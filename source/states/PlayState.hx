@@ -198,6 +198,7 @@ class PlayState extends MusicBeatState
 	public var instakillOnMiss:Bool = false;
 	public var cpuControlled:Bool = false;
 	public var practiceMode:Bool = false;
+	public var ghostTapping:Bool = false;
 	public var pressMissDamage:Float = 0.05;
 
 	public var botplaySine:Float = 0;
@@ -299,6 +300,7 @@ class PlayState extends MusicBeatState
 			FlxG.sound.music.stop();
 
 		// Gameplay settings
+		ghostTapping = ClientPrefs.data.ghostTapping;
 		healthGain = ClientPrefs.getGameplaySetting('healthgain');
 		healthLoss = ClientPrefs.getGameplaySetting('healthloss');
 		instakillOnMiss = ClientPrefs.getGameplaySetting('instakill');
@@ -617,7 +619,7 @@ class PlayState extends MusicBeatState
 
 		//PRECACHING THINGS THAT GET USED FREQUENTLY TO AVOID LAGSPIKES
 		if(ClientPrefs.data.hitsoundVolume > 0) Paths.sound('hitsound');
-		if(!ClientPrefs.data.ghostTapping) for (i in 1...4) Paths.sound('missnote$i');
+		if(ghostTapping) for (i in 1...4) Paths.sound('missnote$i');
 		Paths.image('alphabet');
 
 		if (PauseSubState.songName != null)
@@ -1770,14 +1772,17 @@ class PlayState extends MusicBeatState
 				{
 					if(startedCountdown)
 					{
-						var fakeCrochet:Float = (60 / SONG.bpm) * 1000;
-						notes.forEachAlive(function(daNote:Note)
-						{
+						var noteInd:Int = 0;
+						while (noteInd < notes.length) {
+							var daNote:Note = notes.members[noteInd ++];
+							if (daNote == null || !daNote.exists || !daNote.alive)
+								continue;
+							
 							var strumGroup:FlxTypedGroup<StrumNote> = playerStrums;
 							if(!daNote.mustPress) strumGroup = opponentStrums;
 
 							var strum:StrumNote = strumGroup.members[daNote.noteData];
-							daNote.followStrumNote(strum, fakeCrochet, songSpeed / playbackRate);
+							daNote.followStrumNote(strum, songSpeed / playbackRate);
 
 							if(daNote.mustPress)
 							{
@@ -1803,7 +1808,10 @@ class PlayState extends MusicBeatState
 									invalidateNote(daNote);
 								}
 							}
-						});
+							
+							if (!daNote.exists || !daNote.alive)
+								noteInd --;
+						}
 					}
 					else
 					{
@@ -2710,7 +2718,7 @@ class PlayState extends MusicBeatState
 		}
 		else
 		{
-			if (ClientPrefs.data.ghostTapping)
+			if (ghostTapping)
 				callOnScripts('onGhostTap', [key]);
 			else
 				noteMissPress(key);
@@ -2849,7 +2857,7 @@ class PlayState extends MusicBeatState
 
 	function noteMissPress(direction:Int = 1):Void //You pressed a key when there was no notes to press for this key
 	{
-		if(ClientPrefs.data.ghostTapping) return; //fuck it
+		if (ghostTapping) return; //fuck it
 
 		noteMissCommon(direction);
 		if (playMissSound)

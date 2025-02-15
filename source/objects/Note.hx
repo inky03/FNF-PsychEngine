@@ -453,7 +453,7 @@ class Note extends FlxSprite
 		_lastValidChecked = '';
 	}
 
-	public function followStrumNote(myStrum:StrumNote, fakeCrochet:Float, songSpeed:Float = 1)
+	public function followStrumNote(myStrum:StrumNote, songSpeed:Float = 1)
 	{
 		var noteSpeed:Float = songSpeed * multSpeed;
 		var strumDir:Float = myStrum.direction;

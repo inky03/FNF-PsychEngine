@@ -205,14 +205,17 @@ class EditorPlayState extends MusicBeatSubstate
 		keysCheck();
 		if(notes.length > 0)
 		{
-			var fakeCrochet:Float = (60 / PlayState.SONG.bpm) * 1000;
-			notes.forEachAlive(function(daNote:Note)
-			{
+			var noteInd:Int = 0;
+			while (noteInd < notes.length) {
+				var daNote:Note = notes.members[noteInd ++];
+				if (daNote == null || !daNote.exists || !daNote.alive)
+					continue;
+				
 				var strumGroup:FlxTypedGroup<StrumNote> = playerStrums;
 				if(!daNote.mustPress) strumGroup = opponentStrums;
 
 				var strum:StrumNote = strumGroup.members[daNote.noteData];
-				daNote.followStrumNote(strum, fakeCrochet, songSpeed / playbackRate);
+				daNote.followStrumNote(strum, songSpeed / playbackRate);
 
 				if(!daNote.mustPress && daNote.wasGoodHit && !daNote.hitByOpponent && !daNote.ignoreNote)
 					opponentNoteHit(daNote);
@@ -228,7 +231,10 @@ class EditorPlayState extends MusicBeatSubstate
 					daNote.active = daNote.visible = false;
 					invalidateNote(daNote);
 				}
-			});
+				
+				if (!daNote.exists || !daNote.alive)
+					noteInd --;
+			}
 		}
 		
 		var time:Float = CoolUtil.floorDecimal((Conductor.songPosition - ClientPrefs.data.noteOffset) / 1000, 1);
@@ -340,7 +346,7 @@ class EditorPlayState extends MusicBeatSubstate
 		// Load Notes
 		for (note in _noteList)
 		{
-			if(note == null || note.strumTime < startPos) continue;
+			if(note == null || note.strumTime < startPos - 2) continue;
 			
 			while(cachedSectionTimes.length > noteSec + 1 && cachedSectionTimes[noteSec + 1] <= note.strumTime)
 			{
