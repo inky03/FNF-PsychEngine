@@ -247,7 +247,7 @@ class EditorPlayState extends MusicBeatSubstate
 			//trace('BEAT HIT: ' + curBeat + ', LAST HIT: ' + lastBeatHit);
 			return;
 		}
-		notes.sort(FlxSort.byY, ClientPrefs.data.downScroll ? FlxSort.ASCENDING : FlxSort.DESCENDING);
+		notes.members.sort((a:Note, b:Note) -> Std.int(b.strumTime) - Std.int(a.strumTime));
 
 		super.beatHit();
 		lastBeatHit = curBeat;
@@ -386,33 +386,15 @@ class EditorPlayState extends MusicBeatSubstate
 					oldNote = unspawnNotes[Std.int(unspawnNotes.length - 1)];
 
 					var sustainNote:Note = new Note(swagNote.strumTime + (curStepCrochet * susNote), note.noteData, oldNote, true, this);
+					sustainNote.sustainLength = curStepCrochet;
 					sustainNote.mustPress = swagNote.mustPress;
-					sustainNote.gfNote = swagNote.gfNote;
 					sustainNote.noteType = swagNote.noteType;
+					sustainNote.gfNote = swagNote.gfNote;
 					sustainNote.scrollFactor.set();
 					sustainNote.parent = swagNote;
 					unspawnNotes.push(sustainNote);
 					swagNote.tail.push(sustainNote);
-
-					sustainNote.correctionOffset = swagNote.height / 2;
-					if(!PlayState.isPixelStage)
-					{
-						if(oldNote.isSustainNote)
-						{
-							oldNote.scale.y *= Note.SUSTAIN_SIZE / oldNote.frameHeight;
-							oldNote.scale.y /= playbackRate;
-							oldNote.resizeByRatio(curStepCrochet / Conductor.stepCrochet);
-						}
-
-						if(ClientPrefs.data.downScroll)
-							sustainNote.correctionOffset = 0;
-					}
-					else if(oldNote.isSustainNote)
-					{
-						oldNote.scale.y /= playbackRate;
-						oldNote.resizeByRatio(curStepCrochet / Conductor.stepCrochet);
-					}
-
+					
 					if (sustainNote.mustPress) sustainNote.x += FlxG.width / 2; // general offset
 					else if(ClientPrefs.data.middleScroll)
 					{
