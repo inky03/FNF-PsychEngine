@@ -185,13 +185,19 @@ class BaseOptionsMenu extends MusicBeatSubstate
 					if(controls.UI_LEFT || controls.UI_RIGHT)
 					{
 						var pressed = (controls.UI_LEFT_P || controls.UI_RIGHT_P);
-						if(holdTime > 0.5 || pressed)
+						
+						if (pressed)
+							holdTime = 0;
+						if(curOption.type != STRING)
+							holdTime += elapsed;
+						
+						if (holdTime > 0.5 || pressed)
 						{
 							if(pressed)
 							{
 								var add:Dynamic = null;
 								if(curOption.type != STRING)
-									add = controls.UI_LEFT ? -curOption.changeValue : curOption.changeValue;
+									add = (pressed ? controls.UI_LEFT_P : controls.UI_LEFT) ? -curOption.changeValue : curOption.changeValue;
 		
 								switch(curOption.type)
 								{
@@ -251,9 +257,6 @@ class BaseOptionsMenu extends MusicBeatSubstate
 								curOption.change();
 							}
 						}
-		
-						if(curOption.type != STRING)
-							holdTime += elapsed;
 					}
 					else if(controls.UI_LEFT_R || controls.UI_RIGHT_R)
 					{

@@ -110,8 +110,7 @@ class Main extends Sprite
 		Highscore.load();
 
 		#if HSCRIPT_ALLOWED
-		Iris.warn = function(x, ?pos:haxe.PosInfos) {
-			Iris.logLevel(WARN, x, pos);
+		function getMessageInfo(x:Any, ?pos:haxe.PosInfos, ?header:String):String {
 			var newPos:HScriptInfos = cast pos;
 			if (newPos.showLine == null) newPos.showLine = true;
 			var msgInfo:String = (newPos.funcName != null ? '(${newPos.funcName}) - ' : '')  + '${newPos.fileName}:';
@@ -124,45 +123,24 @@ class Main extends Sprite
 			if (newPos.showLine == true) {
 				msgInfo += '${newPos.lineNumber}:';
 			}
-			msgInfo += ' $x';
-			if (PlayState.instance != null)
-				PlayState.instance.addTextToDebug('WARNING: $msgInfo', FlxColor.YELLOW);
+			return '${header ?? ''}$msgInfo $x';
+		}
+		
+		Iris.warn = function(x, ?pos:haxe.PosInfos) {
+			Iris.logLevel(WARN, x, pos);
+			PlayState.instance?.addTextToDebug(getMessageInfo(x, pos, 'WARNING: '), FlxColor.YELLOW);
 		}
 		Iris.error = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(ERROR, x, pos);
-			var newPos:HScriptInfos = cast pos;
-			if (newPos.showLine == null) newPos.showLine = true;
-			var msgInfo:String = (newPos.funcName != null ? '(${newPos.funcName}) - ' : '')  + '${newPos.fileName}:';
-			#if LUA_ALLOWED
-			if (newPos.isLua == true) {
-				msgInfo += 'HScript:';
-				newPos.showLine = false;
-			}
-			#end
-			if (newPos.showLine == true) {
-				msgInfo += '${newPos.lineNumber}:';
-			}
-			msgInfo += ' $x';
-			if (PlayState.instance != null)
-				PlayState.instance.addTextToDebug('ERROR: $msgInfo', FlxColor.RED);
+			PlayState.instance?.addTextToDebug(getMessageInfo(x, pos, 'ERROR: '), FlxColor.RED);
 		}
 		Iris.fatal = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(FATAL, x, pos);
-			var newPos:HScriptInfos = cast pos;
-			if (newPos.showLine == null) newPos.showLine = true;
-			var msgInfo:String = (newPos.funcName != null ? '(${newPos.funcName}) - ' : '')  + '${newPos.fileName}:';
-			#if LUA_ALLOWED
-			if (newPos.isLua == true) {
-				msgInfo += 'HScript:';
-				newPos.showLine = false;
-			}
-			#end
-			if (newPos.showLine == true) {
-				msgInfo += '${newPos.lineNumber}:';
-			}
-			msgInfo += ' $x';
-			if (PlayState.instance != null)
-				PlayState.instance.addTextToDebug('FATAL: $msgInfo', 0xFFBB0000);
+			PlayState.instance?.addTextToDebug(getMessageInfo(x, pos, 'FATAL: '), 0xFFBB0000);
+		}
+		Iris.print = function(x, ?pos:haxe.PosInfos) {
+			Iris.logLevel(NONE, x, pos);
+			PlayState.instance?.addTextToDebug(getMessageInfo(x, pos, 'TRACE: '), FlxColor.CYAN);
 		}
 		#end
 
