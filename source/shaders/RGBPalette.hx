@@ -139,24 +139,38 @@ class RGBPaletteShader extends FlxShader {
 		uniform vec3 g;
 		uniform vec3 b;
 		uniform float mult;
+		
+		vec4 applyColorTransform(vec4 color) {
+		    if (color.a == 0.) {
+		        return vec4(0.);
+		    }
+		    if (!hasTransform) {
+		        return color;
+		    }
+		    if (!hasColorTransform) {
+		        return color * openfl_Alphav;
+		    }
 
-		vec4 flixel_texture2DCustom(sampler2D bitmap, vec2 coord) {
-			vec4 color = flixel_texture2D(bitmap, coord);
-			if (!hasTransform || color.a == 0.0 || mult == 0.0) {
+		    color = vec4(color.rgb / color.a, color.a);
+		    color = clamp(openfl_ColorOffsetv + color * openfl_ColorMultiplierv, 0., 1.);
+
+		    if (color.a > 0.) {
+		        return vec4(color.rgb * color.a * openfl_Alphav, color.a * openfl_Alphav);
+		    }
+		    return vec4(0.);
+		}
+
+		vec4 flixel_texture2DCustom(sampler2D bitmap, vec2 uv) {
+			vec4 color = texture2D(bitmap, uv);
+			if (color.a == 0.0) {
 				return color;
 			}
-
-			vec4 newColor = color;
-			newColor.rgb = min(color.r * r + color.g * g + color.b * b, vec3(1.0));
-			newColor.a = color.a;
 			
-			color = mix(color, newColor, mult);
-			
-			if(color.a > 0.0) {
-				return vec4(color.rgb, color.a);
-			}
-			return vec4(0.0, 0.0, 0.0, 0.0);
-		}')
+			vec3 rgbMix = mix(color.rgb, vec3(color.r * r + color.g * g + color.b * b), mult);
+			color.rgb = min(rgbMix, color.a);
+			return applyColorTransform(color);
+		}
+	')
 
 	@:glFragmentSource('
 		#pragma header
