@@ -1,6 +1,6 @@
 # Note
 
-This is not the original Psych Engine repository! This is a modification by me (emi3 / inky03) to expand on it's functionality.
+This is not the original Psych Engine repository!! This is a fork by me (emi3 / inky03) to work as a maintenance sort of thing for the engine, even after it's death
 
 See this fork's changelog [here](/docs/CHANGELOG.md).
 
