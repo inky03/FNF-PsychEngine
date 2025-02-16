@@ -7,7 +7,6 @@ import states.editors.MasterEditorMenu;
 import options.OptionsState;
 
 enum MainMenuColumn {
-	LEFT;
 	CENTER;
 	RIGHT;
 }
@@ -21,7 +20,6 @@ class MainMenuState extends MusicBeatState
 	var allowMouse:Bool = true; //Turn this off to block mouse movement in menus
 
 	var menuItems:FlxTypedGroup<FlxSprite>;
-	var leftItem:FlxSprite;
 	var rightItem:FlxSprite;
 
 	//Centered/Text options
@@ -29,11 +27,11 @@ class MainMenuState extends MusicBeatState
 		'story_mode',
 		'freeplay',
 		#if MODS_ALLOWED 'mods', #end
-		'credits'
+		'credits',
+		'options'
 	];
 
-	var leftOption:String = #if ACHIEVEMENTS_ALLOWED 'achievements' #else null #end;
-	var rightOption:String = 'options';
+	var rightOption:String = #if ACHIEVEMENTS_ALLOWED 'achievements' #else null #end;
 
 	var magenta:FlxSprite;
 	var camFollow:FlxObject;
@@ -55,10 +53,10 @@ class MainMenuState extends MusicBeatState
 
 		persistentUpdate = persistentDraw = true;
 
-		var yScroll:Float = 0.25;
+		var yScroll:Float = .7 / optionShit.length;
 		var bg:FlxSprite = new FlxSprite(-80).loadGraphic(Paths.image('menuBG'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
-		bg.scrollFactor.set(0, yScroll);
+		bg.scrollFactor.set(0, yScroll * .75);
 		bg.setGraphicSize(Std.int(bg.width * 1.175));
 		bg.updateHitbox();
 		bg.screenCenter();
@@ -84,14 +82,14 @@ class MainMenuState extends MusicBeatState
 		{
 			var item:FlxSprite = createMenuItem(option, 0, (num * 140) + 90);
 			item.y += (4 - optionShit.length) * 70; // Offsets for when you have anything other than 4 items
+			item.scrollFactor.set(.04, yScroll);
 			item.screenCenter(X);
 		}
-
-		if (leftOption != null)
-			leftItem = createMenuItem(leftOption, 60, 490);
+		
 		if (rightOption != null)
 		{
-			rightItem = createMenuItem(rightOption, FlxG.width - 60, 490);
+			rightItem = createMenuItem(rightOption, FlxG.width - 50, 490);
+			rightItem.scrollFactor.set(.15, yScroll * .5);
 			rightItem.x -= rightItem.width;
 		}
 
@@ -124,7 +122,7 @@ class MainMenuState extends MusicBeatState
 		}
 		#end
 
-		FlxG.camera.follow(camFollow, null, 0.15);
+		FlxG.camera.follow(camFollow, null, 0.2);
 	}
 
 	function createMenuItem(name:String, x:Float, y:Float):FlxSprite
@@ -137,7 +135,6 @@ class MainMenuState extends MusicBeatState
 		menuItem.updateHitbox();
 		
 		menuItem.antialiasing = ClientPrefs.data.antialiasing;
-		menuItem.scrollFactor.set();
 		menuItems.add(menuItem);
 		return menuItem;
 	}
@@ -170,22 +167,11 @@ class MainMenuState extends MusicBeatState
 				{
 					case CENTER:
 						selectedItem = menuItems.members[curSelected];
-					case LEFT:
-						selectedItem = leftItem;
 					case RIGHT:
 						selectedItem = rightItem;
 				}
 
-				if(leftItem != null && FlxG.mouse.overlaps(leftItem))
-				{
-					allowMouse = true;
-					if(selectedItem != leftItem)
-					{
-						curColumn = LEFT;
-						changeItem();
-					}
-				}
-				else if(rightItem != null && FlxG.mouse.overlaps(rightItem))
+				if(rightItem != null && FlxG.mouse.overlaps(rightItem))
 				{
 					allowMouse = true;
 					if(selectedItem != rightItem)
@@ -230,21 +216,9 @@ class MainMenuState extends MusicBeatState
 			switch(curColumn)
 			{
 				case CENTER:
-					if(controls.UI_LEFT_P && leftOption != null)
-					{
-						curColumn = LEFT;
-						changeItem();
-					}
-					else if(controls.UI_RIGHT_P && rightOption != null)
+					if(controls.UI_RIGHT_P && rightOption != null)
 					{
 						curColumn = RIGHT;
-						changeItem();
-					}
-
-				case LEFT:
-					if(controls.UI_RIGHT_P)
-					{
-						curColumn = CENTER;
 						changeItem();
 					}
 
@@ -280,10 +254,6 @@ class MainMenuState extends MusicBeatState
 					case CENTER:
 						option = optionShit[curSelected];
 						item = menuItems.members[curSelected];
-
-					case LEFT:
-						option = leftOption;
-						item = leftItem;
 
 					case RIGHT:
 						option = rightOption;
@@ -369,13 +339,12 @@ class MainMenuState extends MusicBeatState
 		{
 			case CENTER:
 				selectedItem = menuItems.members[curSelected];
-			case LEFT:
-				selectedItem = leftItem;
 			case RIGHT:
 				selectedItem = rightItem;
 		}
 		selectedItem.animation.play('selected');
 		selectedItem.centerOffsets();
+		camFollow.x = selectedItem.getGraphicMidpoint().x;
 		camFollow.y = selectedItem.getGraphicMidpoint().y;
 	}
 }
