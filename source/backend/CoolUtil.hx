@@ -8,7 +8,7 @@ class CoolUtil
 	public static function checkForUpdates(url:String = null):String {
 		if (url == null || url.length == 0)
 			url = "https://raw.githubusercontent.com/inky03/FNF-PsychEngine/mod/gitVersion.txt";
-		var version:String = states.MainMenuState.psychEngineVersion.trim();
+		var version:String = states.MainMenuState.modVersion.trim();
 		if(ClientPrefs.data.checkForUpdates) {
 			trace('checking for updates...');
 			var http = new haxe.Http(url);
@@ -16,11 +16,11 @@ class CoolUtil
 			{
 				var newVersion:String = data.split('\n')[0].trim();
 				trace('version online: $newVersion, your version: $version');
-				if(newVersion != version) {
-					trace('versions arent matching! please update');
+				if (newVersion > version) {
+					trace('using an outdated version! please update');
 					version = newVersion;
-					http.onData = null;
 					http.onError = null;
+					http.onData = null;
 					http = null;
 				}
 			}
