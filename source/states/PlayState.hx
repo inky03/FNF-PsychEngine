@@ -439,12 +439,12 @@ class PlayState extends MusicBeatState
 			{
 				#if LUA_ALLOWED
 				if(file.toLowerCase().endsWith('.lua'))
-					new FunkinLua(folder + file);
+					initLuaScript('$folder$file');
 				#end
 
 				#if HSCRIPT_ALLOWED
 				if(file.toLowerCase().endsWith('.hx'))
-					initHScript(folder + file);
+					initHScript('$folder$file');
 				#end
 			}
 		#end
@@ -595,7 +595,7 @@ class PlayState extends MusicBeatState
 			{
 				#if LUA_ALLOWED
 				if(file.toLowerCase().endsWith('.lua'))
-					new FunkinLua(folder + file);
+					initLuaScript(folder + file);
 				#end
 
 				#if HSCRIPT_ALLOWED
@@ -767,7 +767,7 @@ class PlayState extends MusicBeatState
 					break;
 				}
 			}
-			if(doPush) new FunkinLua(luaFile);
+			if(doPush) initLuaScript(luaFile);
 		}
 		#end
 
@@ -3281,10 +3281,21 @@ class PlayState extends MusicBeatState
 			for (script in luaArray)
 				if(script.scriptName == luaToLoad) return false;
 
-			new FunkinLua(luaToLoad);
+			initLuaScript(luaToLoad);
 			return true;
 		}
 		return false;
+	}
+	public function initLuaScript(scriptFile:String) {
+		var newScript:FunkinLua = null;
+		try {
+			newScript = new FunkinLua(scriptFile);
+			newScript.call('onCreate', []);
+			trace('lua file loaded succesfully:' + scriptFile);
+			luaArray.push(newScript);
+		} catch(e:Dynamic) {
+			addTextToDebug('FATAL: $e', 0xFFBB0000);
+		}
 	}
 	#end
 
@@ -3314,15 +3325,17 @@ class PlayState extends MusicBeatState
 		var newScript:HScript = null;
 		try
 		{
-			newScript = new HScript(null, file);
+			newScript = new HScript(null, file, null, true);
+			newScript.execute();
+			
 			if (newScript.exists('onCreate')) newScript.call('onCreate');
 			trace('initialized hscript interp successfully: $file');
 			hscriptArray.push(newScript);
 		}
 		catch(e:IrisError)
 		{
-			var pos:HScriptInfos = cast {fileName: file, showLine: false};
-			Iris.error(Printer.errorToString(e, false), pos);
+			var pos:HScriptInfos = cast {fileName: file, showLine: #if hscriptPos true, lineNumber: e.line #else false #end};
+			Iris.fatal(Printer.errorToString(e, false), pos);
 			var newScript:HScript = cast (Iris.instances.get(file), HScript);
 			if(newScript != null)
 				newScript.destroy();

@@ -2,7 +2,7 @@
 
 The current list of differences from this fork to Psych Engine *as of 1.0.3* are as follows:
 
-## Game changes
+## Engine changes
 
 ### Chart Editor
 
@@ -17,6 +17,7 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 
 - Fixed "Move mod to top" button in the Mods menu
 - Left / right scrolling on numerical options is more consistent
+- Some menus have been adjusted to look cleaner / less cluttered
 
 ### Gameplay
 
@@ -33,6 +34,7 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 ### LUA
 
 - Objects can now be returned into tables from `runHaxeCode` and `runHaxeFunction`
+- `antialiasing` variable is now available as a default Lua variable
 
 ### HScript
 
@@ -41,7 +43,9 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 ### General
 
 - Changed all libraries to use their latest versions (that previously weren't)
+- DCE is disabled and [almost] all classes are included to remove scripting limitations
 - The second argument "fakeCrochet" has been removed in `Note` class function `followStrumNote`
 - Added variable "ghostTapping" in `PlayState`, so it can be changed without having to modify user preference
+- FATAL script errors only print at the top left of the screen instead of making a new window alert
 
 ...and more! i think...

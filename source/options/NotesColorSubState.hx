@@ -1,7 +1,5 @@
 package options;
 
-import flixel.addons.display.FlxBackdrop;
-import flixel.addons.display.FlxGridOverlay;
 import flixel.addons.display.shapes.FlxShapeCircle;
 import flixel.input.keyboard.FlxKey;
 import flixel.input.gamepad.FlxGamepadInputID;
@@ -60,13 +58,7 @@ class NotesColorSubState extends MusicBeatSubstate
 		bg.screenCenter();
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		add(bg);
-
-		var grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
-		grid.velocity.set(40, 40);
-		grid.alpha = 0;
-		FlxTween.tween(grid, {alpha: 1}, 0.5, {ease: FlxEase.quadOut});
-		add(grid);
-
+		
 		modeBG = new FlxSprite(215, 85).makeGraphic(315, 115, FlxColor.BLACK);
 		modeBG.visible = false;
 		modeBG.alpha = 0.4;
@@ -111,9 +103,10 @@ class NotesColorSubState extends MusicBeatSubstate
 		colorGradientSelector.offset.y = 5;
 		add(colorGradientSelector);
 
-		colorPalette = new FlxSprite(820, 580).loadGraphic(Paths.image('noteColorMenu/palette', false));
+		colorPalette = new FlxSprite(0, 580).loadGraphic(Paths.image('noteColorMenu/palette', false));
 		colorPalette.scale.set(20, 20);
 		colorPalette.updateHitbox();
+		colorPalette.x = bg.x + (bg.width - colorPalette.width) * .5;
 		colorPalette.antialiasing = false;
 		add(colorPalette);
 		
@@ -127,7 +120,7 @@ class NotesColorSubState extends MusicBeatSubstate
 		colorWheelSelector.alpha = 0.6;
 		add(colorWheelSelector);
 
-		var txtX = 980;
+		var txtX = bg.x + bg.width * .5;
 		var txtY = 90;
 		alphabetR = makeColorAlphabet(txtX - 100, txtY);
 		add(alphabetR);
@@ -149,12 +142,12 @@ class NotesColorSubState extends MusicBeatSubstate
 		var tipY = 660;
 		var tip:FlxText = new FlxText(tipX, tipY, 0, Language.getPhrase('note_colors_tip', 'Press RESET to Reset the selected Note Part.'), 16);
 		tip.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		tip.borderSize = 2;
+		tip.borderSize = 1.25;
 		add(tip);
 
 		tipTxt = new FlxText(tipX, tipY + 24, 0, '', 16);
 		tipTxt.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		tipTxt.borderSize = 2;
+		tipTxt.borderSize = 1.25;
 		add(tipTxt);
 		updateTip();
 
@@ -458,9 +451,11 @@ class NotesColorSubState extends MusicBeatSubstate
 				{
 					var center:FlxPoint = new FlxPoint(colorWheel.x + colorWheel.width/2, colorWheel.y + colorWheel.height/2);
 					var mouse:FlxPoint = pointerFlxPoint();
+					var cX:Float = (center.x - mouse.x) / colorWheel.width * 2;
+					var cY:Float = (center.y - mouse.y) / colorWheel.height * 2;
 					var hue:Float = FlxMath.wrap(FlxMath.wrap(Std.int(mouse.degreesTo(center)), 0, 360) - 90, 0, 360);
-					var sat:Float = FlxMath.bound(mouse.dist(center) / colorWheel.width*2, 0, 1);
-					//trace('$hue, $sat');
+					var sat:Float = FlxMath.bound(Math.sqrt(cX * cX + cY * cY), 0, 1);
+					// trace('$hue, $sat');
 					if(sat != 0) setShaderColor(FlxColor.fromHSB(hue, sat, _storedColor.brightness));
 					else setShaderColor(FlxColor.fromRGBFloat(_storedColor.brightness, _storedColor.brightness, _storedColor.brightness));
 					updateColors();
@@ -633,8 +628,9 @@ class NotesColorSubState extends MusicBeatSubstate
 		{
 			Note.initializeGlobalRGBShader(i);
 			var newNote:StrumNote = new StrumNote(150 + (480 / dataArray.length * i), 200, i, 0);
+			var ratio:Float = Math.min(102 / newNote.frameWidth, 102 / newNote.frameHeight);
+			newNote.scale.set(ratio, ratio);
 			newNote.useRGBShader = true;
-			newNote.setGraphicSize(102);
 			newNote.updateHitbox();
 			newNote.ID = i;
 			myNotes.add(newNote);
@@ -669,6 +665,7 @@ class NotesColorSubState extends MusicBeatSubstate
 			if(instant) note.animation.curAnim.finish();
 		}
 		bigNote.animation.play('note$curSelectedNote', true);
+		bigNote.centerOffsets();
 		updateColors();
 	}
 

@@ -68,8 +68,7 @@ class FunkinLua {
 
 		this.scriptName = scriptName.trim();
 		var game:PlayState = PlayState.instance;
-		if(game != null) game.luaArray.push(this);
-
+		
 		var myFolder:Array<String> = this.scriptName.split('/');
 		#if MODS_ALLOWED
 		if(myFolder[0] + '/' == Paths.mods() && (Mods.currentModDirectory == myFolder[1] || Mods.getGlobalMods().contains(myFolder[1]))) //is inside mods folder
@@ -186,6 +185,7 @@ class FunkinLua {
 		set('framerate', ClientPrefs.data.framerate);
 		set('ghostTapping', ClientPrefs.data.ghostTapping);
 		set('hideHud', ClientPrefs.data.hideHud);
+		set('antialiasing', ClientPrefs.data.antialiasing);
 		set('timeBarType', ClientPrefs.data.timeBarType);
 		set('scoreZoom', ClientPrefs.data.scoreZoom);
 		set('cameraZoomOnBeat', ClientPrefs.data.camZooms);
@@ -1583,24 +1583,14 @@ class FunkinLua {
 				result = LuaL.dostring(lua, scriptName);
 
 			var resultStr:String = Lua.tostring(lua, result);
-			if(resultStr != null && result != 0) {
-				trace(resultStr);
-				#if windows
-				lime.app.Application.current.window.alert(resultStr, 'Error on lua script!');
-				#else
-				luaTrace('$scriptName\n$resultStr', true, false, FlxColor.RED);
-				#end
-				lua = null;
-				return;
+			if (resultStr != null && result != 0) {
+				throw resultStr;
 			}
 			if(isString) scriptName = 'unknown';
 		} catch(e:Dynamic) {
 			trace(e);
-			return;
+			throw e;
 		}
-		trace('lua file loaded succesfully:' + scriptName);
-
-		call('onCreate', []);
 	}
 
 	//main

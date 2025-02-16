@@ -6,10 +6,10 @@ import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.input.gamepad.FlxGamepadManager;
 
 class InputFormatter {
-	public static function getKeyName(key:FlxKey):String {
+	public static function getKeyName(?key:FlxKey):String {
 		switch (key) {
 			case BACKSPACE:
-				return "BckSpc";
+				return "Backspace";
 			case CONTROL:
 				return "Ctrl";
 			case ALT:
@@ -17,9 +17,9 @@ class InputFormatter {
 			case CAPSLOCK:
 				return "Caps";
 			case PAGEUP:
-				return "PgUp";
+				return "Page Up";
 			case PAGEDOWN:
-				return "PgDown";
+				return "Page Down";
 			case ZERO:
 				return "0";
 			case ONE:
@@ -87,13 +87,11 @@ class InputFormatter {
 			case QUOTE:
 				return "'";
 			case PRINTSCREEN:
-				return "PrtScrn";
-			case NONE:
+				return "Print Screen";
+			case NONE | null:
 				return '---';
 			default:
 				var label:String = Std.string(key);
-				if(label.toLowerCase() == 'null') return '---';
-
 				var arr:Array<String> = label.split('_');
 				for (i in 0...arr.length) arr[i] = CoolUtil.capitalize(arr[i]);
 				return arr.join(' ');
@@ -109,44 +107,44 @@ class InputFormatter {
 		{
 			// Analogs
 			case LEFT_STICK_DIGITAL_LEFT:
-				return "Left";
+				return "L. Stick Left";
 			case LEFT_STICK_DIGITAL_RIGHT:
-				return "Right";
+				return "L. Stick Right";
 			case LEFT_STICK_DIGITAL_UP:
-				return "Up";
+				return "L. Stick Up";
 			case LEFT_STICK_DIGITAL_DOWN:
-				return "Down";
+				return "L. Stick Down";
 			case LEFT_STICK_CLICK:
 				switch (model) {
 					case PS4: return "L3";
 					case XINPUT: return "LS";
-					default: return "Analog Click";
+					default: return "L. Stick Click";
 				}
 
 			case RIGHT_STICK_DIGITAL_LEFT:
-				return "C. Left";
+				return "R. Stick Left";
 			case RIGHT_STICK_DIGITAL_RIGHT:
-				return "C. Right";
+				return "R. Stick Right";
 			case RIGHT_STICK_DIGITAL_UP:
-				return "C. Up";
+				return "R. Stick Up";
 			case RIGHT_STICK_DIGITAL_DOWN:
-				return "C. Down";
+				return "R. Stick Down";
 			case RIGHT_STICK_CLICK:
 				switch (model) {
 					case PS4: return "R3";
 					case XINPUT: return "RS";
-					default: return "C. Click";
+					default: return "R. Stick Click";
 				}
 
 			// Directional
 			case DPAD_LEFT:
-				return "D. Left";
+				return "D-Pad Left";
 			case DPAD_RIGHT:
-				return "D. Right";
+				return "D-Pad Right";
 			case DPAD_UP:
-				return "D. Up";
+				return "D-Pad Up";
 			case DPAD_DOWN:
-				return "D. Down";
+				return "D-Pad Down";
 
 			// Top buttons
 			case LEFT_SHOULDER:
