@@ -3296,7 +3296,7 @@ class PlayState extends MusicBeatState
 			trace('lua file loaded succesfully:' + scriptFile);
 			luaArray.push(newScript);
 		} catch(e:Dynamic) {
-			addTextToDebug('FATAL: $e', 0xffbb0000, 24);
+			addTextToDebug('FATAL: $e', 0xffbb0000, 18);
 		}
 	}
 	#end
@@ -3328,19 +3328,22 @@ class PlayState extends MusicBeatState
 		try
 		{
 			newScript = new HScript(null, file, null, true);
+			newScript.showFatal = true;
 			newScript.execute();
 			
 			if (newScript.exists('onCreate')) newScript.call('onCreate');
+			
 			trace('initialized hscript interp successfully: $file');
 			hscriptArray.push(newScript);
+			newScript.showFatal = false;
 		}
-		catch(e:IrisError)
-		{
-			var pos:HScriptInfos = cast {fileName: file, showLine: #if hscriptPos true, lineNumber: e.line #else false #end};
-			Iris.fatal(Printer.errorToString(e, false), pos);
+		catch(e:Dynamic) {
+			var pos:HScriptInfos = @:privateAccess { cast newScript.interp.posInfos(); }
+			var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
+			Iris.fatal(errorString, pos);
+			
 			var newScript:HScript = cast (Iris.instances.get(file), HScript);
-			if(newScript != null)
-				newScript.destroy();
+			newScript.destroy();
 		}
 	}
 	#end

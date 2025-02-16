@@ -71,11 +71,13 @@ class HScript extends Iris
 			try {
 				parent.hscript = new HScript(parent, code, varsToBring);
 			}
-			catch(e:IrisError) {
+			catch(e:Dynamic) {
 				var pos:HScriptInfos = cast {fileName: parent.scriptName, isLua: true};
 				if(parent.lastCalledFunction != '') pos.funcName = parent.lastCalledFunction;
-				Iris.error(Printer.errorToString(e, false), pos);
 				parent.hscript = null;
+				
+				var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
+				Iris.fatal(errorString, pos);
 			}
 		}
 		else
@@ -88,19 +90,22 @@ class HScript extends Iris
 				var ret:Dynamic = hs.execute();
 				hs.returnValue = ret;
 			}
-			catch(e:IrisError)
+			catch(e:Dynamic)
 			{
 				var pos:HScriptInfos = cast hs.interp.posInfos();
 				pos.isLua = true;
 				if(parent.lastCalledFunction != '') pos.funcName = parent.lastCalledFunction;
-				Iris.fatal(Printer.errorToString(e, false), pos);
 				hs.returnValue = null;
+				
+				var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
+				Iris.fatal(errorString, pos);
 			}
 		}
 	}
 	#end
 
 	public var origin:String;
+	public var showFatal:Bool = false;
 	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false)
 	{
 		if (file == null)
@@ -149,7 +154,7 @@ class HScript extends Iris
 			try {
 				var ret:Dynamic = execute();
 				returnValue = ret;
-			} catch(e:IrisError) {
+			} catch(e:Dynamic) {
 				returnValue = null;
 				this.destroy();
 				throw e;
@@ -456,23 +461,24 @@ class HScript extends Iris
 			Iris.error('No function named: $funcToRun', this.interp.posInfos());
 			return null;
 		}
-
+		
 		try {
 			var func:Dynamic = interp.variables.get(funcToRun); // function signature
 			final ret = Reflect.callMethod(null, func, args ?? []);
 			return {funName: funcToRun, signature: func, returnValue: ret};
-		}
-		catch(e:IrisError) {
+		} catch(e:Dynamic) {
 			var pos:HScriptInfos = cast this.interp.posInfos();
 			pos.funcName = funcToRun;
 			#if LUA_ALLOWED
-			if (parentLua != null)
-			{
+			if (parentLua != null) {
 				pos.isLua = true;
-				if (parentLua.lastCalledFunction != '') pos.funcName = parentLua.lastCalledFunction;
+				if (parentLua.lastCalledFunction != '')
+					pos.funcName = parentLua.lastCalledFunction;
 			}
 			#end
-			Iris.error(Printer.errorToString(e, false), pos);
+			
+			var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
+			(showFatal ? Iris.fatal : Iris.error) (errorString, pos);
 		}
 		return null;
 	}

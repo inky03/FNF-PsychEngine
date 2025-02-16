@@ -136,7 +136,7 @@ class Main extends Sprite
 		}
 		Iris.fatal = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(FATAL, x, pos);
-			PlayState.instance?.addTextToDebug(getMessageInfo(x, pos, 'FATAL: '), 0xffbb0000, 24);
+			PlayState.instance?.addTextToDebug(getMessageInfo(x, pos, 'FATAL: '), 0xffbb0000, 18);
 		}
 		Iris.print = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(NONE, x, pos);
