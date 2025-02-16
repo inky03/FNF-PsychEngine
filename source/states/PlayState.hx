@@ -3103,6 +3103,10 @@ class PlayState extends MusicBeatState
 	}
 
 	public function invalidateNote(note:Note):Void {
+		// i dont think preventing the note from being destroyed would do the game any good
+		callOnLuas('onDestroyNote', [notes.members.indexOf(note), note.noteData, note.noteType, note.isSustainNote]);
+		callOnHScript('onDestroyNote', [note]);
+		
 		note.kill();
 		notes.remove(note, true);
 		note.destroy();
@@ -3167,7 +3171,7 @@ class PlayState extends MusicBeatState
 
 		FlxG.camera.filters = [];
 
-		#if FLX_PITCH FlxG.sound.music.pitch = 1; #end
+		#if FLX_PITCH if (FlxG.sound.music != null) FlxG.sound.music.pitch = 1; #end
 		FlxG.animationTimeScale = 1;
 
 		Note.globalRgbShaders = [];

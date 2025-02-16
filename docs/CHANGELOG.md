@@ -44,6 +44,7 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 
 ### General
 
+- `onDestroyNote` function for note despawning
 - Changed all libraries to use their latest versions (that previously weren't)
 - DCE is disabled and [almost] all classes are included to remove scripting limitations
 - The second argument "fakeCrochet" has been removed in `Note` class function `followStrumNote`
