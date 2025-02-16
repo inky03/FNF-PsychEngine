@@ -148,7 +148,7 @@ class Main extends Sprite
 		Controls.instance = new Controls();
 		ClientPrefs.loadDefaultKeys();
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
-		addChild(new FlxGame(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
+		addChild(new #if UNHOLYWANDERER04 UnholyGame #else FlxGame #end(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
 
 		#if !mobile
 		fpsVar = new FPSCounter(10, 3, 0xFFFFFF);
@@ -253,3 +253,14 @@ class Main extends Sprite
 	}
 	#end
 }
+
+#if UNHOLYWANDERER04
+class UnholyGame extends flixel.FlxGame {
+	public var frameCounter:Int = 0;
+	
+	override function onEnterFrame(_) {
+		super.onEnterFrame(_);
+		frameCounter ++;
+	}
+}
+#end

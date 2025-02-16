@@ -248,7 +248,29 @@ class FunkinLua {
 			if(ignoreSelf && !excludeScripts.contains(scriptName)) excludeScripts.push(scriptName);
 			return game.callOnHScript(funcName, args, ignoreStops, excludeScripts, excludeValues);
 		});
-
+		
+		#if UNHOLYWANDERER04
+		var unholyed:Bool = false;
+		Lua_helper.add_callback(lua, 'unholywanderer04', function() {
+			var fgame:Main.UnholyGame = cast FlxG.game;
+			if (fgame.frameCounter % 2 == 1) {
+				FlxG.resetGame();
+			} else if (!unholyed) {
+				var game:states.PlayState = states.PlayState.instance;
+				if (game != null) {
+					var unholy:FlxSprite = new FlxSprite().loadGraphic(Paths.image('unholywanderer04', 'embed'));
+					unholy.antialiasing = ClientPrefs.data.antialiasing;
+					unholy.setGraphicSize(FlxG.width, FlxG.height);
+					unholy.updateHitbox();
+					unholy.alpha = 0;
+					unholyed = true;
+					game.uiGroup.insert(0, unholy);
+					FlxTween.tween(unholy, {alpha: 1}, 3);
+				}
+			}
+		});
+		#end
+		
 		Lua_helper.add_callback(lua, "callScript", function(luaFile:String, funcName:String, ?args:Array<Dynamic> = null) {
 			if(args == null){
 				args = [];
