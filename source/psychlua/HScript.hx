@@ -1,5 +1,26 @@
 package psychlua;
 
+#if macro
+import haxe.macro.Expr;
+import haxe.macro.Type;
+import haxe.macro.Context;
+
+class HScriptMacro {
+	static macro function buildInterp():Array<Field> {
+		var pos:Position = Context.currentPos();
+		var fields:Array<Field> = Context.getBuildFields();
+		
+		for (field in fields) {
+			if (field.name == 'setVar' && field.access != null) // DE-INLINE METHOD
+				field.access.remove(Access.AInline);
+		}
+		
+		return fields;
+	}
+}
+
+#else
+
 import flixel.FlxBasic;
 import objects.Character;
 import psychlua.LuaUtils;
@@ -298,16 +319,27 @@ class HScript extends Iris
 		#if LUA_ALLOWED
 		set('createGlobalCallback', function(name:String, func:Dynamic)
 		{
-			for (script in PlayState.instance.luaArray)
+			if (!Reflect.isFunction(func)) {
+				Iris.error('createGlobalCallback ($name): 2nd argument is not a function', this.interp.posInfos());
+				return;
+			}
+			
+			for (script in PlayState.instance.luaArray) {
 				if(script != null && script.lua != null && !script.closed)
 					Lua_helper.add_callback(script.lua, name, func);
-
+			}
+			
 			FunkinLua.customFunctions.set(name, func);
 		});
 
 		// this one was tested
 		set('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua = null)
 		{
+			if (!Reflect.isFunction(func)) {
+				Iris.error('createCallback ($name): 2nd argument is not a function', this.interp.posInfos());
+				return;
+			}
+			
 			if(funk == null) funk = parentLua;
 			
 			if(funk != null) funk.addLocalCallback(name, func);
@@ -511,12 +543,10 @@ class CustomFlxColor {
 		return cast FlxColor.fromString(str);
 }
 
-class CustomInterp extends crowplexus.hscript.Interp
-{
-	public var parentInstance(default, set):Dynamic = [];
+class CustomInterp extends crowplexus.hscript.Interp {
 	private var _instanceFields:Array<String>;
-	function set_parentInstance(inst:Dynamic):Dynamic
-	{
+	public var parentInstance(default, set):Dynamic = [];
+	function set_parentInstance(inst:Dynamic):Dynamic {
 		parentInstance = inst;
 		if(parentInstance == null)
 		{
@@ -527,35 +557,36 @@ class CustomInterp extends crowplexus.hscript.Interp
 		return inst;
 	}
 
-	public function new()
-	{
+	public function new() {
 		super();
 	}
 
 	override function resolve(id: String): Dynamic {
-		if (locals.exists(id)) {
-			var l = locals.get(id);
-			return l.r;
-		}
-
-		if (variables.exists(id)) {
-			var v = variables.get(id);
-			return v;
-		}
-
-		if (imports.exists(id)) {
-			var v = imports.get(id);
-			return v;
-		}
-
-		if(parentInstance != null && _instanceFields.contains(id)) {
-			var v = Reflect.getProperty(parentInstance, id);
-			return v;
-		}
-
+		if (locals.exists(id)) 
+			return locals.get(id).r;
+		if (variables.exists(id))
+			return variables.get(id);
+		if (imports.exists(id))
+			return imports.get(id);
+		
+		if (FunkinLua.customFunctions.exists(id))
+			return FunkinLua.customFunctions.get(id);
+		if (parentInstance != null && _instanceFields.contains(id))
+			return Reflect.getProperty(parentInstance, id);
+		
 		error(EUnknownVariable(id));
-
 		return null;
+	}
+	
+	override function setVar(id:String, v:Dynamic) {
+		if (parentInstance != null && _instanceFields.contains(id))
+			return Reflect.setProperty(parentInstance, id, v);
+		
+		variables.set(id, v);
+		
+		// error(EUnknownVariable(id));
+		// having "global variables" is pretty pointless,
+		// but i figure disabling it would cause issues on existing scripts
 	}
 }
 #else
@@ -578,4 +609,5 @@ class HScript
 	}
 	#end
 }
+#end
 #end

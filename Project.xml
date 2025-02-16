@@ -117,6 +117,7 @@
 	
 	<haxeflag name="-dce no" if="SCRIPTS_ALLOWED" />
 	
+	<haxeflag name="--macro" value="addMetadata('@:build(psychlua.HScript.HScriptMacro.buildInterp())', 'crowplexus.hscript.Interp')" if="HSCRIPT_ALLOWED" />
 	<haxeflag name="--macro" value="include('flixel', true, ['flixel.addons.nape', 'flixel.addons.editors.spine', 'flixel.system.macros'])" if="SCRIPTS_ALLOWED" />
 	<haxeflag name="--macro" value="include('haxe', true, ['haxe.atomic', 'haxe.macro'])" if="SCRIPTS_ALLOWED" />
 	<haxeflag name="--macro" value="include('sys', true)" if="SCRIPTS_ALLOWED" />

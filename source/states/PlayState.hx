@@ -676,8 +676,9 @@ class PlayState extends MusicBeatState
 	}
 
 	#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
-	public function addTextToDebug(text:String, color:FlxColor) {
+	public function addTextToDebug(text:String, color:FlxColor, size:Int = 16):psychlua.DebugLuaText {
 		var newText:psychlua.DebugLuaText = luaDebugGroup.recycle(psychlua.DebugLuaText);
+		newText.size = size;
 		newText.text = text;
 		newText.color = color;
 		newText.disableTime = 6;
@@ -690,6 +691,7 @@ class PlayState extends MusicBeatState
 		luaDebugGroup.add(newText);
 
 		Sys.println(text);
+		return newText;
 	}
 	#end
 
@@ -3294,7 +3296,7 @@ class PlayState extends MusicBeatState
 			trace('lua file loaded succesfully:' + scriptFile);
 			luaArray.push(newScript);
 		} catch(e:Dynamic) {
-			addTextToDebug('FATAL: $e', 0xFFBB0000);
+			addTextToDebug('FATAL: $e', 0xffbb0000, 24);
 		}
 	}
 	#end

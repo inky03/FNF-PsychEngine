@@ -38,6 +38,8 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 
 ### HScript
 
+- Setting game variables without using `game.` is now allowed (it was previously only allowed for getting)
+- `createGlobalCallback` now also makes the callback globally available in HScript scripts
 - `trace` now prints in-game too (including the line number)
 
 ### General
@@ -47,5 +49,7 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 - The second argument "fakeCrochet" has been removed in `Note` class function `followStrumNote`
 - Added variable "ghostTapping" in `PlayState`, so it can be changed without having to modify user preference
 - FATAL script errors only print at the top left of the screen instead of making a new window alert
+	- They are also bigger than the default print messages
+- PlayState function `addTextToDebug` now has an argument for size and returns the text itself
 
 ...and more! i think...
