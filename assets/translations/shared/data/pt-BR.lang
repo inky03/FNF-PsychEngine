@@ -119,6 +119,7 @@ options_language: "Idioma"
 graphics_menu: "Configurações de Gráficos"
 visuals_menu: "Opções Visuais"
 gameplay_menu: "Configurações de Gameplay"
+language_menu: "Seleção de Idioma"
 
 // Note Colors Menu
 note_colors_tip: "Aperte RESET para resetar a parte selecionada da Nota."
