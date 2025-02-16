@@ -242,25 +242,34 @@ class BaseOptionsMenu extends MusicBeatSubstate
 								holdValue += curOption.scrollSpeed * elapsed * (controls.UI_LEFT ? -1 : 1);
 								if(holdValue < curOption.minValue) holdValue = curOption.minValue;
 								else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
-		
+								
 								switch(curOption.type)
 								{
 									case INT:
-										curOption.setValue(Math.round(holdValue));
-									
+										var target:Int = Math.round(holdValue);
+										if (curOption.getValue() != target) {
+											curOption.setValue(target);
+											updateTextFrom(curOption);
+											curOption.change();
+										}
+										
 									case PERCENT:
-										curOption.setValue(FlxMath.roundDecimal(holdValue, curOption.decimals));
-
+										var target:Float = FlxMath.roundDecimal(holdValue, curOption.decimals);
+										if (curOption.getValue() != target) {
+											curOption.setValue(target);
+											updateTextFrom(curOption);
+											curOption.change();
+										}
+										
 									default:
 								}
-								updateTextFrom(curOption);
-								curOption.change();
 							}
 						}
 					}
 					else if(controls.UI_LEFT_R || controls.UI_RIGHT_R)
 					{
-						if(holdTime > 0.5) FlxG.sound.play(Paths.sound('scrollMenu'));
+						if (holdTime > 0.5)
+							FlxG.sound.play(Paths.sound('scrollMenu'));
 						holdTime = 0;
 					}
 			}

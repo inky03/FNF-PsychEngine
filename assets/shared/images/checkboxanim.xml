@@ -1,25 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TextureAtlas imagePath="checkboxanim.png">
-	<!-- Created with Adobe Animate version 21.0.1.37179 -->
-	<!-- http://www.adobe.com/products/animate.html -->
-	<SubTexture name="checkbox0000" x="4" y="4" width="111" height="108" pivotX="0" pivotY="0"/>
-	<SubTexture name="checkbox anim0000" x="119" y="4" width="183" height="142" pivotX="38.45" pivotY="25.3"/>
-	<SubTexture name="checkbox anim0001" x="119" y="4" width="183" height="142"/>
-	<SubTexture name="checkbox anim0002" x="306" y="4" width="183" height="142"/>
-	<SubTexture name="checkbox anim0003" x="306" y="4" width="183" height="142"/>
-	<SubTexture name="checkbox anim0004" x="493" y="4" width="183" height="142"/>
-	<SubTexture name="checkbox anim0005" x="493" y="4" width="183" height="142"/>
-	<SubTexture name="checkbox anim0006" x="680" y="4" width="183" height="142"/>
-	<SubTexture name="checkbox anim0007" x="680" y="4" width="183" height="142"/>
-	<SubTexture name="checkbox anim0008" x="4" y="150" width="183" height="142"/>
-	<SubTexture name="checkbox anim0009" x="4" y="150" width="183" height="142"/>
-	<SubTexture name="checkbox anim reverse0000" x="191" y="150" width="178" height="167" pivotX="28.55" pivotY="29.6"/>
-	<SubTexture name="checkbox anim reverse0001" x="191" y="150" width="178" height="167"/>
-	<SubTexture name="checkbox anim reverse0002" x="373" y="150" width="178" height="167"/>
-	<SubTexture name="checkbox anim reverse0003" x="373" y="150" width="178" height="167"/>
-	<SubTexture name="checkbox anim reverse0004" x="555" y="150" width="178" height="167"/>
-	<SubTexture name="checkbox anim reverse0005" x="555" y="150" width="178" height="167"/>
-	<SubTexture name="checkbox anim reverse0006" x="737" y="150" width="178" height="167"/>
-	<SubTexture name="checkbox anim reverse0007" x="737" y="150" width="178" height="167"/>
-	<SubTexture name="checkbox finish0000" x="4" y="321" width="137" height="125" pivotX="3.4" pivotY="11.65"/>
+	<!-- Created with Adobe Flash CS6 12.0.0.481 -->
+	<SubTexture name="checkbox0000" x="273" y="359" width="111" height="108"/>
+	<SubTexture name="checkbox anim0000" x="183" y="147" width="150" height="108" frameX="0" frameY="-23" frameWidth="181" frameHeight="142" rotated="false"/>
+	<SubTexture name="checkbox anim0001" x="183" y="147" width="150" height="108" frameX="0" frameY="-23" frameWidth="181" frameHeight="142" rotated="false"/>
+	<SubTexture name="checkbox anim0002" x="343" y="130" width="135" height="116" frameX="-14" frameY="-26" frameWidth="181" frameHeight="142" rotated="false"/>
+	<SubTexture name="checkbox anim0003" x="336" y="249" width="126" height="107" frameX="-30" frameY="-28" frameWidth="181" frameHeight="142" rotated="false"/>
+	<SubTexture name="checkbox anim0004" x="1" y="340" width="140" height="136" frameX="-41" frameY="0" frameWidth="181" frameHeight="142" rotated="false"/>
+	<SubTexture name="checkbox anim0005" x="1" y="340" width="140" height="136" frameX="-41" frameY="0" frameWidth="181" frameHeight="142" rotated="false"/>
+	<SubTexture name="checkbox anim0006" x="1" y="340" width="140" height="136" frameX="-41" frameY="0" frameWidth="181" frameHeight="142" rotated="false"/>
+	<SubTexture name="checkbox anim0007" x="343" y="1" width="138" height="126" frameX="-35" frameY="-13" frameWidth="181" frameHeight="142" rotated="false"/>
+	<SubTexture name="checkbox anim0008" x="343" y="1" width="138" height="126" frameX="-35" frameY="-13" frameWidth="181" frameHeight="142" rotated="false"/>
+	<SubTexture name="checkbox anim reverse0000" x="387" y="359" width="111" height="108" frameX="-29" frameY="-32" frameWidth="179" frameHeight="168" rotated="false"/>
+	<SubTexture name="checkbox anim reverse0001" x="183" y="1" width="157" height="143" frameX="-11" frameY="-11" frameWidth="179" frameHeight="168" rotated="false"/>
+	<SubTexture name="checkbox anim reverse0002" x="1" y="172" width="175" height="165" frameX="-2" frameY="-1" frameWidth="179" frameHeight="168" rotated="false"/>
+	<SubTexture name="checkbox anim reverse0003" x="1" y="172" width="175" height="165" frameX="-2" frameY="-1" frameWidth="179" frameHeight="168" rotated="false"/>
+	<SubTexture name="checkbox anim reverse0004" x="1" y="1" width="179" height="168"/>
+	<SubTexture name="checkbox anim reverse0005" x="1" y="1" width="179" height="168"/>
+	<SubTexture name="checkbox anim reverse0006" x="1" y="1" width="179" height="168"/>
+	<SubTexture name="checkbox finish0000" x="144" y="340" width="126" height="138" frameX="0" frameY="0" frameWidth="138" frameHeight="126" rotated="true"/>
 </TextureAtlas>
