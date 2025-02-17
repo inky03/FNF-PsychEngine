@@ -338,7 +338,7 @@ class Note extends FlxSprite
 		var skinPixel:String = skin;
 		var skinPostfix:String = getNoteSkinPostfix();
 		var customSkin:String = skin + skinPostfix;
-		var path:String = PlayState.isPixelStage ? 'pixelUI/' : '';
+		var path:String = (PlayState.uiPrefix == '' ? '' : '${PlayState.uiPrefix}/');
 		if(customSkin == _lastValidChecked || Paths.fileExists('images/' + path + customSkin + '.png', IMAGE))
 		{
 			skin = customSkin;
@@ -348,11 +348,11 @@ class Note extends FlxSprite
 
 		if(PlayState.isPixelStage) {
 			if(isSustainNote) {
-				var graphic = Paths.image('pixelUI/' + skinPixel + 'ENDS' + skinPostfix);
+				var graphic = Paths.image('$path${skinPixel}ENDS$skinPostfix');
 				loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 2));
 				originalHeight = graphic.height / 2;
 			} else {
-				var graphic = Paths.image('pixelUI/' + skinPixel + skinPostfix);
+				var graphic = Paths.image('$path${skinPixel}$skinPostfix');
 				loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 5));
 			}
 			loadPixelNoteAnims();

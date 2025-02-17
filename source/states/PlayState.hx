@@ -127,12 +127,18 @@ class PlayState extends MusicBeatState
 	static function set_stageUI(value:String):String
 	{
 		uiPrefix = uiPostfix = "";
-		if (value != "normal")
+		if (value != "normal" && value != '')
 		{
-			uiPrefix = value.split("-pixel")[0].trim();
+			uiPrefix = value.split("-pixel")[0].trim() + 'UI';
 			if (value == "pixel" || value.endsWith("-pixel")) uiPostfix = "-pixel";
 		}
 		return stageUI = value;
+	}
+	static function formatUI(key:String):String {
+		var formatted:String = key;
+		if (uiPrefix.trim() != '')
+			formatted = '$uiPrefix/$formatted';
+		return '$formatted$uiPostfix';
 	}
 
 	@:noCompletion
@@ -927,11 +933,7 @@ class PlayState extends MusicBeatState
 	function cacheCountdown()
 	{
 		var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
-		var introImagesArray:Array<String> = switch(stageUI) {
-			case "pixel": ['pixelUI/ready-pixel', 'pixelUI/set-pixel', 'pixelUI/date-pixel'];
-			case "normal": ["ready", "set" ,"go"];
-			default: ['${uiPrefix}UI/ready${uiPostfix}', '${uiPrefix}UI/set${uiPostfix}', '${uiPrefix}UI/go${uiPostfix}'];
-		}
+		var introImagesArray:Array<String> = [formatUI('ready'), formatUI('set'), formatUI('go')];
 		introAssets.set(stageUI, introImagesArray);
 		var introAlts:Array<String> = introAssets.get(stageUI);
 		for (asset in introAlts) Paths.image(asset);
@@ -991,11 +993,7 @@ class PlayState extends MusicBeatState
 				characterBopper(tmr.loopsLeft);
 
 				var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
-				var introImagesArray:Array<String> = switch(stageUI) {
-					case "pixel": ['pixelUI/ready-pixel', 'pixelUI/set-pixel', 'pixelUI/date-pixel'];
-					case "normal": ["ready", "set" ,"go"];
-					default: ['${uiPrefix}UI/ready${uiPostfix}', '${uiPrefix}UI/set${uiPostfix}', '${uiPrefix}UI/go${uiPostfix}'];
-				}
+				var introImagesArray:Array<String> = [formatUI('ready'), formatUI('set'), formatUI('go')];
 				introAssets.set(stageUI, introImagesArray);
 
 				var introAlts:Array<String> = introAssets.get(stageUI);
@@ -2511,14 +2509,10 @@ class PlayState extends MusicBeatState
 
 	private function cachePopUpScore()
 	{
-		var uiFolder:String = "";
-		if (stageUI != "normal")
-			uiFolder = uiPrefix + "UI/";
-
 		for (rating in ratingsData)
-			Paths.image(uiFolder + rating.image + uiPostfix);
+			Paths.image(formatUI(rating.image));
 		for (i in 0...10)
-			Paths.image(uiFolder + 'num' + i + uiPostfix);
+			Paths.image(formatUI('num$i'));
 	}
 
 	private function popUpScore(note:Note = null):Void
@@ -2565,13 +2559,9 @@ class PlayState extends MusicBeatState
 
 		var uiFolder:String = "";
 		var antialias:Bool = ClientPrefs.data.antialiasing;
-		if (stageUI != "normal")
-		{
-			uiFolder = uiPrefix + "UI/";
-			antialias = !isPixelStage;
-		}
+		antialias = !isPixelStage;
 
-		rating.loadGraphic(Paths.image(uiFolder + daRating.image + uiPostfix));
+		rating.loadGraphic(Paths.image(formatUI(daRating.image)));
 		rating.screenCenter();
 		rating.x = placement - 40;
 		rating.y -= 60;
@@ -2583,7 +2573,7 @@ class PlayState extends MusicBeatState
 		rating.y -= ClientPrefs.data.comboOffset[1];
 		rating.antialiasing = antialias;
 
-		var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiFolder + 'combo' + uiPostfix));
+		var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(formatUI('combo')));
 		comboSpr.screenCenter();
 		comboSpr.x = placement;
 		comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
@@ -2618,7 +2608,8 @@ class PlayState extends MusicBeatState
 		var separatedScore:String = Std.string(combo).lpad('0', 3);
 		for (i in 0...separatedScore.length)
 		{
-			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiFolder + 'num' + Std.parseInt(separatedScore.charAt(i)) + uiPostfix));
+			var num:Int = Std.parseInt(separatedScore.charAt(i));
+			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(formatUI('num$num')));
 			numScore.screenCenter();
 			numScore.x = placement + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
 			numScore.y += 80 - ClientPrefs.data.comboOffset[3];
