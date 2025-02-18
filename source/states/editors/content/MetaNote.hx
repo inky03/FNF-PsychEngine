@@ -12,6 +12,7 @@ class MetaNote extends Note
 	public var sustainSprite:EditorSustain;
 	public var chartY:Float = 0;
 	public var chartNoteData:Int = 0;
+	public var useBlandSustains(default, set):Bool = false;
 
 	public function new(time:Float, data:Int, songData:Array<Dynamic>)
 	{
@@ -74,6 +75,7 @@ class MetaNote extends Note
 				sustainSprite.scrollFactor.x = 0;
 			}
 			sustainSprite.sustainHeight = Math.max(ChartingState.GRID_SIZE/4, (Math.round((v * ChartingState.GRID_SIZE + ChartingState.GRID_SIZE) / stepCrochet) * zoom) - ChartingState.GRID_SIZE/2);
+			sustainSprite.useBlandSustains = useBlandSustains;
 			sustainSprite.updateHitbox();
 		}
 	}
@@ -138,6 +140,12 @@ class MetaNote extends Note
 			_noteTypeText.draw();
 		}
 	}
+	
+	function set_useBlandSustains(value:Bool):Bool {
+		if (sustainSprite != null)
+			sustainSprite.useBlandSustains = value;
+		return useBlandSustains = value;
+	}
 
 	override function destroy()
 	{
@@ -148,11 +156,15 @@ class MetaNote extends Note
 
 class EditorSustain extends Note {
 	var sustainTile:FlxSprite;
+	var basicSustainTile:FlxSprite;
 	public var sustainHeight:Float = 0;
+	public var useBlandSustains:Bool = false;
 	
 	public function new(data:Int) {
+		basicSustainTile = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
 		sustainTile = new FlxSprite();
 		sustainTile.scrollFactor.x = 0;
+		sustainTile.clipRect = new flixel.math.FlxRect();
 		
 		super(0, data, null, true, true);
 		
@@ -168,18 +180,40 @@ class EditorSustain extends Note {
 	override function draw() {
 		if (!visible) return;
 		
-		if (sustainTile.shader != shader) sustainTile.shader = shader;
-		sustainTile.setColorTransform(colorTransform.redMultiplier, colorTransform.blueMultiplier, colorTransform.redMultiplier);
-		sustainTile.scale.x = this.scale.x;
-		sustainTile.scale.y = sustainHeight;
-		sustainTile.updateHitbox();
-		sustainTile.alpha = this.alpha;
-		sustainTile.setPosition(this.x, this.y - sustainHeight);
-		sustainTile.draw();
-		
-		y += sustainHeight;
-		super.draw();
-		y -= sustainHeight;
+		if (useBlandSustains) {
+			basicSustainTile.scale.set(8, sustainHeight);
+			basicSustainTile.updateHitbox();
+			basicSustainTile.alpha = alpha;
+			basicSustainTile.setPosition(x + (width - basicSustainTile.width) * .5, y);
+			basicSustainTile.draw();
+		} else {
+			var tileY:Float = sustainHeight - height;
+			
+			if (sustainTile.shader != shader) sustainTile.shader = shader;
+			sustainTile.setColorTransform(colorTransform.redMultiplier, colorTransform.blueMultiplier, colorTransform.redMultiplier);
+			sustainTile.scale.copyFrom(scale);
+			sustainTile.updateHitbox();
+			sustainTile.alpha = alpha;
+			
+			y += tileY;
+			super.draw();
+			y -= tileY;
+			
+			if (scale.y <= 0) return;
+			
+			sustainTile.clipRect.set(0, 1, sustainTile.frameWidth, sustainTile.frameHeight - 2);
+			sustainTile.clipRect = sustainTile.clipRect;
+			while (tileY > 0) {
+				tileY -= sustainTile.clipRect.height * sustainTile.scale.y;
+				if (tileY < 0) {
+					var clip:Float = -tileY / sustainTile.scale.y + 1;
+					sustainTile.clipRect.set(0, clip, sustainTile.frameWidth, sustainTile.frameHeight - clip);
+					sustainTile.clipRect = sustainTile.clipRect;
+				}
+				sustainTile.setPosition(this.x, y + tileY);
+				sustainTile.draw();
+			}
+		}
 	}
 	
 	public function reloadSustainTile() {

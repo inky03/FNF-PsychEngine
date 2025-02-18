@@ -264,6 +264,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			chartEditorSave.data.customNextGridColors = ['5F5F5F', '4A4A4A'];
 		
 		changeTheme(chartEditorSave.data.theme != null ? chartEditorSave.data.theme : DEFAULT, false);
+		refreshSustains(chartEditorSave.data.texturedSustains ?? true);
 
 		createGrids();
 
@@ -545,9 +546,15 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDown);
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_UP, keyUp);
 	}
-
+	
+	var texturedSustains:Bool;
 	var gridColors:Array<FlxColor>;
 	var gridColorsOther:Array<FlxColor>;
+	function refreshSustains(useTextured:Bool):Bool {
+		for (note in notes)
+			note.useBlandSustains = !useTextured;
+		return texturedSustains = useTextured;
+	}
 	function changeTheme(changeTo:ChartingTheme, ?doSave:Bool = true)
 	{
 		var oldTheme:ChartingTheme = theme;
@@ -1918,6 +1925,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		swagNote.mustPress = gottaHitNote;
 		swagNote.setSustainLength(note[2], cachedSectionCrochets[secNum] / 4, curZoom);
 		swagNote.gfNote = (section.gfSection && gottaHitNote == section.mustHitSection);
+		swagNote.useBlandSustains = !texturedSustains;
 		swagNote.noteType = note[3];
 		swagNote.scrollFactor.x = 0;
 		var txt:FlxText = swagNote.findNoteTypeText(swagNote.noteType != null ? noteTypes.indexOf(swagNote.noteType) : 0);
@@ -4431,8 +4439,17 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 					state.add(btn);
 
 					var customBgC:String = '303030';
-					if(chartEditorSave.data.customBgColor != null)
+					if (chartEditorSave.data.customBgColor != null)
 						customBgC = chartEditorSave.data.customBgColor;
+					
+					var checkbox:PsychUICheckBox = new PsychUICheckBox(btn.x, btnY + 60, 'Textured Hold Notes', 200);
+					checkbox.onClick = function() {
+						chartEditorSave.data.texturedSustains = checkbox.checked;
+						refreshSustains(checkbox.checked);
+					}
+					checkbox.checked = chartEditorSave.data.texturedSustains ?? true;
+					checkbox.cameras = state.cameras;
+					state.add(checkbox);
 
 					var input:PsychUIInputText = new PsychUIInputText(0, btnY, 80, customBgC, 10);
 					input.maxLength = 6;
