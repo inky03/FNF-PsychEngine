@@ -590,8 +590,9 @@ class NoteSplashEditorState extends MusicBeatState
 
         if (!blockInput)
         {
-            if (controls.BACK)
-                MusicBeatState.switchState(new MasterEditorMenu());
+            if (controls.BACK) {
+                MusicBeatState.switchState(new states.MainMenuState(true));
+            }
             if (FlxG.keys.justPressed.F1)
                 openSubState(new NoteSplashEditorHelpSubState());
         }

@@ -1351,7 +1351,7 @@ class StageEditorState extends MusicBeatState implements PsychUIEventHandler.Psy
 		{
 			if(!unsavedProgress)
 			{
-				MusicBeatState.switchState(new states.editors.MasterEditorMenu());
+				MusicBeatState.switchState(new states.MainMenuState(true));
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
 			else openSubState(new ExitConfirmationPrompt());

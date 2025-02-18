@@ -7,7 +7,7 @@ import objects.Character;
 import states.MainMenuState;
 import states.FreeplayState;
 
-class MasterEditorMenu extends MusicBeatState
+class MasterEditorMenu extends MusicBeatSubstate
 {
 	var options:Array<String> = [
 		'Chart Editor',
@@ -22,10 +22,15 @@ class MasterEditorMenu extends MusicBeatState
 	private var grpTexts:FlxTypedGroup<Alphabet>;
 	private var directories:Array<String> = [null];
 
-	private var curSelected = 0;
-	private var curDirectory = 0;
+	public static var curSelected = 0;
 	private var directoryTxt:FlxText;
-
+	private var curDirectory = 0;
+	private var fadeIn:Bool;
+	
+	public function new(fadeIn:Bool = false) {
+		super();
+		this.fadeIn = fadeIn;
+	}
 	override function create()
 	{
 		FlxG.camera.bgColor = FlxColor.BLACK;
@@ -34,9 +39,11 @@ class MasterEditorMenu extends MusicBeatState
 		DiscordClient.changePresence("Editors Main Menu", null);
 		#end
 
-		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		var bg:FlxSprite = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
+		bg.scale.set(FlxG.width, FlxG.height);
 		bg.scrollFactor.set();
-		bg.color = 0xFF353535;
+		bg.updateHitbox();
+		bg.alpha = 0;
 		add(bg);
 
 		grpTexts = new FlxTypedGroup<Alphabet>();
@@ -45,14 +52,16 @@ class MasterEditorMenu extends MusicBeatState
 		for (i in 0...options.length)
 		{
 			var leText:Alphabet = new Alphabet(90, 320, options[i], true);
+			leText.scrollFactor.set();
 			leText.isMenuItem = true;
-			leText.targetY = i;
-			grpTexts.add(leText);
+			leText.targetY = i - curSelected;
 			leText.snapToPosition();
+			grpTexts.add(leText);
 		}
 		
 		#if MODS_ALLOWED
 		var textBG:FlxSprite = new FlxSprite(0, FlxG.height - 42).makeGraphic(FlxG.width, 42, 0xFF000000);
+		textBG.scrollFactor.set();
 		textBG.alpha = 0.6;
 		add(textBG);
 
@@ -71,13 +80,35 @@ class MasterEditorMenu extends MusicBeatState
 		changeDirectory();
 		#end
 		changeSelection();
-
+		
+		if (fadeIn) {
+			bg.alpha = .6;
+			
+			var fade:FlxSprite = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
+			fade.scale.set(FlxG.width, FlxG.height);
+			fade.scrollFactor.set();
+			fade.updateHitbox();
+			add(fade);
+			
+			FlxTween.tween(fade, {alpha: 0}, .4, {onComplete: (_) -> {
+				fade.destroy();
+			}});
+		} else {
+			FlxTween.tween(bg, {alpha: .6}, .4, {ease: FlxEase.quartInOut});
+		}
+		
 		FlxG.mouse.visible = false;
 		super.create();
 	}
 
 	override function update(elapsed:Float)
 	{
+		if (controls.BACK)
+		{
+			close();
+			return;
+		}
+		
 		if (controls.UI_UP_P)
 		{
 			changeSelection(-1);
@@ -96,11 +127,6 @@ class MasterEditorMenu extends MusicBeatState
 			changeDirectory(1);
 		}
 		#end
-
-		if (controls.BACK)
-		{
-			MusicBeatState.switchState(new MainMenuState());
-		}
 
 		if (controls.ACCEPT)
 		{

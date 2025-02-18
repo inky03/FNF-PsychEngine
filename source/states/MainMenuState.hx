@@ -37,6 +37,11 @@ class MainMenuState extends MusicBeatState
 	var camFollow:FlxObject;
 
 	static var showOutdatedWarning:Bool = true;
+	var openDebugMenu:Bool = false;
+	public function new(debug:Bool = false) {
+		super();
+		openDebugMenu = debug;
+	}
 	override function create()
 	{
 		super.create();
@@ -123,6 +128,17 @@ class MainMenuState extends MusicBeatState
 		#end
 
 		FlxG.camera.follow(camFollow, null, 0.2);
+		FlxG.camera.snapToTarget();
+		subStateClosed.add((_) -> {
+			selectedSomethin = false;
+			FlxG.mouse.visible = true;
+		});
+		
+		if (openDebugMenu) {
+			selectedSomethin = true;
+			FlxG.mouse.visible = false;
+			openSubState(new MasterEditorMenu(true));
+		}
 	}
 
 	function createMenuItem(name:String, x:Float, y:Float):FlxSprite
@@ -314,7 +330,7 @@ class MainMenuState extends MusicBeatState
 			{
 				selectedSomethin = true;
 				FlxG.mouse.visible = false;
-				MusicBeatState.switchState(new MasterEditorMenu());
+				openSubState(new MasterEditorMenu());
 			}
 			#end
 		}

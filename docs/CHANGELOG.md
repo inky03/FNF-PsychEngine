@@ -10,6 +10,7 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 	- Press the up and down arrow keys to scroll with the beat snap constraint
 	- Press the keypad digits 1-7 to place notes (also with the beat snap constraint)
 - Sustain notes are now textured instead of white lines
+	- This can be toggled off (classic sustains) in the View > Theme menu
 - Added a waveform view mode for all tracks
 - Editor noteskin changes live now
 
@@ -28,6 +29,7 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 
 - Fixed a crash caused by an active video when exiting the state
 - Updated note RGB shader (to prevent color blending artifacts)
+- Cleaner master editor menu
 
 ## API changes
 
