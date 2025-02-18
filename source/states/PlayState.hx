@@ -129,16 +129,13 @@ class PlayState extends MusicBeatState
 		uiPrefix = uiPostfix = "";
 		if (value != "normal" && value != '')
 		{
-			uiPrefix = value.split("-pixel")[0].trim() + 'UI';
+			uiPrefix = value.split("-pixel")[0].trim() + 'UI/';
 			if (value == "pixel" || value.endsWith("-pixel")) uiPostfix = "-pixel";
 		}
 		return stageUI = value;
 	}
 	static function formatUI(key:String):String {
-		var formatted:String = key;
-		if (uiPrefix.trim() != '')
-			formatted = '$uiPrefix/$formatted';
-		return '$formatted$uiPostfix';
+		return '$uiPrefix$key$uiPostfix';
 	}
 
 	@:noCompletion
