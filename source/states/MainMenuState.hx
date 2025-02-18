@@ -129,9 +129,11 @@ class MainMenuState extends MusicBeatState
 
 		FlxG.camera.follow(camFollow, null, 0.2);
 		FlxG.camera.snapToTarget();
-		subStateClosed.add((_) -> {
-			selectedSomethin = false;
-			FlxG.mouse.visible = true;
+		subStateClosed.add((sub:flixel.FlxSubState) -> {
+			if (Std.isOfType(sub, states.editors.MasterEditorMenu)) {
+				FlxG.mouse.visible = true;
+				selectedSomethin = false;
+			}
 		});
 		
 		if (openDebugMenu) {

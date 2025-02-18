@@ -84,19 +84,12 @@ class MasterEditorMenu extends MusicBeatSubstate
 		if (fadeIn) {
 			bg.alpha = .6;
 			
-			var fade:FlxSprite = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
-			fade.scale.set(FlxG.width, FlxG.height);
-			fade.scrollFactor.set();
-			fade.updateHitbox();
-			add(fade);
-			
-			FlxTween.tween(fade, {alpha: 0}, .4, {onComplete: (_) -> {
-				fade.destroy();
-			}});
+			openSubState(new CustomFadeTransition(0.5, true));
 		} else {
 			FlxTween.tween(bg, {alpha: .6}, .4, {ease: FlxEase.quartInOut});
 		}
 		
+		persistentUpdate = persistentDraw = true;
 		FlxG.mouse.visible = false;
 		super.create();
 	}
