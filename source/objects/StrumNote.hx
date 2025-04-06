@@ -69,12 +69,13 @@ class StrumNote extends FlxSprite
 		var lastAnim:String = null;
 		if(animation.curAnim != null) lastAnim = animation.curAnim.name;
 		
-		if(PlayState.isPixelStage)
-		{
-			loadGraphic(Paths.image(texture));
+		var skinTexture:String = texture; // i thought i was gonna do more with this, oh well
+		
+		if(PlayState.isPixelStage) {
+			loadGraphic(Paths.image(skinTexture));
 			width = width / 4;
 			height = height / 5;
-			loadGraphic(Paths.image(texture), true, Math.floor(width), Math.floor(height));
+			loadGraphic(Paths.image(skinTexture), true, Math.floor(width), Math.floor(height));
 
 			antialiasing = false;
 			setGraphicSize(Std.int(width * PlayState.daPixelZoom));
@@ -105,7 +106,7 @@ class StrumNote extends FlxSprite
 		}
 		else
 		{
-			frames = Paths.getSparrowAtlas(texture);
+			frames = Paths.getSparrowAtlas(skinTexture);
 			animation.addByPrefix('green', 'arrowUP');
 			animation.addByPrefix('blue', 'arrowDOWN');
 			animation.addByPrefix('purple', 'arrowLEFT');

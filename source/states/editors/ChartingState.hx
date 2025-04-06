@@ -1971,6 +1971,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		cachedSectionTimes = [];
 		cachedSectionCrochets = [];
 		cachedSectionBPMs = [];
+		Conductor.mapBPMChanges(PlayState.SONG);
 
 		if(PlayState.SONG == null)
 		{
