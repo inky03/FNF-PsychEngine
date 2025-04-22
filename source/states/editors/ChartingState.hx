@@ -898,7 +898,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			if(FlxG.sound.music.time >= opponentVocals.length)
 				opponentVocals.pause();
 
-			while(curSec > 0 && Conductor.songPosition < cachedSectionTimes[curSec])
+			while(curSec > 0 && Conductor.songPosition < cachedSectionTimes[curSec] - 1)
 				loadSection(curSec - 1);
 			while(curSec < cachedSectionTimes.length - 1 && Conductor.songPosition >= cachedSectionTimes[curSec + 1])
 				loadSection(curSec + 1);
@@ -4966,14 +4966,14 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 
 				if (shiftAdd > 0) {
 					loadSection(curSec - shiftAdd);
-					Conductor.songPosition = FlxG.sound.music.time = cachedSectionTimes[curSec] - Conductor.offset + 0.000001;
+					Conductor.songPosition = FlxG.sound.music.time = cachedSectionTimes[curSec] - Conductor.offset + 0.0001;
 				}
 			} else {
 				if (curSec + shiftAdd >= PlayState.SONG.notes.length) shiftAdd = PlayState.SONG.notes.length - curSec - 1;
 				
 				if (shiftAdd > 0) {
 					loadSection(curSec + shiftAdd);
-					Conductor.songPosition = FlxG.sound.music.time = cachedSectionTimes[curSec] - Conductor.offset + 0.000001;
+					Conductor.songPosition = FlxG.sound.music.time = cachedSectionTimes[curSec] - Conductor.offset + 0.0001;
 				}
 			}
 			
@@ -5008,7 +5008,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			} else {
 				nextTime += secStartTime;
 			}
-			Conductor.songPosition = FlxG.sound.music.time = Math.max(0, Math.min(nextTime + .0001, FlxG.sound.music.length)) - Conductor.offset + 0.000001;
+			Conductor.songPosition = FlxG.sound.music.time = Math.max(0, Math.min(nextTime + .0001, FlxG.sound.music.length)) - Conductor.offset + 0.0001;
 			if (curSec < cachedSectionTimes.length - 1 && Conductor.songPosition >= cachedSectionTimes[curSec + 1])
 				loadSection(curSec + 1);
 			

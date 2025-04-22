@@ -11,6 +11,11 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 	- Press the keypad digits 1-7 to place notes (also with the beat snap constraint)
 - Sustain notes are now textured instead of white lines
 	- This can be toggled off (classic sustains) in the View > Theme menu
+- Fixed some bugs
+	- Playback rate not behaving correctly on playtesting
+	- Chart Editor info desync when adding BPM changes
+	- Playtest info not updating correctly
+- You can hold A and D to skip sections faster
 - Added a waveform view mode for all tracks
 - Editor noteskin changes live now
 
