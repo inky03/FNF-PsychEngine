@@ -1799,7 +1799,7 @@ class PlayState extends MusicBeatState
 									daNote.tooLate = true;
 								}
 								
-								if (Conductor.songPosition - daNote.strumTime > noteKillOffset)
+								if (Conductor.songPosition - daNote.strumTime - daNote.sustainLength > noteKillOffset)
 								{
 									daNote.active = daNote.visible = false;
 									invalidateNote(daNote);

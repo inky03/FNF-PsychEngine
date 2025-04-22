@@ -86,7 +86,8 @@ class EditorPlayState extends MusicBeatSubstate
 	{
 		Conductor.safeZoneOffset = (ClientPrefs.data.safeFrames / 60) * 1000 * playbackRate;
 		Conductor.songPosition -= startOffset;
-		startOffset = Conductor.crochet;
+		
+		startOffset = Conductor.crochet * playbackRate;
 		timerToStart = startOffset;
 
 		cachePopUpScore();
@@ -127,7 +128,7 @@ class EditorPlayState extends MusicBeatSubstate
 		scoreTxt.visible = !ClientPrefs.data.hideHud;
 		add(scoreTxt);
 		
-		dataTxt = new FlxText(10, 580, FlxG.width - 20, "Section: 0", 20);
+		dataTxt = new FlxText(10, 560, FlxG.width - 20, "Section: 0", 20);
 		dataTxt.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		dataTxt.scrollFactor.set();
 		dataTxt.borderSize = 1.25;
@@ -169,7 +170,7 @@ class EditorPlayState extends MusicBeatSubstate
 		
 		if (startingSong)
 		{
-			timerToStart -= elapsed * 1000;
+			timerToStart -= elapsed * 1000 * playbackRate;
 			Conductor.songPosition = startPos - timerToStart;
 			if(timerToStart < 0) startSong();
 		}
@@ -223,7 +224,7 @@ class EditorPlayState extends MusicBeatSubstate
 				if(daNote.isSustainNote && strum.sustainReduce) daNote.clipToStrumNote(strum);
 
 				// Kill extremely late notes and cause misses
-				if (Conductor.songPosition - daNote.strumTime > noteKillOffset)
+				if (Conductor.songPosition - daNote.strumTime - daNote.sustainLength > noteKillOffset)
 				{
 					if (daNote.mustPress && !daNote.ignoreNote && (daNote.tooLate || !daNote.wasGoodHit))
 						noteMiss(daNote);
@@ -287,6 +288,7 @@ class EditorPlayState extends MusicBeatSubstate
 		inst.looped = false;
 		inst.onComplete = finishSong;
 		inst.volume = vocals.volume = opponentVocals.volume = 1;
+		inst.pitch = playbackRate;
 		FlxG.sound.list.add(inst);
 
 		FlxG.sound.music.pause();
@@ -536,8 +538,10 @@ class EditorPlayState extends MusicBeatSubstate
 		if(daRating.noteSplash && !note.noteSplashData.disabled)
 			spawnNoteSplashOnNote(note);
 
-		if(!note.ratingDisabled)
+		if(!note.ratingDisabled) {
 			songHits++;
+			updateScore();
+		}
 
 		var uiFolder:String = "";
 		var antialias:Bool = ClientPrefs.data.antialiasing;
