@@ -9,38 +9,38 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 
 		//I'd suggest using "Downscroll" as an example for making your own option since it is the simplest here
 		var option:Option = new Option('Downscroll', //Name
-			'If checked, notes go Down instead of Up, simple enough.', //Description
+			'Changes the notes to be located at the bottom instead of the top of the screen.', //Description
 			'downScroll', //Save data variable name
 			BOOL); //Variable type
 		addOption(option);
 
 		var option:Option = new Option('Middlescroll',
-			'If checked, your notes get centered.',
+			'Changes the player notes to be located in the middle of the screen.',
 			'middleScroll',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Opponent Notes',
-			'If unchecked, opponent notes get hidden.',
+			'Should the opponent\'s notes be shown?',
 			'opponentStrums',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Ghost Tapping',
-			"If checked, you won't get misses from pressing keys\nwhile there are no notes able to be hit.",
+			"If checked, you won't get misses from pressing keys while there are no notes able to be hit.",
 			'ghostTapping',
 			BOOL);
 		addOption(option);
 		
 		var option:Option = new Option('Auto Pause',
-			"If checked, the game automatically pauses if the screen isn't on focus.",
+			"If checked, the game will automatically pause when focus is lost.",
 			'autoPause',
 			BOOL);
 		addOption(option);
 		option.onChange = onChangeAutoPause;
 
 		var option:Option = new Option('Disable Reset Button',
-			"If checked, pressing Reset won't do anything.",
+			"If checked, pressing Reset won't kill the player.",
 			'noReset',
 			BOOL);
 		addOption(option);
@@ -52,7 +52,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Hitsound Volume',
-			'Funny notes does \"Tick!\" when you hit them.',
+			'Changes the volume of a tick sound that will play when hitting notes.',
 			'hitsoundVolume',
 			PERCENT);
 		addOption(option);

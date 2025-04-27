@@ -68,7 +68,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		}
 
 		var option:Option = new Option('Note Splash Opacity',
-			'How much transparent should the Note Splashes be.',
+			'Changes the transparency of the Note Splashes.',
 			'splashAlpha',
 			PERCENT);
 		option.scrollSpeed = 1.6;
@@ -99,19 +99,19 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Camera Zooms',
-			"If unchecked, the camera won't zoom in on a beat hit.",
+			"If checked, the camera will pulse on beat hits.",
 			'camZooms',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Score Text Grow on Hit',
-			"If unchecked, disables the Score text growing\neverytime you hit a note.",
+			"If checked, the score display will grow every time you hit a note.",
 			'scoreZoom',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Health Bar Opacity',
-			'How much transparent should the health bar and icons be.',
+			'Changes the transparency of the health bar and icons.',
 			'healthBarAlpha',
 			PERCENT);
 		option.scrollSpeed = 1.6;
@@ -123,7 +123,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		
 		#if !mobile
 		var option:Option = new Option('FPS Counter',
-			'If unchecked, hides FPS Counter.',
+			'If checked, an FPS counter shows at the top left corner of the screen.',
 			'showFPS',
 			BOOL);
 		addOption(option);
@@ -140,7 +140,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		
 		#if CHECK_FOR_UPDATES
 		var option:Option = new Option('Check for Updates',
-			'On Release builds, turn this on to check for updates when you start the game.',
+			'If checked, you will be notified of future updates for this engine.',
 			'checkForUpdates',
 			BOOL);
 		addOption(option);
@@ -148,14 +148,14 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 
 		#if DISCORD_ALLOWED
 		var option:Option = new Option('Discord Rich Presence',
-			"Uncheck this to prevent accidental leaks, it will hide the Application from your \"Playing\" box on Discord",
+			"If checked, the game will show on your Discord Activity Status.",
 			'discordRPC',
 			BOOL);
 		addOption(option);
 		#end
 
 		var option:Option = new Option('Combo Stacking',
-			"If unchecked, Ratings and Combo won't stack, saving on System Memory and making them easier to read",
+			"If unchecked, Ratings and the Combo Counter won't stack, making them easier to read.",
 			'comboStacking',
 			BOOL);
 		addOption(option);
