@@ -7,11 +7,14 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 ### Chart Editor
 
 - Re-implemented vortex editor functionality that was previously available in 0.7.3
+	- The Vortex Editor option has been moved back to the Charting tab
 	- Press the up and down arrow keys to scroll with the beat snap constraint
 	- Press the keypad digits 1-7 to place notes (also with the beat snap constraint)
-- Sustain notes are now textured instead of white lines
+- Sustain notes can now be textured instead of using white lines
 	- This can be toggled off (classic sustains) in the View > Theme menu
+- You can now view the chart editor in Downscroll in the View menu
 - Fixed some bugs
+	- Inconsistencies / inaccuracies related to note and hold note timing (related to BPM changes)
 	- Playback rate not behaving correctly on playtesting
 	- Chart Editor info desync when adding BPM changes
 	- Playtest info not updating correctly
@@ -24,6 +27,7 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 - Fixed "Move mod to top" button in the Mods menu
 - Left / right scrolling on numerical options is more consistent
 - Some menus have been adjusted to look cleaner / less cluttered
+- Some Options menus descriptions have been updated to fix mistakes and (hopefully) describe better
 
 ### Gameplay
 
@@ -32,7 +36,7 @@ The current list of differences from this fork to Psych Engine *as of 1.0.3* are
 
 ### Other
 
-- Fixed a crash caused by an active video when exiting the state
+- Fixed a crash caused by an active video when exiting the state (merged in 1.0.4)
 - Updated note RGB shader (to prevent color blending artifacts)
 - Cleaner master editor menu
 
