@@ -22,7 +22,7 @@ class Conductor
 	//public static var safeFrames:Int = 10;
 	public static var safeZoneOffset:Float = 0; // is calculated in create(), is safeFrames in milliseconds
 
-	public static var bpmChangeMap:Array<BPMChangeEvent> = [];
+	public static var bpmChangeMap:Array<BPMChangeEvent> = defaultBPMChangeMap(bpm);
 
 	public static function judgeNote(arr:Array<Rating>, diff:Float=0):Rating // die
 	{
@@ -34,70 +34,69 @@ class Conductor
 		return data[data.length - 1];
 	}
 
-	public static function getCrotchetAtTime(time:Float){
-		var lastChange = getBPMFromSeconds(time);
-		return lastChange.stepCrochet*4;
+	public static function getStepCrotchetAtTime(time:Float, ?bpmChangeMap:Array<BPMChangeEvent>){
+		var lastChange = getBPMFromSeconds(time, bpmChangeMap);
+		return lastChange.stepCrochet;
+	}
+	
+	public static function getCrotchetAtTime(time:Float, ?bpmChangeMap:Array<BPMChangeEvent>){
+		return getStepCrotchetAtTime(time, bpmChangeMap) * 4;
 	}
 
-	public static function getBPMFromSeconds(time:Float){
-		var lastChange:BPMChangeEvent = {
-			stepTime: 0,
-			songTime: 0,
-			bpm: bpm,
-			stepCrochet: stepCrochet
-		}
-		for (i in 0...Conductor.bpmChangeMap.length)
-		{
-			if (time >= Conductor.bpmChangeMap[i].songTime)
-				lastChange = Conductor.bpmChangeMap[i];
-		}
-
-		return lastChange;
-	}
-
-	public static function getBPMFromStep(step:Float){
-		var lastChange:BPMChangeEvent = {
-			stepTime: 0,
-			songTime: 0,
-			bpm: bpm,
-			stepCrochet: stepCrochet
-		}
-		for (i in 0...Conductor.bpmChangeMap.length)
-		{
-			if (Conductor.bpmChangeMap[i].stepTime<=step)
-				lastChange = Conductor.bpmChangeMap[i];
+	public static function getBPMFromSeconds(time:Float, ?bpmChangeMap:Array<BPMChangeEvent>){
+		bpmChangeMap ??= Conductor.bpmChangeMap;
+		
+		var lastChange:BPMChangeEvent = null;
+		for (change in bpmChangeMap) {
+			if (time >= change.songTime || lastChange == null)
+				lastChange = change;
 		}
 
 		return lastChange;
 	}
 
-	public static function beatToSeconds(beat:Float): Float{
-		var step = beat * 4;
-		var lastChange = getBPMFromStep(step);
-		return lastChange.songTime + ((step - lastChange.stepTime) / (lastChange.bpm / 60)/4) * 1000; // TODO: make less shit and take BPM into account PROPERLY
+	public static function getBPMFromStep(step:Float, ?bpmChangeMap:Array<BPMChangeEvent>){
+		bpmChangeMap ??= Conductor.bpmChangeMap;
+		
+		var lastChange:BPMChangeEvent = null;
+		for (change in bpmChangeMap) {
+			if (change.stepTime <= step || lastChange == null)
+				lastChange = change;
+		}
+
+		return lastChange;
+	}
+	
+	public static function stepToSeconds(step:Float, ?bpmChangeMap:Array<BPMChangeEvent>):Float {
+		var lastChange = getBPMFromStep(step, bpmChangeMap);
+		return lastChange.songTime + ((step - lastChange.stepTime) / (lastChange.bpm / 60) / 4) * 1000; // TODO: make less shit and take BPM into account PROPERLY
 	}
 
-	public static function getStep(time:Float){
-		var lastChange = getBPMFromSeconds(time);
+	public static function beatToSeconds(beat:Float, ?bpmChangeMap:Array<BPMChangeEvent>):Float {
+		return stepToSeconds(beat * 4, bpmChangeMap);
+	}
+
+	public static function getStep(time:Float, ?bpmChangeMap:Array<BPMChangeEvent>){
+		var lastChange = getBPMFromSeconds(time, bpmChangeMap);
 		return lastChange.stepTime + (time - lastChange.songTime) / lastChange.stepCrochet;
 	}
 
-	public static function getStepRounded(time:Float){
-		var lastChange = getBPMFromSeconds(time);
+	public static function getStepRounded(time:Float, ?bpmChangeMap:Array<BPMChangeEvent>){
+		var lastChange = getBPMFromSeconds(time, bpmChangeMap);
 		return lastChange.stepTime + Math.floor(time - lastChange.songTime) / lastChange.stepCrochet;
 	}
 
-	public static function getBeat(time:Float){
-		return getStep(time)/4;
+	public static function getBeat(time:Float, ?bpmChangeMap:Array<BPMChangeEvent>){
+		return getStep(time, bpmChangeMap)/4;
 	}
 
-	public static function getBeatRounded(time:Float):Int{
-		return Math.floor(getStepRounded(time)/4);
+	public static function getBeatRounded(time:Float, ?bpmChangeMap:Array<BPMChangeEvent>):Int{
+		return Math.floor(getStepRounded(time, bpmChangeMap)/4);
 	}
 
 	public static function mapBPMChanges(song:SwagSong)
 	{
-		bpmChangeMap = [];
+		bpmChangeMap = defaultBPMChangeMap(song.bpm);
 
 		var curBPM:Float = song.bpm;
 		var totalSteps:Int = 0;
@@ -121,6 +120,14 @@ class Conductor
 			totalPos += ((60 / curBPM) * 1000 / 4) * deltaSteps;
 		}
 		trace('Added ${bpmChangeMap.length} BPM changes');
+	}
+	public static function defaultBPMChangeMap(bpm:Float = 100):Array<BPMChangeEvent> {
+		return [{
+			bpm: bpm,
+			stepTime: 0,
+			songTime: 0,
+			stepCrochet: calculateCrochet(bpm) * .25
+		}];
 	}
 
 	static function getSectionBeats(song:SwagSong, section:Int)
