@@ -160,6 +160,7 @@ class EditorSustain extends Note {
 		basicSustainTile = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
 		sustainTile = new FlxSprite();
 		sustainTile.scrollFactor.x = 0;
+		clipRect = new flixel.math.FlxRect(0, 0);
 		sustainTile.clipRect = new flixel.math.FlxRect();
 		
 		super(0, data, null, true, true);
@@ -183,7 +184,7 @@ class EditorSustain extends Note {
 			basicSustainTile.setPosition(x + (width - basicSustainTile.width) * .5, y);
 			basicSustainTile.draw();
 		} else {
-			var tileY:Float = (downScroll ? 0 : sustainHeight);
+			var tileY:Float = (downScroll ? 0 : sustainHeight - height);
 			flipY = sustainTile.flipY = downScroll;
 			
 			if (sustainTile.shader != shader) sustainTile.shader = shader;
@@ -196,19 +197,26 @@ class EditorSustain extends Note {
 			
 			sustainTile.clipRect.set(0, 1, sustainTile.frameWidth, sustainTile.frameHeight - 2);
 			sustainTile.clipRect = sustainTile.clipRect;
+			clipRect.set(0, 0, frameWidth, frameHeight);
+			clipRect = clipRect;
 			var stop:Bool = false;
 			
 			if (downScroll) {
+				function clipTile(tile:FlxSprite, y:Float) {
+					if (tileY + tile.height >= sustainHeight) {
+						var clip:Float = (tileY + tile.height - sustainHeight) / tile.scale.y + 1;
+						tile.clipRect.set(0, clip, tile.frameWidth, tile.frameHeight - clip);
+						tile.clipRect = tile.clipRect;
+						stop = true;
+					}
+				}
+				
+				clipTile(this, 0);
 				super.draw();
 				tileY += height - scale.y;
 				
 				while (tileY < sustainHeight) {
-					if (tileY + sustainTile.height >= sustainHeight) {
-						var clip:Float = (tileY + sustainTile.height - sustainHeight) / sustainTile.scale.y + 1;
-						sustainTile.clipRect.set(0, clip, sustainTile.frameWidth, sustainTile.frameHeight - clip);
-						sustainTile.clipRect = sustainTile.clipRect;
-						stop = true;
-					}
+					clipTile(sustainTile, tileY);
 					
 					sustainTile.setPosition(this.x, y + tileY);
 					sustainTile.draw();
@@ -218,21 +226,24 @@ class EditorSustain extends Note {
 					tileY += sustainTile.clipRect.height * sustainTile.scale.y;
 				}
 			} else {
-				tileY -= height;
+				function clipTile(tile:FlxSprite, y:Float) {
+					if (tileY <= 0) {
+						var clip:Float = -tileY / tile.scale.y + 1;
+						tile.clipRect.set(0, clip, tile.frameWidth, tile.frameHeight - clip);
+						tile.clipRect = tile.clipRect;
+						stop = true;
+					}
+				}
+				
 				y += tileY;
+				clipTile(this, sustainHeight);
 				super.draw();
 				y -= tileY;
 				tileY -= scale.y;
 				
 				while (tileY > 0) {
 					tileY -= sustainTile.clipRect.height * sustainTile.scale.y;
-					
-					if (tileY <= 0) {
-						var clip:Float = -tileY / sustainTile.scale.y + 1;
-						sustainTile.clipRect.set(0, clip, sustainTile.frameWidth, sustainTile.frameHeight - clip);
-						sustainTile.clipRect = sustainTile.clipRect;
-						stop = true;
-					}
+					clipTile(sustainTile, tileY);
 					
 					sustainTile.setPosition(this.x, y + tileY);
 					sustainTile.draw();

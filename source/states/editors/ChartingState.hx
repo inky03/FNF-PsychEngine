@@ -1337,7 +1337,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			{
 				if(note == null || note.isEvent) continue;
 				
-				var offsetTime:Float = note.strumTime + .001;
+				var offsetTime:Float = note.strumTime + 1;
 				var hitAlpha:Float = (FlxG.sound.music.playing ? .4 : .6);
 				note.alpha = (offsetTime > Conductor.songPosition) ? 1 : hitAlpha;
 				if (Conductor.songPosition > offsetTime && lastTime <= offsetTime)
@@ -4854,6 +4854,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 				selectedNotes.push(note);
 
 			softReloadNotes(true);
+			forceDataUpdate = true;
 			vortexMoved = false;
 		}
 		
