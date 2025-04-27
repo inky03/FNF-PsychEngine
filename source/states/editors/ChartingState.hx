@@ -1104,13 +1104,15 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			var diffX:Float = FlxG.mouse.x - gridBg.x;
 			var diffY:Float = FlxG.mouse.y - gridBg.y;
 			if(!FlxG.keys.pressed.SHIFT)
-				diffY -= diffY % (GRID_SIZE / (curQuant/16));
-
-			if(nextGridBg.visible) diffY = Math.min(diffY, gridBg.height + nextGridBg.height);
-			else diffY = Math.min(diffY, gridBg.height);
-
-			if(prevGridBg.visible) diffY = Math.max(diffY, -prevGridBg.height);
+				diffY -= diffY % (GRID_SIZE / (curQuant / 16));
+			
+			var topBg:ChartingGridSprite = (downScroll ? nextGridBg : prevGridBg);
+			var bottomBg:ChartingGridSprite = (downScroll ? prevGridBg : nextGridBg);
+			
+			if (topBg.visible) diffY = Math.max(diffY, -topBg.height);
 			else diffY = Math.max(diffY, 0);
+			if (bottomBg.visible) diffY = Math.min(diffY, gridBg.height + bottomBg.height - GRID_SIZE);
+			else diffY = Math.min(diffY, gridBg.height - GRID_SIZE);
 			
 			var noteDiffY:Float = diffY;
 			if (downScroll)
