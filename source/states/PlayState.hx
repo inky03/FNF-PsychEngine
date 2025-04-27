@@ -3320,22 +3320,27 @@ class PlayState extends MusicBeatState
 		try
 		{
 			newScript = new HScript(null, file, null, true);
-			newScript.showFatal = true;
+			newScript.unsafe = true;
 			newScript.execute();
 			
-			if (newScript.exists('onCreate')) newScript.call('onCreate');
+			if (newScript.exists('onCreate'))
+				newScript.call('onCreate');
 			
 			trace('initialized hscript interp successfully: $file');
 			hscriptArray.push(newScript);
-			newScript.showFatal = false;
+			newScript.unsafe = false;
 		}
 		catch(e:Dynamic) {
-			var pos:HScriptInfos = @:privateAccess { cast newScript.interp.posInfos(); }
-			var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
-			Iris.fatal(errorString, pos);
-			
 			var newScript:HScript = cast (Iris.instances.get(file), HScript);
-			newScript.destroy();
+			if (Std.isOfType(e, IrisError)) {
+				var pos:HScriptInfos = cast {showLine: true, isLua: false, fileName: e.origin, lineNumber: e.line};
+				Iris.fatal(Printer.errorToString(e, false), pos);
+			} else {
+				var pos:HScriptInfos = @:privateAccess { cast newScript.interp.posInfos(); }
+				Iris.fatal(Std.string(e), pos);
+			}
+			
+			newScript?.destroy();
 		}
 	}
 	#end

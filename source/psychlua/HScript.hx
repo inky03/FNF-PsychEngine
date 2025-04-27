@@ -105,7 +105,7 @@ class HScript extends Iris
 	#end
 
 	public var origin:String;
-	public var showFatal:Bool = false;
+	public var unsafe:Bool = false;
 	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false)
 	{
 		if (file == null)
@@ -135,7 +135,9 @@ class HScript extends Iris
 		if (scriptName == null && parent != null)
 			scriptName = parent.scriptName;
 		#end
+		
 		super(scriptThing, new IrisConfig(scriptName, false, false));
+		Iris.instances.set(scriptName, this); // idgaf
 		var customInterp:CustomInterp = new CustomInterp();
 		customInterp.parentInstance = FlxG.state;
 		customInterp.showPosOnLog = false;
@@ -465,8 +467,14 @@ class HScript extends Iris
 		try {
 			var func:Dynamic = interp.variables.get(funcToRun); // function signature
 			final ret = Reflect.callMethod(null, func, args ?? []);
+			
 			return {funName: funcToRun, signature: func, returnValue: ret};
 		} catch(e:Dynamic) {
+			if (unsafe) {
+				throw e;
+				return null;
+			}
+			
 			var pos:HScriptInfos = cast this.interp.posInfos();
 			pos.funcName = funcToRun;
 			#if LUA_ALLOWED
@@ -478,7 +486,7 @@ class HScript extends Iris
 			#end
 			
 			var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
-			(showFatal ? Iris.fatal : Iris.error) (errorString, pos);
+			(unsafe ? Iris.fatal : Iris.error) (errorString, pos);
 		}
 		return null;
 	}
