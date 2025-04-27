@@ -1375,7 +1375,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 						while(cachedSectionTimes.length > noteSec + 1 && cachedSectionTimes[noteSec + 1] <= note.strumTime)
 							noteSec++;
 						
-						note.setSustainLength(Conductor.stepToSeconds(Math.round(Conductor.getStep(note.strumTime + note.sustainLength) + addSus)) - note.strumTime, curZoom);
+						note.setSustainLength(Conductor.stepToSeconds(Math.round(Conductor.getStep(note.strumTime + note.sustainLength) * 2 + addSus) / 2) - note.strumTime, curZoom);
 						if (selectedNotes.length == 1)
 							susLengthStepper.value = note.sustainLength;
 					}
