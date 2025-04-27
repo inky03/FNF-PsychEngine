@@ -24,7 +24,7 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 
 ### Menus
 
-- Fixed "Move mod to top" button in the Mods menu
+- ~~Fixed "Move mod to top" button in the Mods menu~~ *merged in 1.0.4*
 - Left / right scrolling on numerical options is more consistent
 - Some menus have been adjusted to look cleaner / less cluttered
 - Some Options menus descriptions have been updated to fix mistakes and (hopefully) describe better
@@ -32,11 +32,11 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 ### Gameplay
 
 - Improvements to note scroll direction
-- "Better" note loop so multiple notes (doubles, triples, quads) are hit at once instead of across different frames
+- "Better" note loop so multiple notes (doubles, triples, quads) are hit the frame they're supposed to
 
 ### Other
 
-- Fixed a crash caused by an active video when exiting the state (merged in 1.0.4)
+- ~~Fixed a crash caused by an active video when exiting the state~~ *merged in 1.0.4*
 - Updated note RGB shader (to prevent color blending artifacts)
 - Cleaner master editor menu
 
@@ -44,7 +44,7 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 
 ### LUA
 
-- Objects can now be returned into tables from `runHaxeCode` and `runHaxeFunction`
+- ~~Objects can now be returned into tables from `runHaxeCode` and `runHaxeFunction`~~ *merged in 1.0.4*
 - `antialiasing` variable is now available as a default Lua variable
 
 ### HScript
