@@ -1,12 +1,12 @@
 # List of differences
 
-The current list of differences from this fork to Psych Engine *as of 1.0.3* are as follows:
+The current list of differences from this fork to Psych Engine (1.0.4) are as follows:
 
 ## Engine changes
 
 ### Chart Editor
 
-- Re-implemented vortex editor functionality that was previously available in 0.7.3
+- Re-implemented vortex editor functionality that was in versions previous to 1.0
 	- The Vortex Editor option has been moved back to the Charting tab
 	- Press the up and down arrow keys to scroll with the beat snap constraint
 	- Press the keypad digits 1-7 to place notes (also with the beat snap constraint)
