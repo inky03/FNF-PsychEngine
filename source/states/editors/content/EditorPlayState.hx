@@ -60,19 +60,21 @@ class EditorPlayState extends MusicBeatSubstate
 	var startOffset:Float = 0;
 	var startPos:Float = 0;
 	var timerToStart:Float = 0;
+	var downScroll:Bool = false;
 
 	var scoreTxt:FlxText;
 	var dataTxt:FlxText;
 	var guitarHeroSustains:Bool = false;
 
 	var _noteList:Array<Note>;
-	public function new(noteList:Array<Note>, allVocals:Array<FlxSound>)
+	public function new(noteList:Array<Note>, allVocals:Array<FlxSound>, downScroll:Bool = false)
 	{
 		super();
 		
 		/* setting up some important data */
 		this.vocals = allVocals[0];
 		this.opponentVocals = allVocals[1];
+		this.downScroll = downScroll;
 		this._noteList = noteList;
 		this.startPos = Conductor.songPosition;
 		Conductor.songPosition = startPos;
@@ -433,7 +435,7 @@ class EditorPlayState extends MusicBeatSubstate
 	private function generateStaticArrows(player:Int):Void
 	{
 		var strumLineX:Float = ClientPrefs.data.middleScroll ? PlayState.STRUM_X_MIDDLESCROLL : PlayState.STRUM_X;
-		var strumLineY:Float = ClientPrefs.data.downScroll ? (FlxG.height - 150) : 50;
+		var strumLineY:Float = downScroll ? (FlxG.height - 150) : 50;
 		for (i in 0...4)
 		{
 			// FlxG.log.add(i);
@@ -445,7 +447,7 @@ class EditorPlayState extends MusicBeatSubstate
 			}
 
 			var babyArrow:StrumNote = new StrumNote(strumLineX, strumLineY, i, player);
-			babyArrow.downScroll = ClientPrefs.data.downScroll;
+			babyArrow.downScroll = downScroll;
 			babyArrow.alpha = targetAlpha;
 
 			if (player == 1)

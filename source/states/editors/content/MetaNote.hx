@@ -9,6 +9,7 @@ class MetaNote extends Note
 	public static var noteTypeTexts:Map<Int, FlxText> = [];
 	public var isEvent:Bool = false;
 	public var songData:Array<Dynamic>;
+	public var downScroll:Bool = false;
 	public var sustainSprite:EditorSustain;
 	public var chartY:Float = 0;
 	public var chartNoteData:Int = 0;
@@ -125,8 +126,9 @@ class MetaNote extends Note
 			sustainSprite.setColorTransform(colorTransform.redMultiplier, sustainSprite.colorTransform.blueMultiplier, colorTransform.redMultiplier);
 			sustainSprite.scale.copyFrom(this.scale);
 			sustainSprite.updateHitbox();
-			sustainSprite.x = this.x + (this.width - sustainSprite.width)/2;
-			sustainSprite.y = this.y + this.height/2;
+			sustainSprite.y = this.y + this.height / 2 - (downScroll ? sustainSprite.sustainHeight : 0);
+			sustainSprite.x = this.x + (this.width - sustainSprite.width) / 2;
+			sustainSprite.downScroll = downScroll;
 			sustainSprite.alpha = this.alpha;
 			sustainSprite.draw();
 		}
@@ -157,6 +159,7 @@ class MetaNote extends Note
 class EditorSustain extends Note {
 	var sustainTile:FlxSprite;
 	var basicSustainTile:FlxSprite;
+	public var downScroll:Bool = false;
 	public var sustainHeight:Float = 0;
 	public var useBlandSustains:Bool = false;
 	
@@ -187,7 +190,8 @@ class EditorSustain extends Note {
 			basicSustainTile.setPosition(x + (width - basicSustainTile.width) * .5, y);
 			basicSustainTile.draw();
 		} else {
-			var tileY:Float = sustainHeight - height;
+			var tileY:Float = (downScroll ? 0 : sustainHeight - height);
+			flipY = sustainTile.flipY = downScroll;
 			
 			if (sustainTile.shader != shader) sustainTile.shader = shader;
 			sustainTile.setColorTransform(colorTransform.redMultiplier, colorTransform.blueMultiplier, colorTransform.redMultiplier);
@@ -195,23 +199,51 @@ class EditorSustain extends Note {
 			sustainTile.updateHitbox();
 			sustainTile.alpha = alpha;
 			
-			y += tileY;
-			super.draw();
-			y -= tileY;
-			
 			if (scale.y <= 0) return;
 			
 			sustainTile.clipRect.set(0, 1, sustainTile.frameWidth, sustainTile.frameHeight - 2);
 			sustainTile.clipRect = sustainTile.clipRect;
-			while (tileY > 0) {
-				tileY -= sustainTile.clipRect.height * sustainTile.scale.y;
-				if (tileY < 0) {
-					var clip:Float = -tileY / sustainTile.scale.y + 1;
-					sustainTile.clipRect.set(0, clip, sustainTile.frameWidth, sustainTile.frameHeight - clip);
-					sustainTile.clipRect = sustainTile.clipRect;
+			var stop:Bool = false;
+			
+			if (downScroll) {
+				super.draw();
+				tileY += height - 1;
+				
+				while (tileY < sustainHeight) {
+					if (tileY + sustainTile.height >= sustainHeight) {
+						var clip:Float = (tileY + sustainTile.height - sustainHeight) / sustainTile.scale.y + 1;
+						sustainTile.clipRect.set(0, clip, sustainTile.frameWidth, sustainTile.frameHeight - clip);
+						sustainTile.clipRect = sustainTile.clipRect;
+						stop = true;
+					}
+					
+					sustainTile.setPosition(this.x, y + tileY);
+					sustainTile.draw();
+					
+					if (stop) break;
+					
+					tileY += sustainTile.clipRect.height * sustainTile.scale.y;
 				}
-				sustainTile.setPosition(this.x, y + tileY);
-				sustainTile.draw();
+			} else {
+				y += tileY;
+				super.draw();
+				y -= tileY;
+				
+				while (tileY > 0) {
+					tileY -= sustainTile.clipRect.height * sustainTile.scale.y;
+					
+					if (tileY <= 0) {
+						var clip:Float = -tileY / sustainTile.scale.y + 1;
+						sustainTile.clipRect.set(0, clip, sustainTile.frameWidth, sustainTile.frameHeight - clip);
+						sustainTile.clipRect = sustainTile.clipRect;
+						stop = true;
+					}
+					
+					sustainTile.setPosition(this.x, y + tileY);
+					sustainTile.draw();
+					
+					if (stop) break;
+				}
 			}
 		}
 	}
