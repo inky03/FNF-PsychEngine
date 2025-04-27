@@ -224,6 +224,13 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 	var waveformEnabled:Bool = false;
 	var waveformTarget:WaveformTarget = INST;
 
+	//var lilStage:FlxSprite;
+	var lilbf:Character;
+	var lildad:Character;
+	var lilgf:Character;
+	var gfSpeed:Int = 1;
+	var singAnimations:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
+
 	override function create()
 	{
 		if(Difficulty.list.length < 1) Difficulty.resetList();
@@ -268,6 +275,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		changeTheme(chartEditorSave.data.theme != null ? chartEditorSave.data.theme : DEFAULT, false);
 		refreshSustains(chartEditorSave.data.texturedSustains ?? true);
 
+		createLilChars();
 		createGrids();
 
 		waveformSprite = new FlxSprite(gridBg.x + (SHOW_EVENT_COLUMN ? GRID_SIZE : 0), 0).makeGraphic(1, 1, 0x00FFFFFF);
@@ -546,6 +554,49 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDown);
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_UP, keyUp);
+	}
+
+	function createLilChars() {
+		creategf('gf-nospeak');
+		createbf('bf');
+		createdad('bf-pixel-opponent');
+	}
+
+	function creategf(?name:String = 'gf-nospeak') {
+		var lilbox = new FlxSprite(157, 590).makeGraphic(100, 55, 0xFF2f4f4f);
+		lilbox.scrollFactor.set();
+		add(lilbox);
+
+		lilgf = new Character(50, 335, name, false); //50, 335
+		lilgf.scrollFactor.set();
+		lilgf.setGraphicSize(Std.int(lilgf.width * 0.4));
+        add(lilgf);
+	}
+
+	function createbf(?name:String = 'bf') {
+		lilbf = new Character(100, 405, name, false); //"bf" 100, 405
+		lilbf.scrollFactor.set();
+		lilbf.setGraphicSize(Std.int(lilbf.width * 0.4));
+        add(lilbf);
+
+		lilbf.flipX = !lilbf.flipX;
+
+		for (key in lilbf.animOffsets.keys()) {
+            lilbf.animOffsets[key][0] *= lilbf.scale.x;
+            lilbf.animOffsets[key][1] *= lilbf.scale.y;
+        }
+	}
+
+	function createdad(?name:String = 'bf-pixel-opponent') {
+		lildad = new Character(50, 556, name, false); //"bf-pixel-opponent"
+		lildad.scrollFactor.set();
+		lildad.setGraphicSize(Std.int(lilbf.width * 0.5));
+        add(lildad);
+
+		for (keyt in lildad.animOffsets.keys()) {
+            lildad.animOffsets[keyt][0] *= lildad.scale.x;
+            lildad.animOffsets[keyt][1] *= lildad.scale.y;
+        }
 	}
 	
 	var texturedSustains:Bool;
@@ -1346,8 +1397,10 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			forceDataUpdate = false;
 			
 			// moved from beatHit()
-			if(metronomeStepper.value > 0 && lastBeatHit != curBeat)
-				FlxG.sound.play(Paths.sound('Metronome_Tick'), metronomeStepper.value);
+			if(lastBeatHit != curBeat) {
+				if(metronomeStepper.value > 0 && lastBeatHit != curBeat) FlxG.sound.play(Paths.sound('Metronome_Tick'), metronomeStepper.value);
+				callBeatHit(curBeat);
+			}
 
 			lastBeatHit = curBeat;
 		}
@@ -1397,6 +1450,10 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		var canPlayHitSound:Bool = (FlxG.sound.music != null && FlxG.sound.music.playing);
 		var hitSoundPlayer:Bool = (hitsoundPlayerStepper.value > 0);
 		var hitSoundOpp:Bool = (hitsoundOpponentStepper.value > 0);
+
+		var lilchar:Character = !note.mustPress ? lildad : lilbf;
+		lilchar.playAnim(singAnimations[note.noteData % 4], true);
+		lilchar.holdTimer = -Math.max(Conductor.stepCrochet * 1.25, note.sustainLength) / 1000 / playbackRate;
 		
 		if (canPlayHitSound) {
 			if(hitSoundPlayer && note.mustPress) {
@@ -1414,6 +1471,18 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 				strumNote.playAnim('confirm', true);
 				strumNote.resetAnim = Math.max(Conductor.stepCrochet * 1.25, note.sustainLength) / 1000 / playbackRate;
 			}
+		}
+	}
+
+	function callBeatHit(curBeat) {
+		if (curBeat % lilbf.danceEveryNumBeats == 0 && !lilbf.getAnimationName().startsWith('sing')) {
+			lilbf.dance();
+		}
+		if (curBeat % lildad.danceEveryNumBeats == 0 && !lildad.getAnimationName().startsWith('sing')) {
+			lildad.dance();
+		}
+		if(curBeat % Math.round(gfSpeed * lilgf.danceEveryNumBeats) == 0 && !lilgf.getAnimationName().startsWith('sing')) {
+			lilgf.dance();
 		}
 	}
 
