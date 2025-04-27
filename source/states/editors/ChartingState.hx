@@ -2004,7 +2004,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 	var forceDataUpdate:Bool = true;
 	function scrollDirectionUpdated() {
 		timeLine.y = (FlxG.height + (downScroll ? GRID_SIZE : -GRID_SIZE) - timeLine.height) * .5;
-		waveformSprite.flipY = downScroll;
+		gridBg.flipY = prevGridBg.flipY = nextGridBg.flipY = waveformSprite.flipY = downScroll;
 		
 		loadSection();
 	}

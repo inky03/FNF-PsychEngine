@@ -183,7 +183,7 @@ class EditorSustain extends Note {
 			basicSustainTile.setPosition(x + (width - basicSustainTile.width) * .5, y);
 			basicSustainTile.draw();
 		} else {
-			var tileY:Float = (downScroll ? 0 : sustainHeight - height);
+			var tileY:Float = (downScroll ? 0 : sustainHeight);
 			flipY = sustainTile.flipY = downScroll;
 			
 			if (sustainTile.shader != shader) sustainTile.shader = shader;
@@ -200,7 +200,7 @@ class EditorSustain extends Note {
 			
 			if (downScroll) {
 				super.draw();
-				tileY += height - 1;
+				tileY += height - scale.y;
 				
 				while (tileY < sustainHeight) {
 					if (tileY + sustainTile.height >= sustainHeight) {
@@ -218,9 +218,11 @@ class EditorSustain extends Note {
 					tileY += sustainTile.clipRect.height * sustainTile.scale.y;
 				}
 			} else {
+				tileY -= height;
 				y += tileY;
 				super.draw();
 				y -= tileY;
+				tileY -= scale.y;
 				
 				while (tileY > 0) {
 					tileY -= sustainTile.clipRect.height * sustainTile.scale.y;

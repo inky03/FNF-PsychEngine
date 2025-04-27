@@ -52,21 +52,27 @@ class ChartingGridSprite extends FlxSprite
 	override function draw()
 	{
 		if(!visible || alpha == 0 || y - camera.scroll.y >= FlxG.height) return;
+		
 		scale.y = ChartingState.GRID_SIZE * Math.min(1, rows);
 		offset.y = -0.5 * (scale.y - 1);
 
+		var initialFlip:Bool = flipY;
+		var initialY:Float = y;
+		flipY = false;
+		
+		if (initialFlip) y += height - ChartingState.GRID_SIZE;
+		
 		super.draw();
-		if(rows <= 1)
-		{
+		if (rows <= 1) {
 			_drawStripes();
 			return;
 		}
-
-		var initialY:Float = y;
-		for (i in 1...Math.ceil(rows))
-		{
-			y += ChartingState.GRID_SIZE + spacing;
-			if(y - camera.scroll.y >= FlxG.height)
+		
+		for (i in 1...Math.ceil(rows)) {
+			y += (ChartingState.GRID_SIZE + spacing) * (initialFlip ? -1 : 1);
+			if (!initialFlip && y - camera.scroll.y >= FlxG.height)
+				break;
+			else if (initialFlip && y - camera.scroll.y <= -height)
 				break;
 
 			animation.play((i % 2 == 1) ? 'odd' : 'even', true);
@@ -75,6 +81,7 @@ class ChartingGridSprite extends FlxSprite
 			super.draw();
 		}
 		animation.play('even', true);
+		flipY = initialFlip;
 		y = initialY;
 
 		_drawStripes();
