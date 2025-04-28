@@ -3,7 +3,9 @@ package states.editors.content;
 import objects.Note;
 import shaders.RGBPalette;
 import flixel.util.FlxDestroyUtil;
+import states.editors.ChartingState;
 
+@:access(states.editors.ChartingState)
 class MetaNote extends Note
 {
 	public static var noteTypeTexts:Map<Int, FlxText> = [];
@@ -13,11 +15,13 @@ class MetaNote extends Note
 	public var sustainSprite:EditorSustain;
 	public var chartY:Float = 0;
 	public var chartNoteData:Int = 0;
+	public var chartingState:ChartingState;
 	public var useBlandSustains(default, set):Bool = false;
 
-	public function new(time:Float, data:Int, songData:Array<Dynamic>)
+	public function new(time:Float, data:Int, songData:Array<Dynamic>, state:ChartingState)
 	{
 		super(time, data, null, false, true);
+		this.chartingState = state;
 		this.songData = songData;
 		this.strumTime = time;
 		this.chartNoteData = data;
@@ -53,6 +57,25 @@ class MetaNote extends Note
 		updateHitbox();
 		if (sustainSprite != null)
 			sustainSprite.changeNoteData(this.noteData);
+	}
+	
+	override function set_noteType(value:String):String {
+		if (noteType == value) return value;
+		
+		songData[3] = value;
+		hitsoundChartEditor = true;
+		gfNote = ignoreNote = false;
+		
+		super.set_noteType(value);
+		
+		if (noteType == null || noteType == '') {
+			if (_noteTypeText != null) _noteTypeText.visible = false;
+		} else {
+			var txt:FlxText = findNoteTypeText(value != null ? chartingState.noteTypes.indexOf(value) : 0);
+			if (txt != null) txt.visible = chartingState.showNoteTypeLabels;
+		}
+		
+		return noteType = value;
 	}
 
 	public function setStrumTime(v:Float)
@@ -281,9 +304,9 @@ class EditorSustain extends Note {
 class EventMetaNote extends MetaNote
 {
 	public var eventText:FlxText;
-	public function new(time:Float, eventData:Dynamic)
+	public function new(time:Float, eventData:Dynamic, state:ChartingState)
 	{
-		super(time, -1, eventData);
+		super(time, -1, eventData, state);
 		this.isEvent = true;
 		events = eventData[1];
 		//trace('events: $events');
