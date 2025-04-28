@@ -121,6 +121,15 @@ class Conductor
 		}
 		trace('Added ${bpmChangeMap.length} BPM changes');
 	}
+	public static function copyBPMChanges(?bpmChanges:Array<BPMChangeEvent>):Array<BPMChangeEvent> {
+		bpmChanges ??= Conductor.bpmChangeMap;
+		
+		var newBPMMap:Array<BPMChangeEvent> = [];
+		for (change in bpmChanges)
+			newBPMMap.push(Reflect.copy(change));
+		
+		return newBPMMap;
+	}
 	public static function defaultBPMChangeMap(bpm:Float = 100):Array<BPMChangeEvent> {
 		return [{
 			bpm: bpm,

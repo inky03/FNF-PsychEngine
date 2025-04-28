@@ -2879,7 +2879,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			var sec = getCurChartSection();
 			if(sec != null)
 			{
-				var oldBPMMap:Array<BPMChangeEvent> = copyBPMChanges();
+				var oldBPMMap:Array<BPMChangeEvent> = Conductor.copyBPMChanges();
 				sec.changeBPM = changeBpmCheckBox.checked;
 				if(!Reflect.hasField(sec, 'bpm')) sec.bpm = changeBpmStepper.value;
 				adaptNotes(oldBPMMap);
@@ -2893,7 +2893,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			var sec = getCurChartSection();
 			if(sec != null)
 			{
-				var oldBPMMap:Array<BPMChangeEvent> = copyBPMChanges();
+				var oldBPMMap:Array<BPMChangeEvent> = Conductor.copyBPMChanges();
 				sec.changeBPM = true;
 				sec.bpm = changeBpmStepper.value;
 				changeBpmCheckBox.checked = true;
@@ -2908,7 +2908,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			var sec = getCurChartSection();
 			if(sec != null)
 			{
-				var oldBPMMap:Array<BPMChangeEvent> = copyBPMChanges();
+				var oldBPMMap:Array<BPMChangeEvent> = Conductor.copyBPMChanges();
 				sec.sectionBeats = beatsPerSecStepper.value;
 				adaptNotes(oldBPMMap);
 			}
@@ -3253,7 +3253,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		bpmStepper = new PsychUINumericStepper(objX, objY, 1, 1, 1, 400, 3);
 		bpmStepper.onValueChange = function()
 		{
-			var oldBPMMap:Array<BPMChangeEvent> = copyBPMChanges();
+			var oldBPMMap:Array<BPMChangeEvent> = Conductor.copyBPMChanges();
 			PlayState.SONG.bpm = bpmStepper.value;
 			adaptNotes(oldBPMMap);
 		};
@@ -4706,15 +4706,6 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		softReloadNotes();
 	}
 	
-	function copyBPMChanges(?bpmChanges:Array<BPMChangeEvent>):Array<BPMChangeEvent> {
-		bpmChanges ??= Conductor.bpmChangeMap;
-		
-		var newBPMMap:Array<BPMChangeEvent> = [];
-		for (change in bpmChanges)
-			newBPMMap.push(Reflect.copy(change));
-		
-		return newBPMMap;
-	}
 	function adaptNotes(oldBPMMap:Array<BPMChangeEvent>)
 	{
 		undoActions = [];
