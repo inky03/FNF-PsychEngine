@@ -92,7 +92,8 @@ class Note extends FlxSprite
 	public var gfNote:Bool = false;
 	public var earlyHitMult:Float = 1;
 	public var lateHitMult:Float = 1;
-	public var lowPriority:Bool = false;
+	public var hitPriority:Float = 1;
+	public var lowPriority(get, set):Bool;
 
 	public static var SUSTAIN_SIZE:Int = 44;
 	public static var swagWidth:Float = 160 * 0.7;
@@ -159,6 +160,14 @@ class Note extends FlxSprite
 		}
 		return value;
 	}
+	
+	function set_lowPriority(value:Bool):Bool {
+		hitPriority = (value ? Math.NEGATIVE_INFINITY : 1);
+		return value;
+	}
+	function get_lowPriority():Bool {
+		return (hitPriority == Math.NEGATIVE_INFINITY);
+	}
 
 	public function defaultRGB()
 	{
@@ -180,10 +189,10 @@ class Note extends FlxSprite
 	}
 
 	private function set_noteType(value:String):String {
-		noteSplashData.texture = PlayState.SONG != null ? PlayState.SONG.splashSkin : 'noteSplashes/noteSplashes';
-		defaultRGB();
-
 		if(noteData > -1 && noteType != value) {
+			noteSplashData.texture = PlayState.SONG != null ? PlayState.SONG.splashSkin : 'noteSplashes/noteSplashes';
+			defaultRGB();
+			
 			switch(value) {
 				case 'Hurt Note':
 					ignoreNote = mustPress;
@@ -217,9 +226,8 @@ class Note extends FlxSprite
 			}
 			if (value != null && value.length > 1) NoteTypesConfig.applyNoteTypeData(this, value);
 			if (hitsound != 'hitsound' && hitsoundVolume > 0) Paths.sound(hitsound); //precache new sound for being idiot-proof
-			noteType = value;
 		}
-		return value;
+		return noteType = value;
 	}
 
 	public function new(strumTime:Float, noteData:Int, ?prevNote:Note, ?sustainNote:Bool = false, ?inEditor:Bool = false, ?createdFrom:Dynamic = null)
