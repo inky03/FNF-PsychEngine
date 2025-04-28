@@ -671,45 +671,26 @@ class EditorPlayState extends MusicBeatSubstate
 		if(Conductor.songPosition >= 0) Conductor.songPosition = inst.time + Conductor.offset;
 
 		// obtain notes that the player can hit
-		var plrInputNotes:Array<Note> = notes.members.filter(function(n:Note)
-			return n != null && n.canBeHit && n.mustPress && !n.tooLate &&
-			!n.wasGoodHit && !n.blockHit && !n.isSustainNote && n.noteData == key);
-
-		plrInputNotes.sort(PlayState.sortHitNotes);
-
-		var shouldMiss:Bool = !ClientPrefs.data.ghostTapping;
-
-		if (plrInputNotes.length != 0) { // slightly faster than doing `> 0` lol
-			var funnyNote:Note = plrInputNotes[0]; // front note
-			// trace('✡⚐🕆☼ 💣⚐💣');
-
-			if (plrInputNotes.length > 1) {
-				var doubleNote:Note = plrInputNotes[1];
-
-				if (doubleNote.noteData == funnyNote.noteData) {
-					// if the note has a 0ms distance (is on top of the current note), kill it
-					if (Math.abs(doubleNote.strumTime - funnyNote.strumTime) < 1.0)
-						invalidateNote(doubleNote);
-					else if (doubleNote.strumTime < funnyNote.strumTime)
-					{
-						// replace the note if its ahead of time (or at least ensure "doubleNote" is ahead)
-						funnyNote = doubleNote;
-					}
-				}
+		var highestNote:Note = null;
+		for (n in notes) {
+			if (n != null && !n.isSustainNote && n.noteData == key && n.canBeHit && n.mustPress && !n.tooLate && !n.wasGoodHit && !n.blockHit) {
+				if (highestNote == null || n.hitPriority > highestNote.hitPriority || (n.hitPriority == highestNote.hitPriority && n.strumTime < highestNote.strumTime))
+					highestNote = n;
 			}
+		}
 
-			goodNoteHit(funnyNote);
+		if (highestNote != null) {
+			goodNoteHit(highestNote);
+		} else {
+			var spr:StrumNote = playerStrums.members[key];
+			if (spr != null) {
+				spr.playAnim('pressed');
+				spr.resetAnim = 0;
+			}
 		}
 
 		//more accurate hit time for the ratings? part 2 (Now that the calculations are done, go back to the time it was before for not causing a note stutter)
 		Conductor.songPosition = lastTime;
-
-		var spr:StrumNote = playerStrums.members[key];
-		if(spr != null && spr.animation.curAnim.name != 'confirm')
-		{
-			spr.playAnim('pressed');
-			spr.resetAnim = 0;
-		}
 	}
 
 	private function onKeyRelease(event:KeyboardEvent):Void
