@@ -567,9 +567,9 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		toyGroup = new FlxTypedSpriteGroup();
 		toyGroup.scrollFactor.set();
 		
-		lilbf = createToy('bf', centerX + 120, FlxG.height - 50);
+		lilbf = createToy('bf', centerX + 110, FlxG.height - 50);
 		lilgf = createToy('gf-nospeak', centerX, FlxG.height - 50);
-		lildad = createToy('bf-pixel-opponent', centerX - 120, FlxG.height - 50);
+		lildad = createToy('bf-pixel-opponent', centerX - 110, FlxG.height - 50);
 		
 		lilbf.flipX = !lilbf.flipX;
 		
@@ -587,7 +587,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 
 	function createToy(?name:String, x:Float = 0, y:Float = 0) {
 		var toy:Character = new Character(x, y, name, false);
-		toy.scale.set(toy.scale.x * .4, toy.scale.y * .4);
+		toy.scale.set(toy.scale.x * .35, toy.scale.y * .35);
 		toy.updateHitbox();
 		toy.origin.set();
 		
@@ -911,21 +911,22 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 				{
 					if(FlxG.sound.music.playing)
 						setSongPlaying(false);
-
+					
+					var downScrollMult:Int = (downScroll ? -1 : 1);
 					if(mouseSnapCheckBox.checked && FlxG.mouse.wheel != 0)
 					{
 						var snap:Float = Conductor.stepCrochet / (curQuant/16) / curZoom;
-						var timeAdd:Float = (FlxG.keys.pressed.SHIFT ? 4 : 1) / (holdingAlt ? 4 : 1) * FlxG.mouse.wheel * (downScroll ? 1 : -1) * snap;
+						var timeAdd:Float = (FlxG.keys.pressed.SHIFT ? 4 : 1) / (holdingAlt ? 4 : 1) * FlxG.mouse.wheel * downScrollMult * snap;
 						var time:Float = Math.round((FlxG.sound.music.time + timeAdd) / snap) * snap;
 						if(time > 0) time += 0.000001; //goes at the start of a section more properly
 						FlxG.sound.music.time = time;
 					}
 					else
 					{
-						var speedMult:Float = (FlxG.keys.pressed.SHIFT ? 4 : 1) * (FlxG.mouse.wheel != 0 ? 4 : 1) / (holdingAlt ? 4 : 1);
-						if(FlxG.keys.pressed.W == !downScroll || FlxG.mouse.wheel > 0)
+						var speedMult:Float = (FlxG.keys.pressed.SHIFT ? 4 : 1) * (FlxG.mouse.wheel != 0 ? 4 : 1) / (holdingAlt ? 4 : 1) * downScrollMult;
+						if(FlxG.keys.pressed.W || FlxG.mouse.wheel > 0)
 							FlxG.sound.music.time -= Conductor.crochet * speedMult * 1.5 * elapsed / curZoom;
-						else if(FlxG.keys.pressed.S == !downScroll || FlxG.mouse.wheel < 0)
+						else if(FlxG.keys.pressed.S || FlxG.mouse.wheel < 0)
 							FlxG.sound.music.time += Conductor.crochet * speedMult * 1.5 * elapsed / curZoom;
 					}
 
@@ -2367,9 +2368,9 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		ignoreProgressCheckBox.checked = chartEditorSave.data.ignoreProgressWarns;
 
 		objY += 45;
-		hitsoundPlayerStepper = new PsychUINumericStepper(objX, objY, 0.2, 0, 0, 1, 1);
-		hitsoundOpponentStepper = new PsychUINumericStepper(objX + 100, objY, 0.2, 0, 0, 1, 1);
-		metronomeStepper = new PsychUINumericStepper(objX + 200, objY, 0.2, 0, 0, 1, 1);
+		metronomeStepper = new PsychUINumericStepper(objX, objY, 0.2, 0, 0, 1, 1);
+		hitsoundPlayerStepper = new PsychUINumericStepper(objX + 100, objY, 0.2, 0, 0, 1, 1);
+		hitsoundOpponentStepper = new PsychUINumericStepper(objX + 200, objY, 0.2, 0, 0, 1, 1);
 
 		objY += 35;
 		instVolumeStepper = new PsychUINumericStepper(objX, objY, 0.1, 0.6, 0, 1, 1);
@@ -5076,14 +5077,19 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 	}
 	
 	function updateVortexHolds() {
+		var snap:Float = (curQuant / 4);
+		
 		for (num => key in keysArray) {
 			if (_heldNotes[num] != null) {
 				var noteSec:Int = 0;
 				var note:MetaNote = _heldNotes[num];
 				while (cachedSectionTimes.length > noteSec + 1 && cachedSectionTimes[noteSec + 1] <= note.strumTime)
 					noteSec++;
-				note.sustainLength = FlxG.sound.music.time - note.strumTime;
-				note.setSustainLength(note.sustainLength, curZoom);
+				
+				var targetTime:Float = Conductor.getStep(Conductor.songPosition + Conductor.offset);
+				targetTime = Math.floor(targetTime * snap) / snap;
+				
+				note.setSustainLength(Conductor.stepToSeconds(targetTime - Conductor.offset) - note.strumTime, curZoom);
 			}
 		}
 	}

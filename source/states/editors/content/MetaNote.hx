@@ -88,7 +88,7 @@ class MetaNote extends Note
 	public function setSustainLength(newLength:Float, zoom:Float = 1)
 	{
 		_lastZoom = zoom;
-		songData[2] = sustainLength = newLength;
+		songData[2] = sustainLength = Math.max(newLength, 0);
 
 		if(sustainLength > 0)
 		{
