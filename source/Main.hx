@@ -39,6 +39,7 @@ import haxe.io.Path;
 #end
 
 import backend.Highscore;
+import backend.ScriptedState;
 
 // NATIVE API STUFF, YOU CAN IGNORE THIS AND SCROLL //
 #if (linux && !debug)
@@ -110,21 +111,27 @@ class Main extends Sprite
 			return '${header ?? ''}$msgInfo $x';
 		}
 		
+		function debugPrint(message:String, ?color:FlxColor, ?size:Int) {
+			if (FlxG.state is ScriptedState) {
+				var scriptedState:ScriptedState = cast FlxG.state;
+				scriptedState.addTextToDebug(message, color);
+			}
+		}
 		Iris.warn = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(WARN, x, pos);
-			PlayState.instance?.addTextToDebug(getMessageInfo(x, pos, 'WARNING: '), FlxColor.YELLOW);
+			debugPrint(getMessageInfo(x, pos, 'WARNING: '), FlxColor.YELLOW);
 		}
 		Iris.error = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(ERROR, x, pos);
-			PlayState.instance?.addTextToDebug(getMessageInfo(x, pos, 'ERROR: '), FlxColor.RED);
+			debugPrint(getMessageInfo(x, pos, 'ERROR: '), FlxColor.RED);
 		}
 		Iris.fatal = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(FATAL, x, pos);
-			PlayState.instance?.addTextToDebug(getMessageInfo(x, pos, 'FATAL: '), 0xffbb0000, 18);
+			debugPrint(getMessageInfo(x, pos, 'FATAL: '), 0xffbb0000, 18);
 		}
 		Iris.print = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(NONE, x, pos);
-			PlayState.instance?.addTextToDebug(getMessageInfo(x, pos, 'TRACE: '), FlxColor.CYAN);
+			debugPrint(getMessageInfo(x, pos, 'TRACE: '), FlxColor.CYAN);
 		}
 		#end
 

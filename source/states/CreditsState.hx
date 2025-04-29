@@ -2,7 +2,7 @@ package states;
 
 import objects.AttachedSprite;
 
-class CreditsState extends MusicBeatState
+class CreditsState extends ScriptedState
 {
 	var curSelected:Int = -1;
 
@@ -19,6 +19,8 @@ class CreditsState extends MusicBeatState
 
 	override function create()
 	{
+		preCreate();
+		
 		#if DISCORD_ALLOWED
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("In the Menus", null);
@@ -134,10 +136,10 @@ class CreditsState extends MusicBeatState
 	var holdTime:Float = 0;
 	override function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+		
 		if (FlxG.sound.music.volume < 0.7)
-		{
 			FlxG.sound.music.volume += 0.5 * elapsed;
-		}
 
 		if(!quitting)
 		{
@@ -202,6 +204,8 @@ class CreditsState extends MusicBeatState
 			}
 		}
 		super.update(elapsed);
+		
+		postUpdate(elapsed);
 	}
 
 	var moveTween:FlxTween = null;

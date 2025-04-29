@@ -58,6 +58,7 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 
 ### HScript
 
+- State Scripting (EXPERIMENTAL)
 - Fixed crashes on specific circumstances (errors that previously weren't correctly caught, ex. Null Function Pointer)
 - Setting game variables without using `game.` is now allowed (it was previously only allowed for getting)
 - `createGlobalCallback` now also makes the callback globally available in HScript scripts

@@ -18,7 +18,8 @@ class MusicBeatState extends FlxState
 	{
 		return Controls.instance;
 	}
-
+	
+	var _pre:Bool = false;
 	var _psychCameraInitialized:Bool = false;
 
 	public var variables:Map<String, Dynamic> = new Map<String, Dynamic>();
@@ -28,9 +29,8 @@ class MusicBeatState extends FlxState
 	override function create() {
 		var skip:Bool = FlxTransitionableState.skipNextTransOut;
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
-
-		if(!_psychCameraInitialized) initPsychCamera();
-
+		
+		if (!_pre) preCreate();
 		super.create();
 
 		if(!skip) {
@@ -38,6 +38,11 @@ class MusicBeatState extends FlxState
 		}
 		FlxTransitionableState.skipNextTransOut = false;
 		timePassedOnState = 0;
+	}
+	
+	public function preCreate():Void {
+		if (!_psychCameraInitialized) initPsychCamera();
+		_pre = true;
 	}
 
 	public function initPsychCamera():PsychCamera

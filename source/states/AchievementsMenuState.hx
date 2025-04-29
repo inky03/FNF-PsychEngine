@@ -5,7 +5,7 @@ import flixel.util.FlxSort;
 import objects.Bar;
 
 #if ACHIEVEMENTS_ALLOWED
-class AchievementsMenuState extends MusicBeatState
+class AchievementsMenuState extends ScriptedState
 {
 	public var curSelected:Int = 0;
 
@@ -22,6 +22,8 @@ class AchievementsMenuState extends MusicBeatState
 
 	override function create()
 	{
+		preCreate();
+		
 		Paths.clearStoredMemory();
 		Paths.clearUnusedMemory();
 
@@ -147,6 +149,8 @@ class AchievementsMenuState extends MusicBeatState
 
 	var goingBack:Bool = false;
 	override function update(elapsed:Float) {
+		preUpdate(elapsed);
+		
 		if(!goingBack && options.length > 1)
 		{
 			var add:Int = 0;
@@ -209,6 +213,8 @@ class AchievementsMenuState extends MusicBeatState
 			goingBack = true;
 		}
 		super.update(elapsed);
+		
+		postUpdate(elapsed);
 	}
 
 	public var barTween:FlxTween = null;

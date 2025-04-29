@@ -24,6 +24,8 @@ class HScriptMacro {
 import flixel.FlxBasic;
 import objects.Character;
 import psychlua.LuaUtils;
+import backend.ScriptedState;
+import backend.MusicBeatState;
 import psychlua.CustomSubstate;
 
 #if LUA_ALLOWED
@@ -50,6 +52,7 @@ class HScript extends Iris
 	public var filePath:String;
 	public var modFolder:String;
 	public var returnValue:Dynamic;
+	public var parentState:flixel.FlxState;
 
 	#if LUA_ALLOWED
 	public var parentLua:FunkinLua;
@@ -106,8 +109,9 @@ class HScript extends Iris
 
 	public var origin:String;
 	public var unsafe:Bool = false;
-	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false)
-	{
+	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false, ?state:ScriptedState) {
+		parentState = state ?? FlxG.state;
+		
 		if (file == null)
 			file = '';
 
@@ -139,7 +143,7 @@ class HScript extends Iris
 		super(scriptThing, new IrisConfig(scriptName, false, false));
 		Iris.instances.set(scriptName, this); // idgaf
 		var customInterp:CustomInterp = new CustomInterp();
-		customInterp.parentInstance = FlxG.state;
+		customInterp.parentInstance = parentState;
 		customInterp.showPosOnLog = false;
 		this.interp = customInterp;
 		#if LUA_ALLOWED
@@ -205,29 +209,46 @@ class HScript extends Iris
 		#if flxanimate
 		set('FlxAnimate', FlxAnimate);
 		#end
+		
+		if (parentState != null) {
+			var cls = Type.getClass(parentState);
+			var clsName:String = Type.getClassName(cls);
+			var stateName:String = clsName.substr(clsName.indexOf('.') + 1);
+			
+			set(stateName, cls);
+		}
 
 		// Functions & Variables
+		var variableMap:Map<String, Dynamic>;
+		if (parentState is MusicBeatState) {
+			variableMap = cast(parentState, MusicBeatState).variables;
+		} else {
+			variableMap = MusicBeatState.getVariables();
+		}
+		
 		set('setVar', function(name:String, value:Dynamic) {
-			MusicBeatState.getVariables().set(name, value);
+			variableMap.set(name, value);
 			return value;
 		});
 		set('getVar', function(name:String) {
 			var result:Dynamic = null;
-			if(MusicBeatState.getVariables().exists(name)) result = MusicBeatState.getVariables().get(name);
+			if (variableMap.exists(name))
+				result = variableMap.get(name);
 			return result;
 		});
 		set('removeVar', function(name:String)
 		{
-			if(MusicBeatState.getVariables().exists(name))
-			{
-				MusicBeatState.getVariables().remove(name);
+			if (variableMap.exists(name)) {
+				variableMap.remove(name);
 				return true;
 			}
 			return false;
 		});
-		set('debugPrint', function(text:String, ?color:FlxColor = null) {
-			if(color == null) color = FlxColor.WHITE;
-			PlayState.instance.addTextToDebug(text, color);
+		set('debugPrint', function(text:String, color:FlxColor = FlxColor.WHITE) {
+			if (parentState != null && parentState is ScriptedState) {
+				var scriptedState:ScriptedState = cast parentState;
+				scriptedState.addTextToDebug(text, color);
+			}
 		});
 		set('getModSetting', function(saveTag:String, ?modName:String = null) {
 			if(modName == null)
@@ -372,7 +393,7 @@ class HScript extends Iris
 		set('parentLua', null);
 		#end
 		set('this', this);
-		set('game', FlxG.state);
+		set('game', parentState);
 		set('controls', Controls.instance);
 
 		set('buildTarget', LuaUtils.getBuildTarget());
@@ -558,8 +579,9 @@ class CustomFlxColor {
 }
 
 class CustomInterp extends crowplexus.hscript.Interp {
-	private var _instanceFields:Array<String>;
-	public var parentInstance(default, set):Dynamic = [];
+	private var _instanceFields:Array<String> = [];
+	public var parentInstance(default, set):Dynamic = null;
+	
 	function set_parentInstance(inst:Dynamic):Dynamic {
 		parentInstance = inst;
 		if(parentInstance == null)

@@ -15,7 +15,7 @@ import substates.ResetScoreSubState;
 
 import backend.StageData;
 
-class StoryMenuState extends MusicBeatState
+class StoryMenuState extends ScriptedState
 {
 	public static var weekCompleted:Map<String, Bool> = new Map<String, Bool>();
 
@@ -45,6 +45,8 @@ class StoryMenuState extends MusicBeatState
 
 	override function create()
 	{
+		preCreate();
+		
 		Paths.clearStoredMemory();
 		Paths.clearUnusedMemory();
 
@@ -196,6 +198,8 @@ class StoryMenuState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+		
 		if(WeekData.weeksList.length < 1)
 		{
 			if (controls.BACK && !movedBack && !selectedWeek)
@@ -290,6 +294,8 @@ class StoryMenuState extends MusicBeatState
 
 		for (num => lock in grpLocks.members)
 			lock.y = grpWeekText.members[lock.ID].y + grpWeekText.members[lock.ID].height/2 - lock.height/2;
+		
+		postUpdate(elapsed);
 	}
 
 	var movedBack:Bool = false;

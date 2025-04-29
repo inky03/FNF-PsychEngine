@@ -17,7 +17,7 @@ import openfl.utils.Assets;
 
 import haxe.Json;
 
-class FreeplayState extends MusicBeatState
+class FreeplayState extends ScriptedState
 {
 	var songs:Array<SongMetadata> = [];
 
@@ -54,6 +54,7 @@ class FreeplayState extends MusicBeatState
 
 	override function create()
 	{
+		preCreate();
 		//Paths.clearStoredMemory();
 		//Paths.clearUnusedMemory();
 		
@@ -217,6 +218,8 @@ class FreeplayState extends MusicBeatState
 	var stopMusicPlay:Bool = false;
 	override function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+		
 		if(WeekData.weeksList.length < 1)
 			return;
 
@@ -461,6 +464,8 @@ class FreeplayState extends MusicBeatState
 
 		updateTexts(elapsed);
 		super.update(elapsed);
+		
+		postUpdate(elapsed);
 	}
 	
 	function getVocalFromCharacter(char:String)

@@ -35,7 +35,7 @@ typedef TitleData =
 	@:optional var idle:Bool;
 }
 
-class TitleState extends MusicBeatState
+class TitleState extends ScriptedState
 {
 	public static var muteKeys:Array<FlxKey> = [FlxKey.ZERO];
 	public static var volumeDownKeys:Array<FlxKey> = [FlxKey.NUMPADMINUS, FlxKey.MINUS];
@@ -66,8 +66,9 @@ class TitleState extends MusicBeatState
 
 	override public function create():Void
 	{
+		preCreate();
+		
 		Paths.clearStoredMemory();
-		super.create();
 		Paths.clearUnusedMemory();
 
 		if(!initialized)
@@ -109,6 +110,8 @@ class TitleState extends MusicBeatState
 		else
 			startIntro();
 		#end
+		
+		super.create();
 	}
 
 	var logoBl:FlxSprite;
@@ -322,6 +325,8 @@ class TitleState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+		
 		if (FlxG.sound.music != null)
 			Conductor.songPosition = FlxG.sound.music.time;
 		// FlxG.watch.addQuick('amp', FlxG.sound.music.amplitude);
@@ -458,6 +463,8 @@ class TitleState extends MusicBeatState
 		}
 
 		super.update(elapsed);
+		
+		postUpdate(elapsed);
 	}
 
 	function createCoolText(textArray:Array<String>, ?offset:Float = 0)

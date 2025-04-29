@@ -1,9 +1,10 @@
 #if LUA_ALLOWED
 package psychlua;
 
+import backend.Song;
 import backend.WeekData;
 import backend.Highscore;
-import backend.Song;
+import backend.ScriptedState;
 
 import openfl.Lib;
 import openfl.utils.Assets;
@@ -48,6 +49,7 @@ class FunkinLua {
 	public var camTarget:FlxCamera;
 	public var scriptName:String = '';
 	public var modFolder:String = null;
+	public var parentState:FlxState;
 	public var closed:Bool = false;
 
 	#if HSCRIPT_ALLOWED
@@ -57,7 +59,7 @@ class FunkinLua {
 	public var callbacks:Map<String, Dynamic> = new Map<String, Dynamic>();
 	public static var customFunctions:Map<String, Dynamic> = new Map<String, Dynamic>();
 
-	public function new(scriptName:String) {
+	public function new(scriptName:String, ?state:FlxState) { // TODO: allat
 		lua = LuaL.newstate();
 		LuaL.openlibs(lua);
 
@@ -67,7 +69,6 @@ class FunkinLua {
 		//LuaL.dostring(lua, CLENSE);
 
 		this.scriptName = scriptName.trim();
-		var game:PlayState = PlayState.instance;
 		
 		var myFolder:Array<String> = this.scriptName.split('/');
 		#if MODS_ALLOWED
@@ -86,41 +87,43 @@ class FunkinLua {
 		set('version', MainMenuState.psychEngineVersion.trim());
 		set('modFolder', this.modFolder);
 
-		// Song/Week shit
-		set('curBpm', Conductor.bpm);
-		set('bpm', PlayState.SONG.bpm);
-		set('scrollSpeed', PlayState.SONG.speed);
-		set('crochet', Conductor.crochet);
-		set('stepCrochet', Conductor.stepCrochet);
-		set('songLength', FlxG.sound.music.length);
-		set('songName', PlayState.SONG.song);
-		set('songPath', Paths.formatToSongPath(PlayState.SONG.song));
-		set('loadedSongName', Song.loadedSongName);
-		set('loadedSongPath', Paths.formatToSongPath(Song.loadedSongName));
-		set('chartPath', Song.chartPath);
-		set('startedCountdown', false);
-		set('curStage', PlayState.SONG.stage);
-
-		set('isStoryMode', PlayState.isStoryMode);
-		set('difficulty', PlayState.storyDifficulty);
-
-		set('difficultyName', Difficulty.getString(false));
-		set('difficultyPath', Difficulty.getFilePath());
-		set('difficultyNameTranslation', Difficulty.getString(true));
-		set('weekRaw', PlayState.storyWeek);
-		set('week', WeekData.weeksList[PlayState.storyWeek]);
-		set('seenCutscene', PlayState.seenCutscene);
-		set('hasVocals', PlayState.SONG.needsVoices);
-
 		// Screen stuff
 		set('screenWidth', FlxG.width);
 		set('screenHeight', FlxG.height);
+		
+		parentState = state ?? FlxG.state;
+		var game:PlayState = PlayState.instance;
+		if (state is PlayState) // PlayState-only variables
+		@:privateAccess {
+			var game:PlayState = cast state;
+			
+			// Song/Week shit
+			set('curBpm', Conductor.bpm);
+			set('bpm', PlayState.SONG.bpm);
+			set('scrollSpeed', PlayState.SONG.speed);
+			set('crochet', Conductor.crochet);
+			set('stepCrochet', Conductor.stepCrochet);
+			set('songLength', FlxG.sound.music.length);
+			set('songName', PlayState.SONG.song);
+			set('songPath', Paths.formatToSongPath(PlayState.SONG.song));
+			set('loadedSongName', Song.loadedSongName);
+			set('loadedSongPath', Paths.formatToSongPath(Song.loadedSongName));
+			set('chartPath', Song.chartPath);
+			set('startedCountdown', false);
+			set('curStage', PlayState.SONG.stage);
 
+			set('isStoryMode', PlayState.isStoryMode);
+			set('difficulty', PlayState.storyDifficulty);
 
-		// PlayState-only variables
-		if(game != null)
-		@:privateAccess
-		{
+			set('difficultyName', Difficulty.getString(false));
+			set('difficultyPath', Difficulty.getFilePath());
+			set('difficultyNameTranslation', Difficulty.getString(true));
+			set('weekRaw', PlayState.storyWeek);
+			set('week', WeekData.weeksList[PlayState.storyWeek]);
+			set('seenCutscene', PlayState.seenCutscene);
+			set('hasVocals', PlayState.SONG.needsVoices);
+			
+			// Gameplay variables
 			var curSection:SwagSection = PlayState.SONG.notes[game.curSection];
 			set('curSection', game.curSection);
 			set('curBeat', game.curBeat);
@@ -177,33 +180,33 @@ class FunkinLua {
 			set('boyfriendName', game.boyfriend != null ? game.boyfriend.curCharacter : PlayState.SONG.player1);
 			set('dadName', game.dad != null ? game.dad.curCharacter : PlayState.SONG.player2);
 			set('gfName', game.gf != null ? game.gf.curCharacter : PlayState.SONG.gfVersion);
+			
+			// Other settings
+			set('downscroll', ClientPrefs.data.downScroll);
+			set('middlescroll', ClientPrefs.data.middleScroll);
+			set('framerate', ClientPrefs.data.framerate);
+			set('ghostTapping', ClientPrefs.data.ghostTapping);
+			set('hideHud', ClientPrefs.data.hideHud);
+			set('antialiasing', ClientPrefs.data.antialiasing);
+			set('timeBarType', ClientPrefs.data.timeBarType);
+			set('scoreZoom', ClientPrefs.data.scoreZoom);
+			set('cameraZoomOnBeat', ClientPrefs.data.camZooms);
+			set('flashingLights', ClientPrefs.data.flashing);
+			set('noteOffset', ClientPrefs.data.noteOffset);
+			set('healthBarAlpha', ClientPrefs.data.healthBarAlpha);
+			set('noResetButton', ClientPrefs.data.noReset);
+			set('lowQuality', ClientPrefs.data.lowQuality);
+			set('shadersEnabled', ClientPrefs.data.shaders);
+			set('scriptName', scriptName);
+			set('currentModDirectory', Mods.currentModDirectory);
+
+			// Noteskin/Splash
+			set('noteSkin', ClientPrefs.data.noteSkin);
+			set('noteSkinPostfix', Note.getNoteSkinPostfix());
+			set('splashSkin', ClientPrefs.data.splashSkin);
+			set('splashSkinPostfix', NoteSplash.getSplashSkinPostfix());
+			set('splashAlpha', ClientPrefs.data.splashAlpha);
 		}
-
-		// Other settings
-		set('downscroll', ClientPrefs.data.downScroll);
-		set('middlescroll', ClientPrefs.data.middleScroll);
-		set('framerate', ClientPrefs.data.framerate);
-		set('ghostTapping', ClientPrefs.data.ghostTapping);
-		set('hideHud', ClientPrefs.data.hideHud);
-		set('antialiasing', ClientPrefs.data.antialiasing);
-		set('timeBarType', ClientPrefs.data.timeBarType);
-		set('scoreZoom', ClientPrefs.data.scoreZoom);
-		set('cameraZoomOnBeat', ClientPrefs.data.camZooms);
-		set('flashingLights', ClientPrefs.data.flashing);
-		set('noteOffset', ClientPrefs.data.noteOffset);
-		set('healthBarAlpha', ClientPrefs.data.healthBarAlpha);
-		set('noResetButton', ClientPrefs.data.noReset);
-		set('lowQuality', ClientPrefs.data.lowQuality);
-		set('shadersEnabled', ClientPrefs.data.shaders);
-		set('scriptName', scriptName);
-		set('currentModDirectory', Mods.currentModDirectory);
-
-		// Noteskin/Splash
-		set('noteSkin', ClientPrefs.data.noteSkin);
-		set('noteSkinPostfix', Note.getNoteSkinPostfix());
-		set('splashSkin', ClientPrefs.data.splashSkin);
-		set('splashSkinPostfix', NoteSplash.getSplashSkinPostfix());
-		set('splashAlpha', ClientPrefs.data.splashAlpha);
 
 		// build target (windows, mac, linux, etc.)
 		set('buildTarget', LuaUtils.getBuildTarget());
