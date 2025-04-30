@@ -2273,13 +2273,13 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}
 	}
 	function positionNoteYOnTime(note:MetaNote) {
-		var noteY:Float = Conductor.getStep(note.strumTime) * GRID_SIZE * curZoom;
+		var noteY:Float = Conductor.getStep(note.strumTime);
 		noteY = Math.max(noteY, -150);
 		note.chartY = noteY;
 		refreshNotePosition(note);
 	}
 	function refreshNotePosition(note:MetaNote) {
-		note.y = note.chartY * (downScroll ? -1 : 1) + (GRID_SIZE/2 - note.height/2);
+		note.y = note.chartY * GRID_SIZE * curZoom * (downScroll ? -1 : 1) + (GRID_SIZE / 2 - note.height / 2);
 		note.downScroll = downScroll;
 		if (downScroll)
 			note.y -= GRID_SIZE;
