@@ -109,7 +109,7 @@ class HScript extends Iris
 
 	public var origin:String;
 	public var unsafe:Bool = false;
-	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false, ?state:ScriptedState) {
+	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false, ?state:flixel.FlxState) {
 		parentState = state ?? FlxG.state;
 		
 		if (file == null)
@@ -199,7 +199,10 @@ class HScript extends Iris
 		set('Character', Character);
 		set('Alphabet', Alphabet);
 		set('Note', objects.Note);
+		set('CustomState', CustomState);
 		set('CustomSubstate', CustomSubstate);
+		set('MusicBeatState', MusicBeatState);
+		set('MusicBeatSubstate', MusicBeatSubstate);
 		#if (!flash && sys)
 		set('FlxRuntimeShader', flixel.addons.display.FlxRuntimeShader);
 		set('ErrorHandledRuntimeShader', shaders.ErrorHandledShader.ErrorHandledRuntimeShader);
@@ -245,8 +248,8 @@ class HScript extends Iris
 			return false;
 		});
 		set('debugPrint', function(text:String, color:FlxColor = FlxColor.WHITE) {
-			if (parentState != null && parentState is ScriptedState) {
-				var scriptedState:ScriptedState = cast parentState;
+			if (parentState != null && parentState is ScriptedSubState) {
+				var scriptedState:ScriptedSubState = cast parentState;
 				scriptedState.addTextToDebug(text, color);
 			}
 		});

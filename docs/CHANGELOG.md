@@ -86,10 +86,13 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 	- `Note.isSustainEnd` to check if a sustain marks the end of a note
 	- `Note.followStrumNote` second argument "fakeCrochet" has been removed (as it was useless)
 	- Strum **press** animation is now strictly only played on a ghost tap
-- Play State
-	- Added variable `ghostTapping`, so it can be modified without having to change user preferences
-	- `stageUI`, `uiPrefix` and `uiPostfix` behavior has been adjusted (this also affects note textures)
-	- `addTextToDebug` function now has an argument for size and returns the text itself
+- States
+	- Play State
+		- Added variable `ghostTapping`, so it can be modified without having to change user preferences
+		- `stageUI`, `uiPrefix` and `uiPostfix` behavior has been adjusted (this also affects note textures)
+		- `addTextToDebug` function now has an argument for size and returns the text itself
+	- Backend (MusicBeat)
+		- State and substate classes are unified (`MusicBeatState` extends `MusicBeatSubstate`)
 - Changed all libraries to use their latest versions (that previously weren't)
 
 ...and more! i think...

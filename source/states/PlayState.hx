@@ -200,7 +200,6 @@ class PlayState extends ScriptedState
 	public var iconP2:HealthIcon;
 	public var camHUD:FlxCamera;
 	public var camGame:FlxCamera;
-	public var camOther:FlxCamera;
 	public var cameraSpeed:Float = 1;
 
 	public var songScore:Int = 0;
@@ -258,8 +257,6 @@ class PlayState extends ScriptedState
 	public static var nextReloadAll:Bool = false;
 	override public function create()
 	{
-		preCreate();
-		
 		//trace('Playback Rate: ' + playbackRate);
 		_lastLoadedModDirectory = Mods.currentModDirectory;
 		Paths.clearStoredMemory();
@@ -301,12 +298,9 @@ class PlayState extends ScriptedState
 		// var gameCam:FlxCamera = FlxG.camera;
 		camGame = initPsychCamera();
 		camHUD = new FlxCamera();
-		camOther = new FlxCamera();
 		camHUD.bgColor.alpha = 0;
-		camOther.bgColor.alpha = 0;
 
 		FlxG.cameras.add(camHUD, false);
-		FlxG.cameras.add(camOther, false);
 
 		persistentUpdate = true;
 		persistentDraw = true;
@@ -369,8 +363,7 @@ class PlayState extends ScriptedState
 		dadGroup = new FlxSpriteGroup(DAD_X, DAD_Y);
 		gfGroup = new FlxSpriteGroup(GF_X, GF_Y);
 
-		switch (curStage)
-		{
+		switch (curStage) {
 			case 'stage': new StageWeek1(); 			//Week 1
 			case 'spooky': new Spooky();				//Week 2
 			case 'philly': new Philly();				//Week 3
@@ -385,8 +378,7 @@ class PlayState extends ScriptedState
 		}
 		if(isPixelStage) introSoundsSuffix = '-pixel';
 
-		if (!stageData.hide_girlfriend)
-		{
+		if (!stageData.hide_girlfriend) {
 			if(SONG.gfVersion == null || SONG.gfVersion.length < 1) SONG.gfVersion = 'gf'; //Fix for the Chart Editor
 			gf = new Character(0, 0, SONG.gfVersion);
 			startCharacterPos(gf);
@@ -402,19 +394,19 @@ class PlayState extends ScriptedState
 		startCharacterPos(boyfriend);
 		boyfriendGroup.add(boyfriend);
 		
-		if(stageData.objects != null && stageData.objects.length > 0)
-		{
+		if(stageData.objects != null && stageData.objects.length > 0) {
 			var list:Map<String, FlxSprite> = StageData.addObjectsToState(stageData.objects, !stageData.hide_girlfriend ? gfGroup : null, dadGroup, boyfriendGroup, this);
 			for (key => spr in list)
 				if(!StageData.reservedNames.contains(key))
 					variables.set(key, spr);
 		}
-		else
-		{
+		else {
 			add(gfGroup);
 			add(dadGroup);
 			add(boyfriendGroup);
 		}
+		
+		preCreate();
 		
 		#if (SCRIPTS_ALLOWED)
 		// "SCRIPTS FOLDER" SCRIPTS
@@ -3083,22 +3075,20 @@ class PlayState extends ScriptedState
 	}
 
 	var lastStepHit:Int = -1;
-	override function stepHit()
+	public override function stepHit()
 	{
-		super.stepHit();
-
-		if(curStep == lastStepHit) {
+		if (curStep == lastStepHit) {
 			return;
 		}
+		
+		super.stepHit();
 
 		lastStepHit = curStep;
-		setOnScripts('curStep', curStep);
-		callOnScripts('onStepHit');
 	}
 
 	var lastBeatHit:Int = -1;
 
-	override function beatHit()
+	public override function beatHit()
 	{
 		if(lastBeatHit >= curBeat) {
 			//trace('BEAT HIT: ' + curBeat + ', LAST HIT: ' + lastBeatHit);
@@ -3118,9 +3108,6 @@ class PlayState extends ScriptedState
 
 		super.beatHit();
 		lastBeatHit = curBeat;
-
-		setOnScripts('curBeat', curBeat);
-		callOnScripts('onBeatHit');
 	}
 
 	public function characterBopper(beat:Int):Void
@@ -3140,7 +3127,7 @@ class PlayState extends ScriptedState
 			boyfriend.dance();
 	}
 
-	override function sectionHit()
+	public override function sectionHit()
 	{
 		if (SONG.notes[curSection] != null)
 		{
@@ -3164,10 +3151,8 @@ class PlayState extends ScriptedState
 			setOnScripts('altAnim', SONG.notes[curSection].altAnim);
 			setOnScripts('gfSection', SONG.notes[curSection].gfSection);
 		}
+		
 		super.sectionHit();
-
-		setOnScripts('curSection', curSection);
-		callOnScripts('onSectionHit');
 	}
 
 	function strumPlayAnim(isDad:Bool, id:Int, time:Float) {

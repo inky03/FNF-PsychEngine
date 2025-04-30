@@ -15,47 +15,45 @@ class AchievementsMenuState extends ScriptedState
 	public var descText:FlxText;
 	public var progressTxt:FlxText;
 	public var progressBar:Bar;
+	public var bg:FlxSprite;
 
 	var camFollow:FlxObject;
 
 	var MAX_PER_ROW:Int = 4;
 
-	override function create()
-	{
-		preCreate();
-		
+	override function create() {	
 		Paths.clearStoredMemory();
 		Paths.clearUnusedMemory();
-
+		
 		#if DISCORD_ALLOWED
 		DiscordClient.changePresence("Achievements Menu", null);
 		#end
-
-		// prepare achievement list
-		for (achievement => data in Achievements.achievements)
-		{
-			var unlocked:Bool = Achievements.isUnlocked(achievement);
-			if(data.hidden != true || unlocked)
-				options.push(makeAchievement(achievement, data, unlocked, data.mod));
-		}
-
+		
 		camFollow = new FlxObject(0, 0, 1, 1);
 		add(camFollow);
-
-		var menuBG:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuBGBlue'));
-		menuBG.antialiasing = ClientPrefs.data.antialiasing;
-		menuBG.setGraphicSize(Std.int(menuBG.width * 1.1));
-		menuBG.updateHitbox();
-		menuBG.screenCenter();
-		menuBG.scrollFactor.set();
-		add(menuBG);
-
+		
+		bg = new FlxSprite().loadGraphic(Paths.image('menuBGBlue'));
+		bg.antialiasing = ClientPrefs.data.antialiasing;
+		bg.setGraphicSize(Std.int(bg.width * 1.1));
+		bg.updateHitbox();
+		bg.screenCenter();
+		bg.scrollFactor.set();
+		add(bg);
+		
 		grpOptions = new FlxSpriteGroup();
 		grpOptions.scrollFactor.x = 0;
-
+		
+		preCreate();
+		
+		// prepare achievement list
+		for (achievement => data in Achievements.achievements) {
+			var unlocked:Bool = Achievements.isUnlocked(achievement);
+			if (data.hidden != true || unlocked)
+				options.push(makeAchievement(achievement, data, unlocked, data.mod));
+		}
+		
 		options.sort(sortByID);
-		for (option in options)
-		{
+		for (option in options) {
 			var hasAntialias:Bool = ClientPrefs.data.antialiasing;
 			var graphic = null;
 			if(option.unlocked)

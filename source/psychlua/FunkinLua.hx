@@ -1663,6 +1663,16 @@ class FunkinLua {
 		}
 		return LuaUtils.Function_Continue;
 	}
+	
+	public function exists(variable:String):Bool {
+		if (lua == null)
+			return false;
+		
+		Lua.getglobal(lua, variable);
+		var type:Int = Lua.type(lua, -1);
+		
+		return (type != Lua.LUA_TNONE && type != Lua.LUA_TNIL);
+	}
 
 	public function set(variable:String, data:Dynamic) {
 		if(lua == null) {

@@ -17,10 +17,7 @@ class CreditsState extends ScriptedState
 
 	var offsetThing:Float = -75;
 
-	override function create()
-	{
-		preCreate();
-		
+	override function create() {	
 		#if DISCORD_ALLOWED
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("In the Menus", null);
@@ -70,7 +67,9 @@ class CreditsState extends ScriptedState
 			["Join the Psych Ward!", "discord", "", "https://discord.gg/2ka77eMXDv", "5165F6"]
 		];
 		
-		for(i in defaultList)
+		preCreate();
+		
+		for (i in defaultList)
 			creditsStuff.push(i);
 	
 		for (i => credit in creditsStuff)

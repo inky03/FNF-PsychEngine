@@ -64,23 +64,18 @@ class TitleState extends ScriptedState
 	var easterEggKeysBuffer:String = '';
 	#end
 
-	override public function create():Void
-	{
-		preCreate();
-		
+	override public function create():Void {
 		Paths.clearStoredMemory();
 		Paths.clearUnusedMemory();
 
-		if(!initialized)
-		{
+		if (!initialized) {
 			ClientPrefs.loadPrefs();
 			Language.reloadPhrases();
 		}
 
 		curWacky = FlxG.random.getObject(getIntroTextShit());
 
-		if(!initialized)
-		{
+		if(!initialized) {
 			if(FlxG.save.data != null && FlxG.save.data.fullscreen)
 			{
 				FlxG.fullscreen = FlxG.save.data.fullscreen;
@@ -91,24 +86,25 @@ class TitleState extends ScriptedState
 		}
 
 		if (FlxG.save.data.weekCompleted != null)
-		{
 			StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
-		}
 
 		FlxG.mouse.visible = false;
+		
+		preCreate();
+		
 		#if FREEPLAY
 		MusicBeatState.switchState(new FreeplayState());
 		#elseif CHARTING
 		MusicBeatState.switchState(new ChartingState());
 		#else
-		if(FlxG.save.data.flashing == null && !FlashingState.leftState)
-		{
+		if (FlxG.save.data.flashing == null && !FlashingState.leftState) {
 			FlxTransitionableState.skipNextTransIn = true;
 			FlxTransitionableState.skipNextTransOut = true;
 			MusicBeatState.switchState(new FlashingState());
 		}
-		else
+		else {
 			startIntro();
+		}
 		#end
 		
 		super.create();

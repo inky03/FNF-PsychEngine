@@ -233,10 +233,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	
 	var singAnimations:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
 
-	override function create()
-	{
-		preCreate();
-		
+	override function create() {
 		if(Difficulty.list.length < 1) Difficulty.resetList();
 		_keysPressedBuffer.resize(keysArray.length);
 		_heldNotes.resize(keysArray.length);
@@ -280,6 +277,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		changeTheme(chartEditorSave.data.theme != null ? chartEditorSave.data.theme : DEFAULT, false);
 		refreshSustains(chartEditorSave.data.texturedSustains ?? true);
 		
+		preCreate();
 		createGrids();
 
 		waveformSprite = new FlxSprite(gridBg.x + (SHOW_EVENT_COLUMN ? GRID_SIZE : 0), 0).makeGraphic(1, 1, 0x00FFFFFF);
@@ -294,6 +292,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		add(dummyArrow);
 
 		vortexIndicator = new FlxSprite(gridBg.x - GRID_SIZE, (FlxG.height - GRID_SIZE)/2).loadGraphic(Paths.image('editors/vortex_indicator'));
+		vortexIndicator.antialiasing = ClientPrefs.data.antialiasing;
 		vortexIndicator.setGraphicSize(GRID_SIZE);
 		vortexIndicator.updateHitbox();
 		vortexIndicator.scrollFactor.set();
@@ -2491,15 +2490,20 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					{
 						if(note == null) continue;
 						note.reloadNote(note.texture);
-		
+						
 						if(note.width > note.height)
 							note.setGraphicSize(GRID_SIZE);
 						else
 							note.setGraphicSize(0, GRID_SIZE);
-		
+						
 						note.updateHitbox();
+						positionNoteXByData(note);
 					}
-					for (strum in strumLineNotes) {
+					
+					var startX:Float = gridBg.x;
+					var startY:Float = (FlxG.height - GRID_SIZE) / 2;
+					
+					for (i => strum in strumLineNotes.members) {
 						if (strum == null) continue;
 						var tex:String = noteTextureInputText.text;
 						if (tex.trim() == '') { // ok
@@ -2516,6 +2520,10 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						
 						strum.playAnim('static');
 						strum.updateHitbox();
+						
+						strum.x = startX + (i * GRID_SIZE) + (GRID_SIZE - strum.width) / 2;
+						strum.y = startY + (GRID_SIZE - strum.height) / 2;
+						if (SHOW_EVENT_COLUMN) strum.x += GRID_SIZE;
 					}
 					if(noteTextureInputText.text.trim().length > 0) showOutput('Reloaded notes to: "$textureLoad"');
 					else showOutput('Reloaded notes to default texture');

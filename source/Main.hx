@@ -5,6 +5,7 @@ import android.content.Context;
 #end
 
 import debug.FPSCounter;
+import debug.ScriptTraceDisplay;
 
 import flixel.graphics.FlxGraphic;
 import flixel.FlxGame;
@@ -58,8 +59,9 @@ class Main extends Sprite
 		skipSplash: true, // if the default flixel splash screen should be skipped
 		startFullscreen: false // if the game should start at fullscreen mode
 	};
-
+	
 	public static var fpsVar:FPSCounter;
+	public static var traces:ScriptTraceDisplay;
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
@@ -111,27 +113,21 @@ class Main extends Sprite
 			return '${header ?? ''}$msgInfo $x';
 		}
 		
-		function debugPrint(message:String, ?color:FlxColor, ?size:Int) {
-			if (FlxG.state is ScriptedState) {
-				var scriptedState:ScriptedState = cast FlxG.state;
-				scriptedState.addTextToDebug(message, color);
-			}
-		}
 		Iris.warn = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(WARN, x, pos);
-			debugPrint(getMessageInfo(x, pos, 'WARNING: '), FlxColor.YELLOW);
+			ScriptedState.debugPrint(getMessageInfo(x, pos, 'WARNING: '), FlxColor.YELLOW);
 		}
 		Iris.error = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(ERROR, x, pos);
-			debugPrint(getMessageInfo(x, pos, 'ERROR: '), FlxColor.RED);
+			ScriptedState.debugPrint(getMessageInfo(x, pos, 'ERROR: '), FlxColor.RED);
 		}
 		Iris.fatal = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(FATAL, x, pos);
-			debugPrint(getMessageInfo(x, pos, 'FATAL: '), 0xffbb0000, 18);
+			ScriptedState.debugPrint(getMessageInfo(x, pos, 'FATAL: '), 0xffbb0000, 17);
 		}
 		Iris.print = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(NONE, x, pos);
-			debugPrint(getMessageInfo(x, pos, 'TRACE: '), FlxColor.CYAN);
+			ScriptedState.debugPrint(getMessageInfo(x, pos, 'TRACE: '), FlxColor.CYAN);
 		}
 		#end
 
@@ -140,9 +136,12 @@ class Main extends Sprite
 		ClientPrefs.loadDefaultKeys();
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
 		addChild(new #if UNHOLYWANDERER04 UnholyGame #else FlxGame #end(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
-
+		
+		traces = new ScriptTraceDisplay();
+		addChild(traces);
+		
 		#if !mobile
-		fpsVar = new FPSCounter(10, 3, 0xFFFFFF);
+		fpsVar = new FPSCounter(12, 4, 0xffffff);
 		addChild(fpsVar);
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;

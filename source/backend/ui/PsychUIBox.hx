@@ -119,7 +119,7 @@ class PsychUIBox extends FlxSpriteGroup
 					if(FlxG.mouse.justPressed)
 						_pressedBox = true;
 
-					if(!_draggingBox && canMove && _pressedBox && FlxG.mouse.pressed && (Math.abs(FlxG.mouse.deltaScreenX) > 1 || Math.abs(FlxG.mouse.deltaScreenY) > 1))
+					if(!_draggingBox && canMove && _pressedBox && FlxG.mouse.pressed && (Math.abs(FlxG.mouse.deltaViewX) > 1 || Math.abs(FlxG.mouse.deltaViewY) > 1))
 					{
 						_draggingPos = FlxPoint.weak(x, y);
 						_draggingPoint = FlxG.mouse.getPositionInCameraView(camera);
