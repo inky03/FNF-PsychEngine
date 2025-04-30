@@ -23,6 +23,7 @@ class MainMenuState extends ScriptedState
 	var allowMouse:Bool = true; //Turn this off to block mouse movement in menus
 
 	var menuItems:FlxTypedSpriteGroup<MenuItem>;
+	var selectedItem:MenuItem = null;
 	var itemYPadding:Float = 25;
 	var itemSpacing:Float = 140;
 	var rightItem:MenuItem;
@@ -143,17 +144,20 @@ class MainMenuState extends ScriptedState
 
 		FlxG.camera.follow(camFollow, null, .2);
 		
-		positionMenuItems();
-		add(menuItems);
-		
 		if (rightOption != null) {
 			rightItem = addMenuItem(rightOption, null, RIGHT);
 			rightItem.setPosition(FlxG.width - rightItem.width - 50, 490);
+			add(rightItem);
 		}
 		if (leftOption != null) {
 			leftItem = addMenuItem(leftOption, null, LEFT);
 			leftItem.setPosition(50, 490);
+			add(leftItem);
 		}
+		
+		positionMenuItems();
+		updateYScroll();
+		add(menuItems);
 		
 		super.create();
 	}
@@ -166,17 +170,23 @@ class MainMenuState extends ScriptedState
 	function addMenuItem(name:String, ?onAccept:MenuItem -> Void, column:MainMenuColumn = CENTER):MenuItem {
 		var item:MenuItem = new MenuItem(0, 0, name, onAccept ?? menuFunctions[name]);
 		item.column = column;
-		menuItems.add(item);
+		
+		if (column == CENTER)
+			menuItems.add(item);
+		
 		return item;
 	}
 	
 	function positionMenuItems():Void {
 		for (i => item in menuItems.members) {
-			item.setPosition(0, i * itemSpacing);
+			item.setPosition(0, (i - menuItems.length * .5 + 1) * itemSpacing);
 			item.screenCenter(X);
 		}
-		menuItems.screenCenter(Y);
 		
+		updateYScroll();
+	}
+	
+	function updateYScroll():Void {
 		var yScroll:Float = .7 / menuItems.length;
 		var itemYScroll:Float = Math.min(1, Math.max(menuItems.height - FlxG.height + itemYPadding, 0) / FlxG.height * .35 + .25);
 		menuItems.scrollFactor.set(.04, itemYScroll);
@@ -344,13 +354,8 @@ class MainMenuState extends ScriptedState
 		var oldColumn:MainMenuColumn = curColumn;
 		var oldSelected:Int = curSelected;
 		
-		if (column == CENTER) {
-			var limit:Int = menuItems.length;
-			do {
-				limit --;
-				curSelected = FlxMath.wrap(curSelected + change, 0, menuItems.length - 1);
-			} while (menuItems.members[curSelected].column != CENTER && limit > 0 && change != 0);
-		}
+		if (column == CENTER)
+			curSelected = FlxMath.wrap(curSelected + change, 0, menuItems.length - 1);
 		
 		if (change != 0) {
 			curColumn = CENTER;
@@ -358,19 +363,21 @@ class MainMenuState extends ScriptedState
 			curColumn = column;
 		}
 
-		var selectedItem:MenuItem;
+		var newSelectedItem:MenuItem;
 		switch(curColumn) {
 			case LEFT:
-				selectedItem = leftItem;
+				newSelectedItem = leftItem;
 			case CENTER:
-				selectedItem = menuItems.members[curSelected];
+				newSelectedItem = menuItems.members[curSelected];
 			case RIGHT:
-				selectedItem = rightItem;
+				newSelectedItem = rightItem;
 		}
 		
 		if (forced || callOnScripts('onSelectItem', [selectedItem], true) != psychlua.LuaUtils.Function_Stop) {
-			for (item in menuItems)
-				item.selected = (item == selectedItem);
+			if (selectedItem != null)
+				selectedItem.selected = false;
+			newSelectedItem.selected = true;
+			selectedItem = newSelectedItem;
 			
 			if (change != 0)
 				FlxG.sound.play(Paths.sound('scrollMenu'));

@@ -72,7 +72,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 	
 	public function getStateName():String { // Used to load the appropriate substate script
 		var clsName:String = Type.getClassName(Type.getClass(this));
-		return clsName.substr(clsName.indexOf('.') + 1);
+		return clsName.substr(clsName.lastIndexOf('.') + 1);
 	}
 	function getFolderName():String {
 		return 'substates';
