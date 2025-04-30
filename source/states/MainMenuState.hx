@@ -179,7 +179,7 @@ class MainMenuState extends ScriptedState
 	
 	function positionMenuItems():Void {
 		for (i => item in menuItems.members) {
-			item.setPosition(0, (i - menuItems.length * .5 + 1) * itemSpacing);
+			item.setPosition(0, i * itemSpacing + (FlxG.height - menuItems.length * itemSpacing) * .5);
 			item.screenCenter(X);
 		}
 		
