@@ -427,43 +427,32 @@ class NoteOffsetState extends ScriptedState
 
 	var zoomTween:FlxTween;
 	var lastBeatHit:Int = -1;
-	override public function beatHit() {
-		super.beatHit();
-
-		if(lastBeatHit == curBeat)
-		{
+	override public function beatHit(beat:Int):Void {
+		super.beatHit(beat);
+		
+		if (lastBeatHit == beat)
 			return;
-		}
-
-		if(curBeat % 2 == 0)
-		{
+		
+		if (beat % 2 == 0) {
 			boyfriend.dance();
 			gf.dance();
 		}
 		
-		if(curBeat % 4 == 2)
-		{
+		if (beat % 4 == 2) {
 			FlxG.camera.zoom = 1.15;
-
-			if(zoomTween != null) zoomTween.cancel();
-			zoomTween = FlxTween.tween(FlxG.camera, {zoom: 1}, 1, {ease: FlxEase.circOut, onComplete: function(twn:FlxTween)
-				{
-					zoomTween = null;
-				}
-			});
-
+			
 			beatText.alpha = 1;
 			beatText.y = 320;
 			beatText.velocity.y = -150;
-			if(beatTween != null) beatTween.cancel();
-			beatTween = FlxTween.tween(beatText, {alpha: 0}, 1, {ease: FlxEase.sineIn, onComplete: function(twn:FlxTween)
-				{
-					beatTween = null;
-				}
-			});
+
+			if (zoomTween != null) zoomTween.cancel();
+			zoomTween = FlxTween.tween(FlxG.camera, {zoom: 1}, 1, {ease: FlxEase.circOut, onComplete: (_) -> zoomTween = null});
+			
+			if (beatTween != null) beatTween.cancel();
+			beatTween = FlxTween.tween(beatText, {alpha: 0}, 1, {ease: FlxEase.sineIn, onComplete: (_) -> beatTween = null});
 		}
 
-		lastBeatHit = curBeat;
+		lastBeatHit = beat;
 	}
 
 	function repositionCombo()

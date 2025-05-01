@@ -455,8 +455,11 @@ class PlayState extends ScriptedState
 		add(comboGroup);
 		add(uiGroup);
 		add(noteGroup);
-
+		
+		lastBeatHit = -8;
+		lastStepHit = lastBeatHit * 4;
 		Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
+		
 		var showTime:Bool = (ClientPrefs.data.timeBarType != 'Disabled');
 		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, 400, "", 32);
 		timeTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -936,10 +939,7 @@ class PlayState extends ScriptedState
 			}
 			moveCameraSection();
 
-			startTimer = new FlxTimer().start(Conductor.crochet / 1000 / playbackRate, function(tmr:FlxTimer)
-			{
-				characterBopper(tmr.loopsLeft);
-
+			startTimer = new FlxTimer().start(Conductor.crochet / 1000 / playbackRate, (tmr:FlxTimer) -> {
 				var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
 				var introImagesArray:Array<String> = [formatUI('ready'), formatUI('set'), formatUI('go')];
 				introAssets.set(stageUI, introImagesArray);
@@ -948,8 +948,7 @@ class PlayState extends ScriptedState
 				var antialias:Bool = (ClientPrefs.data.antialiasing && !isPixelStage);
 				var tick:Countdown = THREE;
 
-				switch (swagCounter)
-				{
+				switch (swagCounter) {
 					case 0:
 						FlxG.sound.play(Paths.sound('intro3' + introSoundsSuffix), 0.6);
 						tick = THREE;
@@ -986,7 +985,7 @@ class PlayState extends ScriptedState
 				callOnLuas('onCountdownTick', [swagCounter]);
 				callOnHScript('onCountdownTick', [tick, swagCounter]);
 
-				swagCounter += 1;
+				swagCounter ++;
 			}, 5);
 		}
 		return true;
@@ -1781,8 +1780,6 @@ class PlayState extends ScriptedState
 		#end
 		
 		super.update(elapsed);
-		setOnScripts('curDecStep', curDecStep);
-		setOnScripts('curDecBeat', curDecBeat);
 		setOnScripts('botPlay', cpuControlled);
 
 		updateIconsScale(elapsed);
@@ -3074,44 +3071,37 @@ class PlayState extends ScriptedState
 		super.destroy();
 	}
 
-	var lastStepHit:Int = -1;
-	public override function stepHit()
-	{
-		if (curStep == lastStepHit) {
+	var lastStepHit:Int;
+	public override function stepHit(step:Int):Void {
+		if (step == lastStepHit)
 			return;
-		}
 		
-		super.stepHit();
-
-		lastStepHit = curStep;
+		super.stepHit(step);
+		
+		lastStepHit = step;
 	}
-
-	var lastBeatHit:Int = -1;
-
-	public override function beatHit()
-	{
-		if(lastBeatHit >= curBeat) {
-			//trace('BEAT HIT: ' + curBeat + ', LAST HIT: ' + lastBeatHit);
+	
+	var lastBeatHit:Int;
+	public override function beatHit(beat:Int):Void {
+		if (lastBeatHit >= beat)
 			return;
-		}
-
+		
 		if (generatedMusic)
 			notes.members.sort((a:Note, b:Note) -> Std.int(b.strumTime) - Std.int(a.strumTime));
-
+		
 		iconP1.scale.set(1.2, 1.2);
 		iconP2.scale.set(1.2, 1.2);
-
+		
 		iconP1.updateHitbox();
 		iconP2.updateHitbox();
-
-		characterBopper(curBeat);
-
-		super.beatHit();
-		lastBeatHit = curBeat;
+		
+		characterBopper(beat);
+		
+		super.beatHit(beat);
+		lastBeatHit = beat;
 	}
 
-	public function characterBopper(beat:Int):Void
-	{
+	public function characterBopper(beat:Int):Void {
 		if (gf != null && beat % Math.round(gfSpeed * gf.danceEveryNumBeats) == 0 && !gf.getAnimationName().startsWith('sing') && !gf.stunned)
 			gf.dance();
 		if (boyfriend != null && beat % boyfriend.danceEveryNumBeats == 0 && !boyfriend.getAnimationName().startsWith('sing') && !boyfriend.stunned)
@@ -3120,39 +3110,34 @@ class PlayState extends ScriptedState
 			dad.dance();
 	}
 
-	public function playerDance():Void
-	{
+	public function playerDance():Void {
 		var anim:String = boyfriend.getAnimationName();
 		if(boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 #if FLX_PITCH / FlxG.sound.music.pitch #end) * boyfriend.singDuration && anim.startsWith('sing') && !anim.endsWith('miss'))
 			boyfriend.dance();
 	}
 
-	public override function sectionHit()
-	{
-		if (SONG.notes[curSection] != null)
-		{
+	public override function sectionHit(section:Int):Void {
+		if (SONG.notes[section] != null) {
 			if (generatedMusic && !endingSong && !isCameraOnForcedPos)
 				moveCameraSection();
 
-			if (camZooming && FlxG.camera.zoom < 1.35 && ClientPrefs.data.camZooms)
-			{
+			if (camZooming && FlxG.camera.zoom < 1.35 && ClientPrefs.data.camZooms) {
 				FlxG.camera.zoom += 0.015 * camZoomingMult;
 				camHUD.zoom += 0.03 * camZoomingMult;
 			}
 
-			if (SONG.notes[curSection].changeBPM)
-			{
-				Conductor.bpm = SONG.notes[curSection].bpm;
+			if (SONG.notes[section].changeBPM) {
+				Conductor.bpm = SONG.notes[section].bpm;
 				setOnScripts('curBpm', Conductor.bpm);
 				setOnScripts('crochet', Conductor.crochet);
 				setOnScripts('stepCrochet', Conductor.stepCrochet);
 			}
-			setOnScripts('mustHitSection', SONG.notes[curSection].mustHitSection);
-			setOnScripts('altAnim', SONG.notes[curSection].altAnim);
-			setOnScripts('gfSection', SONG.notes[curSection].gfSection);
+			setOnScripts('altAnim', SONG.notes[section].altAnim);
+			setOnScripts('gfSection', SONG.notes[section].gfSection);
+			setOnScripts('mustHitSection', SONG.notes[section].mustHitSection);
 		}
 		
-		super.sectionHit();
+		super.sectionHit(section);
 	}
 
 	function strumPlayAnim(isDad:Bool, id:Int, time:Float) {

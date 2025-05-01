@@ -7,6 +7,7 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	public var curStep:Int = 0;
 	public var curBeat:Int = 0;
 	
+	public var curDecSection:Float = 0;
 	public var curDecStep:Float = 0;
 	public var curDecBeat:Float = 0;
 	
@@ -52,18 +53,19 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		MusicBeatState.timePassedOnState += elapsed;
 		
 		var oldStep:Int = curStep;
-		updateCurStep();
+		updateStep();
 		updateBeat();
+		updateSection();
 		
 		if (oldStep != curStep) {
-			if (curStep > 0)
-				stepHit();
+			stepHit(curStep);
 
 			if (PlayState.SONG != null) {
-				if (oldStep < curStep)
-					updateSection();
-				else
+				if (oldStep < curStep) {
+					forwardSection();
+				} else {
 					rollbackSection();
+				}
 			}
 		}
 		
@@ -80,14 +82,17 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		MusicBeatState.switchState(FlxG.state);
 	}
 	
-	function updateSection():Void {
+	function forwardSection():Void {
 		if (stepsToDo < 1) stepsToDo = Math.round(getBeatsOnSection() * 4);
+		
+		if (curStep == 0) sectionHit(0); // idgaf
 		
 		while (curStep >= stepsToDo) {
 			curSection ++;
-			var beats:Float = getBeatsOnSection();
-			stepsToDo += Math.round(beats * 4);
-			sectionHit();
+			updateSection();
+			sectionHit(curSection);
+			
+			stepsToDo += Math.round(getBeatsOnSection() * 4);
 		}
 	}
 	function rollbackSection():Void {
@@ -105,52 +110,72 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 				curSection ++;
 			}
 		}
-
-		if (curSection > lastSection) sectionHit();
-	}
-	public function getBeatsOnSection() {
-		var val:Null<Float> = 4;
 		
-		if (PlayState.SONG != null && PlayState.SONG.notes[curSection] != null)
-			val = PlayState.SONG.notes[curSection].sectionBeats;
+		if (curSection > lastSection) {
+			updateSection();
+			sectionHit(curSection);
+		}
+	}
+	public function getBeatsOnSection(?section:Int):Null<Float> {
+		var val:Null<Float> = 4;
+		section ??= curSection;
+		
+		if (PlayState.SONG != null && PlayState.SONG.notes[section] != null)
+			val = PlayState.SONG.notes[section].sectionBeats;
 		
 		return (val == null ? 4 : val);
 	}
 	
-	function updateBeat():Void {
-		curBeat = Math.floor(curStep / 4);
-		curDecBeat = curDecStep / 4;
-	}
-	function updateCurStep():Void {
+	function updateStep():Void {
 		var lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
 
 		var shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
 		curDecStep = lastChange.stepTime + shit;
-		curStep = lastChange.stepTime + Math.floor(shit);
+		curStep = Math.floor(curDecStep);
+	}
+	function updateBeat():Void {
+		curDecBeat = curDecStep / 4;
+		curBeat = Math.floor(curDecBeat);
+	}
+	function updateSection():Void {
+		if (PlayState.SONG == null) return;
+		
+		var lastSectionTime:Float = 0;
+		var curCrochet:Float = Conductor.crochet;
+		
+		for (i => section in PlayState.SONG.notes) {
+			curCrochet = Conductor.getBPMFromSeconds(lastSectionTime).stepCrochet * 4;
+			var nextSectionTime = lastSectionTime + getBeatsOnSection(i) * curCrochet;
+			
+			if (nextSectionTime >= Conductor.songPosition - ClientPrefs.data.noteOffset)
+				break;
+			
+			lastSectionTime = nextSectionTime;
+		}
+		
+		curDecSection = curSection + (Conductor.songPosition - ClientPrefs.data.noteOffset - lastSectionTime) / curCrochet / getBeatsOnSection(curSection);
 	}
 
-	public function stepHit():Void {
+	public function stepHit(step:Int):Void {
 		stagesFunc(function(stage:BaseStage) {
-			stage.curStep = curStep;
 			stage.curDecStep = curDecStep;
+			stage.curStep = step;
 			stage.stepHit();
 		});
 
-		if (curStep % 4 == 0)
-			beatHit();
+		if (step % 4 == 0)
+			beatHit(curBeat);
 	}
-	public function beatHit():Void {
-		//trace('Beat: ' + curBeat);
+	public function beatHit(beat:Int):Void {
 		stagesFunc(function(stage:BaseStage) {
-			stage.curBeat = curBeat;
 			stage.curDecBeat = curDecBeat;
+			stage.curBeat = beat;
 			stage.beatHit();
 		});
 	}
-	public function sectionHit():Void {
-		//trace('Section: ' + curSection + ', Beat: ' + curBeat + ', Step: ' + curStep);
+	public function sectionHit(section:Int):Void {
 		stagesFunc(function(stage:BaseStage) {
-			stage.curSection = curSection;
+			stage.curSection = section;
 			stage.sectionHit();
 		});
 	}

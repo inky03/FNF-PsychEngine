@@ -1,6 +1,6 @@
 # List of differences
 
-The current list of differences from this fork to Psych Engine (1.0.4) are as follows:
+The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) are as follows:
 
 ## Engine changes
 
@@ -115,7 +115,10 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 ### General (Scripting)
 
 - DCE is disabled and [almost] all classes are included, to remove scripting limitations
-- `onStepHit`, `onBeatHit` and `onSectionHit` now have the respective step, beat or section passed as the first function argument
+- Added `curDecSection`
+- `onStepHit`, `onBeatHit` and `onSectionHit` functions
+	- Will now also trigger in 0 and negative time marks
+	- Now have the respective step, beat or section passed as the first function argument
 - FATAL script errors only print at the top left of the screen instead of making a new window alert
 	- These errors are highlighted in dark red, and are bigger than the other printed text
 - Script trace messages are now rendered in OpenFL instead of HaxeFlixel, so they will remain on top of the screen at any time
@@ -131,6 +134,10 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 	- `Conductor.defaultBPMChangeMap` to make default BPM change array based on an initial BPM value
 - MusicBeatState
 	- Unified with MusicBeatSubstate (now extends)
+	- Added `curDecSection`
+	- `stepHit`, `beatHit` and `sectionHit` functions
+		- Will now also trigger in 0 and negative time marks
+		- Now have the respective step, beat or section passed as the first function argument
 - Notes
 	- Improvements to note scroll direction and sustain note scaling
 		- `correctionOffset` is no longer needed due to this and has been removed
@@ -147,5 +154,8 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 	- Backend (MusicBeat)
 		- State and substate classes are unified (`MusicBeatState` extends `MusicBeatSubstate`)
 - Changed all libraries to use their latest versions (that previously weren't)
+	- HScript Iris (1.1.3 used in release -> git used in fork)
+		- Fixed increment / decrement operator `var ++` `var --`
+		- String concatenation (from yours truly I guess!)
 
 ...and more! i think...

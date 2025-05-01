@@ -502,7 +502,7 @@ class TitleState extends ScriptedState
 
 	private var sickBeats:Int = 0; //Basically curBeat but won't be skipped if you hold the tab or resize the screen
 	public static var closedState:Bool = false;
-	override function beatHit() {
+	override function beatHit(beat:Int):Void {
 		if (logoBl != null)
 			logoBl.animation.play('bump', true);
 
@@ -560,15 +560,15 @@ class TitleState extends ScriptedState
 			}
 		}
 		
-		super.beatHit();
+		super.beatHit(beat);
 	}
 	
-	override function stepHit():Void {
+	override function stepHit(step:Int):Void {
 		var syncTime:Float = FlxG.sound.music.time + Conductor.offset;
 		if (Math.abs(Conductor.songPosition - syncTime) > 10)
 			Conductor.songPosition = syncTime;
 		
-		super.stepHit();
+		super.stepHit(step);
 	}
 
 	var skippedIntro:Bool = false;

@@ -80,18 +80,23 @@ class CustomSubstate extends ScriptedSubState {
 		
 		if (!loaded) { // check if the custom substate functions exist within any script (assume it shouldnt error if that is the case)
 			var funcNames:Array<String> = ['onCustomSubstateCreate', 'onCustomSubstateCreatePost', 'onCustomSubstateUpdate', 'onCustomSubstateUpdatePost', 'onCustomSubstateDestroy'];
-			#if LUA_ALLOWED
-			for (lua in luaArray) {
-				for (funcName in funcNames)
-					loaded = (loaded || lua.exists(funcName));
+			
+			if (_parentState is ScriptedState) {
+				var scriptedState:ScriptedState = cast _parentState;
+				
+				#if LUA_ALLOWED
+				for (lua in scriptedState.luaArray) {
+					for (funcName in funcNames)
+						loaded = (loaded || lua.exists(funcName));
+				}
+				#end
+				#if HSCRIPT_ALLOWED
+				for (hscript in scriptedState.hscriptArray) {
+					for (funcName in funcNames)
+						loaded = (loaded || hscript.exists(funcName));
+				}
+				#end
 			}
-			#end
-			#if HSCRIPT_ALLOWED
-			for (hscript in hscriptArray) {
-				for (funcName in funcNames)
-					loaded = (loaded || hscript.exists(funcName));
-			}
-			#end
 		}
 		
 		if (!loaded) {

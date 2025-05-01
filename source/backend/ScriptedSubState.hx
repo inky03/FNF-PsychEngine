@@ -57,23 +57,39 @@ class ScriptedSubState extends MusicBeatSubstate {
 		callOnScripts('onDrawPost');
 	}
 	
-	public override function sectionHit() {
-		super.sectionHit();
+	public override function sectionHit(section:Int):Void {
+		super.sectionHit(section);
 		
-		setOnScripts('curSection', curSection);
-		callOnScripts('onSectionHit', [curSection]);
+		callOnScripts('onSectionHit', [section]);
 	}
-	public override function beatHit() {
-		super.beatHit();
+	public override function beatHit(beat:Int):Void {
+		super.beatHit(beat);
 		
-		setOnScripts('curBeat', curBeat);
-		callOnScripts('onBeatHit', [curBeat]);
+		callOnScripts('onBeatHit', [beat]);
 	}
-	public override function stepHit() {
-		super.stepHit();
+	public override function stepHit(step:Int):Void {
+		super.stepHit(step);
 		
-		setOnScripts('curStep', curStep);
-		callOnScripts('onStepHit', [curStep]);
+		callOnScripts('onStepHit', [step]);
+	}
+	
+	override function updateSection():Void {
+		super.updateSection();
+		
+		setOnLuas('curSection', curSection);
+		setOnLuas('curDecSection', curDecSection);
+	}
+	override function updateBeat():Void {
+		super.updateBeat();
+		
+		setOnLuas('curBeat', curBeat);
+		setOnLuas('curDecBeat', curDecBeat);
+	}
+	override function updateStep():Void {
+		super.updateStep();
+		
+		setOnLuas('curStep', curStep);
+		setOnLuas('curDecStep', curDecStep);
 	}
 	
 	public override function destroy():Void {
