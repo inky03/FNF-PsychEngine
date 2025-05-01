@@ -72,39 +72,39 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 			- Adapted for scripting flexibility
 			- Functions
 				- ```haxe
-				function onSelectItem(item, index) {}
-				function onAccept(item, index) {}
-				```
+					function onSelectItem(item, index) {}
+					function onAccept(item, index) {}
+					```
 		- FreeplayState
 			- Functions
 				- ```haxe
-				function onMusicPlayer(playing, item) {}
-				function onMusicPlayerPost(playing, item) {}
-				function onSelectItem(item, index) {}
-				function onAccept(item, index) {}
-				```
+					function onMusicPlayer(playing, item) {}
+					function onMusicPlayerPost(playing, item) {}
+					function onSelectItem(item, index) {}
+					function onAccept(item, index) {}
+					```
 		- Options Sub-states
 			- Functions
 				- ```haxe
-				function onSelectItem(item, index) {}
-				function onAccept(item) {}
-				```
+					function onSelectItem(item, index) {}
+					function onAccept(item) {}
+					```
 		- General
 			- Most states now admit scripts; loads from `scripts/states/StateName.hx`
 				- Search `extends ScriptableState` to see all scriptable states as of currently
 			- Functions
 				- ```haxe
-				function onCreate() {}
-				function onCreatePost() {}
-				function onUpdate(elapsed) {}
-				function onUpdatePost(elapsed) {}
-				function onDraw() {}
-				function onDrawPost() {}
-				function onStepHit(step) {}
-				function onBeatHit(beat) {}
-				function onSectionHit(section) {}
-				function onDestroy() {}
-				```
+					function onCreate() {}
+					function onCreatePost() {}
+					function onUpdate(elapsed) {}
+					function onUpdatePost(elapsed) {}
+					function onDraw() {}
+					function onDrawPost() {}
+					function onStepHit(step) {}
+					function onBeatHit(beat) {}
+					function onSectionHit(section) {}
+					function onDestroy() {}
+					```
 - More default imports
 	- `MusicBeatState`, `MusicBeatSubstate` and variants, for convenience
 - Fixed crashes on specific circumstances (errors that previously weren't correctly caught, ex. Null Function Pointer)
