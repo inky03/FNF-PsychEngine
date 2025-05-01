@@ -2,11 +2,9 @@ package options;
 
 class GameplaySettingsSubState extends BaseOptionsMenu
 {
-	public function new()
-	{
-		title = Language.getPhrase('gameplay_menu', 'Gameplay Settings');
-		rpcTitle = 'Gameplay Settings Menu'; //for Discord Rich Presence
-
+	public function new() {
+		super(Language.getPhrase('gameplay_menu', 'Gameplay Settings'), 'Gameplay Settings Menu');
+		
 		//I'd suggest using "Downscroll" as an example for making your own option since it is the simplest here
 		var option:Option = new Option('Downscroll', //Name
 			'Changes the notes to be located at the bottom instead of the top of the screen.', //Description
@@ -115,8 +113,6 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.maxValue = 10;
 		option.changeValue = 0.1;
 		addOption(option);
-
-		super();
 	}
 
 	function onChangeHitsoundVolume()

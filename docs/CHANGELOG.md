@@ -51,6 +51,7 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 
 ### Lua
 
+- Switch to a custom state in Lua with `openCustomState('stateName')` (note Custom States scripts only admit HScript, regardless)
 - ~~Objects can now be returned into tables from `runHaxeCode` and `runHaxeFunction`~~ *merged in 1.0.4*
 - Try compiling with `-D UNHOLYWANDERER04` to add an absolutely exquisite, brand new Lua function
 - `antialiasing` variable is now available as a default Lua variable
@@ -59,6 +60,52 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 ### HScript
 
 - State Scripting (EXPERIMENTAL)
+	- Custom States
+		- Switch to a custom state in HScript with `MusicBeatState.switchState(new CustomState('stateName'))`
+		- Will only admit the highest priority script (to prevent major code conflicts)
+		- All features **scriptable states** have
+	- Custom Sub-states
+		- Now admit script files; loads from `scripts/substates/SubStateName.hx`
+	- Scriptable States
+		- MainMenuState
+			- Adapted for scripting flexibility
+			- Functions
+				- ```haxe
+				function onSelectItem(item, index) {}
+				function onAccept(item, index) {}
+				```
+		- FreeplayState
+			- Functions
+				- ```haxe
+				function onMusicPlayer(playing, item) {}
+				function onMusicPlayerPost(playing, item) {}
+				function onSelectItem(item, index) {}
+				function onAccept(item, index) {}
+				```
+		- Options Sub-states
+			- Functions
+				- ```haxe
+				function onSelectItem(item, index) {}
+				function onAccept(item) {}
+				```
+		- General
+			- Most states now admit scripts; loads from `scripts/states/StateName.hx`
+				- Search `extends ScriptableState` to see all scriptable states as of currently
+			- Functions
+				- ```haxe
+				function onCreate() {}
+				function onCreatePost() {}
+				function onUpdate(elapsed) {}
+				function onUpdatePost(elapsed) {}
+				function onDraw() {}
+				function onDrawPost() {}
+				function onStepHit(step) {}
+				function onBeatHit(beat) {}
+				function onSectionHit(section) {}
+				function onDestroy() {}
+				```
+- More default imports
+	- `MusicBeatState`, `MusicBeatSubstate` and variants, for convenience
 - Fixed crashes on specific circumstances (errors that previously weren't correctly caught, ex. Null Function Pointer)
 - Setting game variables without using `game.` is now allowed (it was previously only allowed for getting)
 - `createGlobalCallback` now also makes the callback globally available in HScript scripts
@@ -67,8 +114,11 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 ### General (Scripting)
 
 - DCE is disabled and [almost] all classes are included, to remove scripting limitations
+- `onStepHit`, `onBeatHit` and `onSectionHit` now have the respective step, beat or section passed as the first function argument
 - FATAL script errors only print at the top left of the screen instead of making a new window alert
 	- These errors are highlighted in dark red, and are bigger than the other printed text
+- Script trace messages are now rendered in OpenFL instead of HaxeFlixel, so they will remain on top of the screen at any time
+	- "luaDebugGroup" has been removed in PlayState
 
 ### General (Source Code)
 
@@ -78,6 +128,8 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 	- Most functions now have their step & beat equivalents
 	- `Conductor.copyBPMChanges` to copy a BPM change array to a new array
 	- `Conductor.defaultBPMChangeMap` to make default BPM change array based on an initial BPM value
+- MusicBeatState
+	- Unified with MusicBeatSubstate (now extends)
 - Notes
 	- Improvements to note scroll direction and sustain note scaling
 		- `correctionOffset` is no longer needed due to this and has been removed

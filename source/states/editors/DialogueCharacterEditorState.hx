@@ -393,9 +393,13 @@ class DialogueCharacterEditorState extends MusicBeatState implements PsychUIEven
 		curAnim = 0;
 		animText.text = 'Animation: ' + character.jsonFile.animations[curAnim].anim + ' (' + (curAnim + 1) +' / ' + character.jsonFile.animations.length + ') - Press W or S to scroll';
 
+		updatePresence();
+	}
+	
+	override function updatePresence() {
 		#if DISCORD_ALLOWED
 		// Updating Discord Rich Presence
-		DiscordClient.changePresence("Dialogue Character Editor", "Editting: " + character.jsonFile.image);
+		DiscordClient.changePresence("Dialogue Character Editor", "Editing: " + character.jsonFile.image);
 		#end
 	}
 

@@ -10,6 +10,7 @@ import states.stages.StageWeek1 as BackgroundStage;
 class NoteOffsetState extends ScriptedState
 {
 	var stageDirectory:String = 'week1';
+	var createStage:Bool = true;
 	var boyfriend:Character;
 	var gf:Character;
 
@@ -35,9 +36,9 @@ class NoteOffsetState extends ScriptedState
 	var _lastControllerMode:Bool = false;
 
 	override public function create() {
-		#if DISCORD_ALLOWED
-		DiscordClient.changePresence("Delay/Combo Offset Menu", null);
-		#end
+		preCreate();
+		
+		rpcDetails = 'Delay/Combo Offset Menu';
 
 		// Cameras
 		camGame = initPsychCamera();
@@ -52,8 +53,10 @@ class NoteOffsetState extends ScriptedState
 		FlxG.sound.pause();
 
 		// Stage
-		Paths.setCurrentLevel(stageDirectory);
-		new BackgroundStage();
+		if (createStage) {
+			Paths.setCurrentLevel(stageDirectory);
+			new BackgroundStage();
+		}
 
 		preCreate();
 
@@ -163,7 +166,8 @@ class NoteOffsetState extends ScriptedState
 		updateMode();
 		_lastControllerMode = true;
 
-		Conductor.bpm = 128.0;
+		Conductor.bpm = 128;
+		Conductor.mapBPMChanges();
 		FlxG.sound.playMusic(Paths.music('offsetSong'), 1, true);
 
 		super.create();
@@ -423,8 +427,7 @@ class NoteOffsetState extends ScriptedState
 
 	var zoomTween:FlxTween;
 	var lastBeatHit:Int = -1;
-	override public function beatHit()
-	{
+	override public function beatHit() {
 		super.beatHit();
 
 		if(lastBeatHit == curBeat)

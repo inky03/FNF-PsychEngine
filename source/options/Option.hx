@@ -5,15 +5,15 @@ typedef Keybind = {
 	gamepad:String
 }
 
-enum OptionType {
+enum abstract OptionType(String) to String {
 	// Bool will use checkboxes
 	// Everything else will use a text
-	BOOL;
-	INT;
-	FLOAT;
-	PERCENT;
-	STRING;
-	KEYBIND;
+	var BOOL = 'bool';
+	var INT = 'int';
+	var FLOAT = 'float';
+	var PERCENT = 'percent';
+	var STRING = 'string';
+	var KEYBIND = 'keybind';
 }
 
 class Option

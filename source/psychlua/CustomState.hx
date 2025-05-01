@@ -16,7 +16,8 @@ class CustomState extends ScriptedState {
 	}
 	
 	public override function create():Void {
-		trace('started $stateName');
+		rpcDetails = 'Custom State ($stateName)';
+		
 		preCreate();
 		super.create();
 	}
@@ -24,12 +25,21 @@ class CustomState extends ScriptedState {
 		var loaded:Bool = #if SCRIPTS_ALLOWED startStateScripts() #else false #end;
 		
 		if (!loaded) {
-			var e:String = #if SCRIPTS_ALLOWED 'Custom state script was not found / had errors, for "$stateName"' #else 'State scripts are unsupported in this build' #end;
 			FlxTransitionableState.skipNextTransIn = true;
-			MusicBeatState.switchState(new states.ErrorState('$e\n\nPress BACK to return to Main Menu.',
-				() -> {},
+			
+			#if SCRIPTS_ALLOWED
+			var e:String = 'Custom state script was not found / had errors, for "$stateName"';
+			MusicBeatState.switchState(new states.ErrorState('$e\n\nPress ACCEPT to attempt to reload the state.\nPress BACK to return to Main Menu.',
+				() -> MusicBeatState.switchState(new CustomState(stateName)),
 				() -> MusicBeatState.switchState(new states.MainMenuState())
 			));
+			#else
+			var e:String = 'Scripts are unsupported in this build';
+			MusicBeatState.switchState(new states.ErrorState('$e\n\nPress ACCEPT or BACK to return to Main Menu.',
+				() -> MusicBeatState.switchState(new states.MainMenuState()),
+				() -> MusicBeatState.switchState(new states.MainMenuState())
+			));
+			#end
 		}
 	}
 	

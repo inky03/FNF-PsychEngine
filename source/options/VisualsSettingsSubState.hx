@@ -11,11 +11,9 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 	var notes:FlxTypedGroup<StrumNote>;
 	var splashes:FlxTypedGroup<NoteSplash>;
 	var noteY:Float = 90;
-	public function new()
-	{
-		title = Language.getPhrase('visuals_menu', 'Visuals Settings');
-		rpcTitle = 'Visuals Settings Menu'; //for Discord Rich Presence
-
+	public function new() {
+		super(Language.getPhrase('visuals_menu', 'Visual Settings'), 'Visual Settings Menu');
+		
 		// for note skins and splash skins
 		notes = new FlxTypedGroup<StrumNote>();
 		splashes = new FlxTypedGroup<NoteSplash>();
@@ -159,8 +157,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			'comboStacking',
 			BOOL);
 		addOption(option);
-
-		super();
+		
 		add(notes);
 		add(splashes);
 	}

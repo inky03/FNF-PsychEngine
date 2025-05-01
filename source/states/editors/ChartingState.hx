@@ -1829,15 +1829,18 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			}
 			catch (e:Dynamic) {}
 		}
-
-		#if DISCORD_ALLOWED
-		DiscordClient.changePresence('Chart Editor', 'Song: ' + PlayState.SONG.song);
-		#end
 		
+		updatePresence();
 		updateAudioVolume();
 		updateWaveform();
 		setPitch();
 		_cacheSections();
+	}
+	
+	override function updatePresence() {
+		#if DISCORD_ALLOWED
+		DiscordClient.changePresence('Chart Editor', 'Song: ' + PlayState.SONG.song);
+		#end
 	}
 
 	function onSongComplete()

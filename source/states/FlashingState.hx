@@ -16,6 +16,8 @@ class FlashingState extends MusicBeatState
 	override function create()
 	{
 		super.create();
+		
+		rpcDetails = 'Title Screen';
 
 		bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
 		add(bg);

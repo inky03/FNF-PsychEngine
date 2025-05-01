@@ -53,7 +53,8 @@ class DiscordClient
 			message += '($user)';
 
 		trace(message);
-		changePresence();
+		if (FlxG.state is MusicBeatSubstate)
+			cast(FlxG.state, MusicBeatSubstate).updatePresence();
 	}
 
 	private static function onError(errorCode:Int, message:cpp.ConstCharStar):Void
@@ -70,8 +71,8 @@ class DiscordClient
 	{
 		var discordHandlers:DiscordEventHandlers = new DiscordEventHandlers();
 		discordHandlers.ready = cpp.Function.fromStaticFunction(onReady);
-		discordHandlers.disconnected = cpp.Function.fromStaticFunction(onDisconnected);
 		discordHandlers.errored = cpp.Function.fromStaticFunction(onError);
+		discordHandlers.disconnected = cpp.Function.fromStaticFunction(onDisconnected);
 		Discord.Initialize(clientID, cpp.RawPointer.addressOf(discordHandlers), true, null);
 
 		if(!isInitialized) trace("Discord Client initialized");

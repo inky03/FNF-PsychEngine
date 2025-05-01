@@ -11,7 +11,7 @@ import objects.Note;
 import shaders.RGBPalette;
 import shaders.RGBPalette.RGBShaderReference;
 
-class NotesColorSubState extends MusicBeatSubstate
+class NotesColorSubState extends ScriptedSubState
 {
 	var onModeColumn:Bool = true;
 	var curSelectedMode:Int = 0;
@@ -48,9 +48,7 @@ class NotesColorSubState extends MusicBeatSubstate
 	public function new() {
 		super();
 		
-		#if DISCORD_ALLOWED
-		DiscordClient.changePresence("Note Colors Menu", null);
-		#end
+		rpcDetails = 'Note Colors Menu';
 		
 		onPixel = PlayState.isPixelStage;
 		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
@@ -177,6 +175,8 @@ class NotesColorSubState extends MusicBeatSubstate
 		NUMPADSEVEN => '7', NUMPADEIGHT => '8', NUMPADNINE => '9', A => 'A', B => 'B', C => 'C', D => 'D', E => 'E', F => 'F'];
 
 	override function update(elapsed:Float) {
+		preUpdate(elapsed);
+		
 		if (controls.BACK) {
 			FlxG.mouse.visible = false;
 			FlxG.sound.play(Paths.sound('cancelMenu'));
@@ -487,6 +487,8 @@ class NotesColorSubState extends MusicBeatSubstate
 			FlxG.sound.play(Paths.sound('cancelMenu'), 0.6);
 			updateColors();
 		}
+		
+		postUpdate(elapsed);
 	}
 
 	function pointerOverlaps(obj:Dynamic)

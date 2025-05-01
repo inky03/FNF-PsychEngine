@@ -8,8 +8,7 @@ import flixel.input.gamepad.FlxGamepad;
 import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.input.gamepad.FlxGamepadManager;
 
-class ControlsSubState extends MusicBeatSubstate
-{
+class ControlsSubState extends MusicBeatSubstate { // TODO: scriptable?
 	var curSelected:Int = 0;
 	var curAlt:Bool = false;
 
@@ -61,11 +60,9 @@ class ControlsSubState extends MusicBeatSubstate
 	public function new()
 	{
 		super();
-
-		#if DISCORD_ALLOWED
-		DiscordClient.changePresence("Controls Menu", null);
-		#end
-
+		
+		rpcDetails = 'Controls Menu';
+		
 		options.push([true]);
 		options.push([true]);
 		options.push([true, defaultKey]);

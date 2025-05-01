@@ -94,10 +94,14 @@ class Conductor
 		return Math.floor(getStepRounded(time, bpmChangeMap)/4);
 	}
 
-	public static function mapBPMChanges(song:SwagSong)
-	{
+	public static function mapBPMChanges(?song:SwagSong) {
+		if (song == null) {
+			bpmChangeMap = defaultBPMChangeMap(Conductor.bpm);
+			return;
+		}
+		
 		bpmChangeMap = defaultBPMChangeMap(song.bpm);
-
+		
 		var curBPM:Float = song.bpm;
 		var totalSteps:Int = 0;
 		var totalPos:Float = 0;
@@ -151,8 +155,7 @@ class Conductor
 	}
 
 	public static function set_bpm(newBPM:Float):Float {
-		bpm = newBPM;
-		crochet = calculateCrochet(bpm);
+		crochet = calculateCrochet(newBPM);
 		stepCrochet = crochet / 4;
 
 		return bpm = newBPM;

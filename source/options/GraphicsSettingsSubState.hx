@@ -6,11 +6,9 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 {
 	var antialiasingOption:Int;
 	var boyfriend:Character = null;
-	public function new()
-	{
-		title = Language.getPhrase('graphics_menu', 'Graphics Settings');
-		rpcTitle = 'Graphics Settings Menu'; //for Discord Rich Presence
-
+	public function new() {
+		super(Language.getPhrase('graphics_menu', 'Graphics Settings'), 'Graphics Settings Menu');
+		
 		boyfriend = new Character(840, 170, 'bf', true);
 		boyfriend.setGraphicSize(Std.int(boyfriend.width * 0.75));
 		boyfriend.updateHitbox();
@@ -20,7 +18,7 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 
 		//I'd suggest using "Low Quality" as an example for making your own option since it is the simplest here
 		var option:Option = new Option('Low Quality', //Name
-			'If checked, disables some background details,\ndecreases loading times and improves performance.', //Description
+			'If checked, disables some background details,\ndecreasing loading times and improving performance.', //Description
 			'lowQuality', //Save data variable name
 			BOOL); //Variable type
 		addOption(option);
@@ -34,20 +32,20 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		antialiasingOption = optionsArray.length-1;
 
 		var option:Option = new Option('Shaders', //Name
-			"If unchecked, disables shaders.\nIt's used for some visual effects, and also CPU intensive for weaker PCs.", //Description
+			"Enables shaders, commonly used for visual effects.\nMight be CPU intensive for weaker PCs.", //Description
 			'shaders',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('GPU Caching', //Name
-			"If checked, allows the GPU to be used for caching textures, decreasing RAM usage.\nDon't turn this on if you have a shitty Graphics Card.", //Description
+			"Allows caching textures to the GPU, decreasing RAM usage.\nDisable this if your Graphics Card isn't powerful.", //Description
 			'cacheOnGPU',
 			BOOL);
 		addOption(option);
 
 		#if !html5 //Apparently other framerates isn't correctly supported on Browser? Probably it has some V-Sync shit enabled by default, idk
 		var option:Option = new Option('Framerate',
-			"Pretty self explanatory, isn't it?",
+			"Changes the frames per second the game runs at.",
 			'framerate',
 			INT);
 		addOption(option);
@@ -59,8 +57,7 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		option.displayFormat = '%v FPS';
 		option.onChange = onChangeFramerate;
 		#end
-
-		super();
+		
 		insert(1, boyfriend);
 	}
 

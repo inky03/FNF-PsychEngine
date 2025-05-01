@@ -1523,36 +1523,36 @@ class PlayState extends ScriptedState
 	}
 
 	#if DISCORD_ALLOWED
-	override public function onFocus():Void
-	{
+	override public function onFocus():Void {
 		super.onFocus();
-		if (!paused && health > 0)
-		{
-			resetRPC(Conductor.songPosition > 0.0);
-		}
+		resetRPC(Conductor.songPosition > 0);
 	}
 
-	override public function onFocusLost():Void
-	{
+	override public function onFocusLost():Void {
 		super.onFocusLost();
-		if (!paused && health > 0 && autoUpdateRPC)
-		{
-			DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
-		}
+		if (health > 0)
+			resetRPC(false);
 	}
 	#end
+	
+	override function updatePresence():Void {
+		if (autoUpdateRPC)
+			resetRPC(Conductor.songPosition > 0);
+	}
 
 	// Updating Discord Rich Presence.
-	public var autoUpdateRPC:Bool = true; //performance setting for custom RPC things
-	function resetRPC(?showTime:Bool = false)
-	{
+	function resetRPC(showTime:Bool = false) {
 		#if DISCORD_ALLOWED
-		if(!autoUpdateRPC) return;
-
-		if (showTime)
-			DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter(), true, songLength - Conductor.songPosition - ClientPrefs.data.noteOffset);
-		else
-			DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
+		if (!autoUpdateRPC) return;
+		
+		var detailsText:String = (paused ? this.detailsPausedText : this.detailsText);
+		var stateText:String = SONG.song + ' ($storyDifficultyText)';
+		
+		if (showTime && !paused) {
+			DiscordClient.changePresence(detailsText, stateText, iconP2.getCharacter(), true, songLength - Conductor.songPosition - ClientPrefs.data.noteOffset);
+		} else {
+			DiscordClient.changePresence(detailsText, stateText, iconP2.getCharacter());
+		}
 		#end
 	}
 

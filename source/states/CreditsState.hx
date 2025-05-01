@@ -17,11 +17,8 @@ class CreditsState extends ScriptedState
 
 	var offsetThing:Float = -75;
 
-	override function create() {	
-		#if DISCORD_ALLOWED
-		// Updating Discord Rich Presence
-		DiscordClient.changePresence("In the Menus", null);
-		#end
+	override function create() {
+		rpcDetails = 'Credits Menu';
 
 		persistentUpdate = true;
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));

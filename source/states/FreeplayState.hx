@@ -61,11 +61,8 @@ class FreeplayState extends ScriptedState
 		persistentUpdate = true;
 		PlayState.isStoryMode = false;
 		WeekData.reloadWeekFiles(false);
-
-		#if DISCORD_ALLOWED
-		// Updating Discord Rich Presence
-		DiscordClient.changePresence("In the Menus", null);
-		#end
+		
+		rpcDetails = 'Freeplay Menu';
 
 		if(WeekData.weeksList.length < 1)
 		{
@@ -333,7 +330,7 @@ class FreeplayState extends ScriptedState
 		}
 		else if(FlxG.keys.justPressed.SPACE)
 		{
-			if(instPlaying != curSelected && !player.playingMusic)
+			if (instPlaying != curSelected && !player.playingMusic && callOnScripts('onMusicPlayer', [true, songs[curSelected]], true) != psychlua.LuaUtils.Function_Stop)
 			{
 				destroyFreeplayVocals();
 				FlxG.sound.music.volume = 0;
@@ -400,13 +397,17 @@ class FreeplayState extends ScriptedState
 				player.curTime = 0;
 				player.switchPlayMusic();
 				player.pauseOrResume(true);
+				
+				callOnScripts('onMusicPlayerPost', [true, songs[curSelected]]);
 			}
-			else if (instPlaying == curSelected && player.playingMusic)
+			else if (instPlaying == curSelected && player.playingMusic && callOnScripts('onMusicPlayer', [!player.playing, songs[curSelected]], true) != psychlua.LuaUtils.Function_Stop)
 			{
 				player.pauseOrResume(!player.playing);
+				
+				callOnScripts('onMusicPlayerPost', [player.playing, songs[curSelected]]);
 			}
 		}
-		else if (controls.ACCEPT && !player.playingMusic)
+		else if (controls.ACCEPT && !player.playingMusic && callOnScripts('onAccept', [songs[curSelected]], true) != psychlua.LuaUtils.Function_Stop)
 		{
 			persistentUpdate = false;
 			var songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
@@ -494,73 +495,81 @@ class FreeplayState extends ScriptedState
 
 	function changeDiff(change:Int = 0)
 	{
-		if (player.playingMusic)
-			return;
+		var next:Int = FlxMath.wrap(curDifficulty + change, 0, Difficulty.list.length-1);
+		
+		if (callOnScripts('onChangeDifficulty', [Difficulty.getString(next), next], true) != psychlua.LuaUtils.Function_Stop) {
+			if (player.playingMusic)
+				return;
 
-		curDifficulty = FlxMath.wrap(curDifficulty + change, 0, Difficulty.list.length-1);
-		#if !switch
-		intendedScore = Highscore.getScore(songs[curSelected].songName, curDifficulty);
-		intendedRating = Highscore.getRating(songs[curSelected].songName, curDifficulty);
-		#end
+			curDifficulty = next;
+			#if !switch
+			intendedScore = Highscore.getScore(songs[curSelected].songName, curDifficulty);
+			intendedRating = Highscore.getRating(songs[curSelected].songName, curDifficulty);
+			#end
 
-		lastDifficultyName = Difficulty.getString(curDifficulty, false);
-		var displayDiff:String = Difficulty.getString(curDifficulty);
-		if (Difficulty.list.length > 1)
-			diffText.text = '< ' + displayDiff.toUpperCase() + ' >';
-		else
-			diffText.text = displayDiff.toUpperCase();
+			lastDifficultyName = Difficulty.getString(curDifficulty, false);
+			var displayDiff:String = Difficulty.getString(curDifficulty);
+			if (Difficulty.list.length > 1)
+				diffText.text = '< ' + displayDiff.toUpperCase() + ' >';
+			else
+				diffText.text = displayDiff.toUpperCase();
 
-		positionHighscore();
-		missingText.visible = false;
-		missingTextBG.visible = false;
+			positionHighscore();
+			missingText.visible = false;
+			missingTextBG.visible = false;
+		}
 	}
 
 	function changeSelection(change:Int = 0, playSound:Bool = true)
 	{
 		if (player.playingMusic)
 			return;
+		
+		var next:Int = FlxMath.wrap(curSelected + change, 0, songs.length-1);
+		
+		if (callOnScripts('onSelectItem', [songs[next], next], true) != psychlua.LuaUtils.Function_Stop) {
+			curSelected = next;
+			_updateSongLastDifficulty();
+			if(playSound) FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 
-		curSelected = FlxMath.wrap(curSelected + change, 0, songs.length-1);
-		_updateSongLastDifficulty();
-		if(playSound) FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
-
-		var newColor:Int = songs[curSelected].color;
-		if(newColor != intendedColor)
-		{
-			intendedColor = newColor;
-			FlxTween.cancelTweensOf(bg);
-			FlxTween.color(bg, 1, bg.color, intendedColor);
-		}
-
-		for (num => item in grpSongs.members)
-		{
-			var icon:HealthIcon = iconArray[num];
-			item.alpha = 0.6;
-			icon.alpha = 0.6;
-			if (item.targetY == curSelected)
+			var newColor:Int = songs[curSelected].color;
+			if(newColor != intendedColor)
 			{
-				item.alpha = 1;
-				icon.alpha = 1;
+				intendedColor = newColor;
+				FlxTween.cancelTweensOf(bg);
+				FlxTween.color(bg, 1, bg.color, intendedColor);
 			}
-		}
-		
-		Mods.currentModDirectory = songs[curSelected].folder;
-		PlayState.storyWeek = songs[curSelected].week;
-		Difficulty.loadFromWeek();
-		
-		var savedDiff:String = songs[curSelected].lastDifficulty;
-		var lastDiff:Int = Difficulty.list.indexOf(lastDifficultyName);
-		if(savedDiff != null && !Difficulty.list.contains(savedDiff) && Difficulty.list.contains(savedDiff))
-			curDifficulty = Math.round(Math.max(0, Difficulty.list.indexOf(savedDiff)));
-		else if(lastDiff > -1)
-			curDifficulty = lastDiff;
-		else if(Difficulty.list.contains(Difficulty.getDefault()))
-			curDifficulty = Math.round(Math.max(0, Difficulty.defaultList.indexOf(Difficulty.getDefault())));
-		else
-			curDifficulty = 0;
 
-		changeDiff();
-		_updateSongLastDifficulty();
+			for (num => item in grpSongs.members)
+			{
+				var icon:HealthIcon = iconArray[num];
+				item.alpha = 0.6;
+				icon.alpha = 0.6;
+				if (item.targetY == curSelected)
+				{
+					item.alpha = 1;
+					icon.alpha = 1;
+				}
+			}
+			
+			Mods.currentModDirectory = songs[curSelected].folder;
+			PlayState.storyWeek = songs[curSelected].week;
+			Difficulty.loadFromWeek();
+			
+			var savedDiff:String = songs[curSelected].lastDifficulty;
+			var lastDiff:Int = Difficulty.list.indexOf(lastDifficultyName);
+			if(savedDiff != null && !Difficulty.list.contains(savedDiff) && Difficulty.list.contains(savedDiff))
+				curDifficulty = Math.round(Math.max(0, Difficulty.list.indexOf(savedDiff)));
+			else if(lastDiff > -1)
+				curDifficulty = lastDiff;
+			else if(Difficulty.list.contains(Difficulty.getDefault()))
+				curDifficulty = Math.round(Math.max(0, Difficulty.defaultList.indexOf(Difficulty.getDefault())));
+			else
+				curDifficulty = 0;
+
+			changeDiff();
+			_updateSongLastDifficulty();
+		}
 	}
 
 	inline private function _updateSongLastDifficulty()

@@ -12,13 +12,8 @@ class ModSettingsSubState extends BaseOptionsMenu
 	var save:Map<String, Dynamic> = new Map<String, Dynamic>();
 	var folder:String;
 	private var _crashed:Bool = false;
-	public function new(options:Array<Dynamic>, folder:String, name:String)
-	{
+	public function new(options:Array<Dynamic>, folder:String, name:String) {
 		this.folder = folder;
-
-		title = '';
-		//title = name;
-		rpcTitle = 'Mod Settings ($name)'; //for Discord Rich Presence
 
 		if(FlxG.save.data.modSettings == null) FlxG.save.data.modSettings = new Map<String, Dynamic>();
 		else
@@ -143,8 +138,12 @@ class ModSettingsSubState extends BaseOptionsMenu
 			close();
 			return;
 		}
-
+		
+		title = '$name Mod Settings';
+		
 		super();
+		
+		rpcDetails = 'Mod Settings ($name)'; //for Discord Rich Presence
 
 		bg.alpha = 0.75;
 		bg.color = FlxColor.WHITE;
@@ -174,12 +173,15 @@ class ModSettingsSubState extends BaseOptionsMenu
 
 	override public function update(elapsed:Float)
 	{
-		if(_crashed)
-		{
+		preUpdate(elapsed);
+		
+		if (_crashed) {
 			close();
 			return;
 		}
 		super.update(elapsed);
+		
+		postUpdate(elapsed);
 	}
 
 	override public function close()

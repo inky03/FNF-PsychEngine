@@ -227,6 +227,10 @@ class DialogueEditorState extends MusicBeatState implements PsychUIEventHandler.
 		daText.y = DialogueBoxPsych.DEFAULT_TEXT_Y;
 		if(daText.rows > 2) daText.y -= DialogueBoxPsych.LONG_TEXT_ADD;
 
+		updatePresence();
+	}
+	
+	override function updatePresence() {
 		#if DISCORD_ALLOWED
 		// Updating Discord Rich Presence
 		var rpcText:String = lineInputText.text;

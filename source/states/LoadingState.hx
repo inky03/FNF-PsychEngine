@@ -127,7 +127,7 @@ class LoadingState extends MusicBeatState
 					}
 					else
 					{
-						trace('"$scriptPath" contains no \"onCreate" function, stopping script.');
+						ScriptedState.debugPrint('"$scriptPath" contains no \"onCreate" function, stopping script.', FlxColor.YELLOW);
 					}
 				}
 				catch(e:IrisError)

@@ -319,11 +319,10 @@ class WeekEditorState extends MusicBeatState implements PsychUIEventHandler.Psyc
 			missingFileText.text = 'MISSING FILE: images/storymenu/' + assetName + '.png';
 		}
 		recalculateStuffPosition();
-
-		#if DISCORD_ALLOWED
-		// Updating Discord Rich Presence
-		DiscordClient.changePresence("Week Editor", "Editting: " + weekFileName);
-		#end
+		
+		rpcDetails = 'Week Editor';
+		rpcState = 'Editing $weekFileName';
+		updatePresence();
 	}
 	
 	public function UIEvent(id:String, sender:Dynamic) {

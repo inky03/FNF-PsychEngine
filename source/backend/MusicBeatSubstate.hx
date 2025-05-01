@@ -16,16 +16,31 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	public var stages:Array<BaseStage> = [];
 	public var variables:Map<String, Dynamic> = [];
 	
+	public var rpcDetails:Null<String> = null;
+	public var rpcState:Null<String> = null;
+	public var autoUpdateRPC:Bool = true; //performance setting for custom RPC things
+	
 	public function new() {
 		super();
 	}
 	
 	public override function create() {
+		subStateClosed.add((_) -> updatePresence());
+		
 		if (!_pre) preCreate();
 		super.create();
+		
+		updatePresence();
 	}
 	public function preCreate():Void {
 		_pre = true;
+	}
+	
+	public function updatePresence():Void {
+		#if DISCORD_ALLOWED
+		if (autoUpdateRPC && (rpcDetails != null || rpcState != null))
+			DiscordClient.changePresence(rpcDetails, rpcState);
+		#end
 	}
 	
 	public var controls(get, never):Controls;
@@ -34,12 +49,9 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	}
 	
 	public override function update(elapsed:Float) {
-		var oldStep:Int = curStep;
 		MusicBeatState.timePassedOnState += elapsed;
 		
-		if (FlxG.keys.justPressed.F5) // add keybind?
-			MusicBeatState.switchState(this);
-		
+		var oldStep:Int = curStep;
 		updateCurStep();
 		updateBeat();
 		
@@ -59,11 +71,18 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 			
 		stagesFunc((stage:BaseStage) -> stage.update(elapsed));
 		
+		if (FlxG.keys.justPressed.F5) // add keybind?
+			reset();
+		
 		super.update(elapsed);
+	}
+	public function reset():Void {
+		MusicBeatState.switchState(FlxG.state);
 	}
 	
 	function updateSection():Void {
 		if (stepsToDo < 1) stepsToDo = Math.round(getBeatsOnSection() * 4);
+		
 		while (curStep >= stepsToDo) {
 			curSection ++;
 			var beats:Float = getBeatsOnSection();
@@ -77,12 +96,13 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		var lastSection:Int = curSection;
 		curSection = 0;
 		stepsToDo = 0;
-		for (i in 0...PlayState.SONG.notes.length) {
-			if (PlayState.SONG.notes[i] != null) {
+		for (section in PlayState.SONG.notes) {
+			if (section != null) {
 				stepsToDo += Math.round(getBeatsOnSection() * 4);
-				if(stepsToDo > curStep) break;
+				if (stepsToDo > curStep)
+					break;
 				
-				curSection++;
+				curSection ++;
 			}
 		}
 

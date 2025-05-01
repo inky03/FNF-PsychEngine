@@ -42,7 +42,7 @@ class MusicBeatState extends MusicBeatSubstate {
 		
 		super.preCreate();
 	}
-
+	
 	public function initPsychCamera():PsychCamera {
 		var camera = new PsychCamera();
 		FlxG.cameras.reset(camera);

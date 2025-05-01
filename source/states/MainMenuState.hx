@@ -47,6 +47,8 @@ class MainMenuState extends ScriptedState
 	var bg:FlxSprite;
 	var magenta:FlxSprite;
 	var camFollow:FlxObject;
+	
+	var justEntered:Bool = true;
 
 	static var showOutdatedWarning:Bool = true;
 	var openDebugMenu:Bool = false;
@@ -59,11 +61,8 @@ class MainMenuState extends ScriptedState
 		Mods.pushGlobalMods();
 		#end
 		Mods.loadTopMod();
-
-		#if DISCORD_ALLOWED
-		// Updating Discord Rich Presence
-		DiscordClient.changePresence("In the Menus", null);
-		#end
+		
+		rpcDetails = 'In the Menus';
 
 		persistentUpdate = persistentDraw = true;
 		
@@ -132,7 +131,10 @@ class MainMenuState extends ScriptedState
 			pause(false);
 		});
 		subStateOpened.add((sub:flixel.FlxSubState) -> pause(true));
-		if (openDebugMenu) openSubState(new MasterEditorMenu(true));
+		if (openDebugMenu) {
+			openSubState(new MasterEditorMenu(true));
+			FlxTransitionableState.skipNextTransOut = true;
+		}
 
 		#if CHECK_FOR_UPDATES
 		if (showOutdatedWarning && ClientPrefs.data.checkForUpdates && substates.OutdatedSubState.updateVersion > modVersion) {
@@ -163,8 +165,12 @@ class MainMenuState extends ScriptedState
 	}
 	
 	function pause(yea:Bool):Void {
+		if (justEntered && !openDebugMenu)
+			yea = false;
+		
 		FlxG.mouse.visible = !yea;
 		selectedSomethin = yea;
+		justEntered = false;
 	}
 
 	function addMenuItem(name:String, ?onAccept:MenuItem -> Void, column:MainMenuColumn = CENTER):MenuItem {
@@ -184,6 +190,16 @@ class MainMenuState extends ScriptedState
 		}
 		
 		updateYScroll();
+	}
+	
+	function getAllMenuItems():Array<MenuItem> {
+		var items:Array<MenuItem> = [];
+		
+		for (item in menuItems) items.push(item);
+		if (leftItem != null) items.push(leftItem);
+		if (rightItem != null) items.push(rightItem);
+		
+		return items;
 	}
 	
 	function updateYScroll():Void {
@@ -338,7 +354,7 @@ class MainMenuState extends ScriptedState
 	}
 	
 	function fade(fadeIn:Bool = false, ?ignore:MenuItem):Void {
-		for (item in menuItems) {
+		for (item in getAllMenuItems()) {
 			if (item == ignore)
 				continue;
 			
@@ -373,7 +389,7 @@ class MainMenuState extends ScriptedState
 				newSelectedItem = rightItem;
 		}
 		
-		if (forced || callOnScripts('onSelectItem', [selectedItem], true) != psychlua.LuaUtils.Function_Stop) {
+		if (forced || callOnScripts('onSelectItem', [selectedItem, curSelected], true) != psychlua.LuaUtils.Function_Stop) {
 			if (selectedItem != null)
 				selectedItem.selected = false;
 			newSelectedItem.selected = true;

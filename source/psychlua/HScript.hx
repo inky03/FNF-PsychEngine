@@ -73,35 +73,22 @@ class HScript extends Iris
 			trace('initializing haxe interp for: ${parent.scriptName}');
 			try {
 				parent.hscript = new HScript(parent, code, varsToBring);
-			}
-			catch(e:Dynamic) {
-				var pos:HScriptInfos = cast {fileName: parent.scriptName, isLua: true};
-				if(parent.lastCalledFunction != '') pos.funcName = parent.lastCalledFunction;
+			} catch(e:Dynamic) {
+				catchError(hs, e, parent.lastCalledFunction);
 				parent.hscript = null;
-				
-				var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
-				Iris.fatal(errorString, pos);
 			}
 		}
 		else
 		{
-			try
-			{
+			try {
 				hs.scriptCode = code;
 				hs.varsToBring = varsToBring;
 				hs.parse(true);
 				var ret:Dynamic = hs.execute();
 				hs.returnValue = ret;
-			}
-			catch(e:Dynamic)
-			{
-				var pos:HScriptInfos = cast hs.interp.posInfos();
-				pos.isLua = true;
-				if(parent.lastCalledFunction != '') pos.funcName = parent.lastCalledFunction;
-				hs.returnValue = null;
-				
-				var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
-				Iris.fatal(errorString, pos);
+			} catch(e:Dynamic) {
+				catchError(hs, e, parent.lastCalledFunction);
+				parent.hscript = null;
 			}
 		}
 	}
@@ -344,10 +331,12 @@ class HScript extends Iris
 			}
 			return false;
 		});
-
-		// For adding your own callbacks
-		// not very tested but should work
+		
+		set('parentLua', null);
+		
 		#if LUA_ALLOWED
+		set('parentLua', parentLua);
+		
 		set('createGlobalCallback', function(name:String, func:Dynamic)
 		{
 			if (!Reflect.isFunction(func)) {
@@ -362,8 +351,7 @@ class HScript extends Iris
 			
 			FunkinLua.customFunctions.set(name, func);
 		});
-
-		// this one was tested
+		
 		set('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua = null)
 		{
 			if (!Reflect.isFunction(func)) {
@@ -376,8 +364,7 @@ class HScript extends Iris
 			if(funk != null) funk.addLocalCallback(name, func);
 			else Iris.error('createCallback ($name): 3rd argument is null', this.interp.posInfos());
 		});
-		#end
-
+		
 		set('addHaxeLibrary', function(libName:String, ?libPackage:String = '') {
 			try {
 				var str:String = '';
@@ -385,16 +372,12 @@ class HScript extends Iris
 					str = libPackage + '.';
 
 				set(libName, Type.resolveClass(str + libName));
-			}
-			catch (e:IrisError) {
-				Iris.error(Printer.errorToString(e, false), this.interp.posInfos());
+			} catch (e:Dynamic) {
+				catchError(this, e);
 			}
 		});
-		#if LUA_ALLOWED
-		set('parentLua', parentLua);
-		#else
-		set('parentLua', null);
 		#end
+		
 		set('this', this);
 		set('game', parentState);
 		set('controls', Controls.instance);
@@ -408,6 +391,8 @@ class HScript extends Iris
 		set('Function_StopLua', LuaUtils.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
 		set('Function_StopHScript', LuaUtils.Function_StopHScript);
 		set('Function_StopAll', LuaUtils.Function_StopAll);
+		
+		set('catchError', (e:Dynamic) -> catchError(this, e));
 	}
 
 	#if LUA_ALLOWED
@@ -469,9 +454,8 @@ class HScript extends Iris
 			try {
 				if (c != null)
 					funk.hscript.set(libName, c);
-			}
-			catch (e:IrisError) {
-				Iris.error(Printer.errorToString(e, false), pos);
+			} catch (e:Dynamic) {
+				catchError(funk.hscript, e);
 			}
 			FunkinLua.lastCalledScript = funk;
 			if (FunkinLua.getBool('luaDebugMode') && FunkinLua.getBool('luaDeprecatedWarnings'))
@@ -494,25 +478,35 @@ class HScript extends Iris
 			
 			return {funName: funcToRun, signature: func, returnValue: ret};
 		} catch(e:Dynamic) {
-			if (unsafe) {
-				throw e;
-				return null;
-			}
-			
-			var pos:HScriptInfos = cast this.interp.posInfos();
-			pos.funcName = funcToRun;
-			#if LUA_ALLOWED
-			if (parentLua != null) {
-				pos.isLua = true;
-				if (parentLua.lastCalledFunction != '')
-					pos.funcName = parentLua.lastCalledFunction;
-			}
-			#end
-			
-			var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
-			(unsafe ? Iris.fatal : Iris.error) (errorString, pos);
+			catchError(this, e, funcToRun);
 		}
 		return null;
+	}
+	
+	public static function catchError(hs:HScript, e:Dynamic, ?funcToRun:String):Void {
+		if (hs.unsafe) {
+			throw e;
+			return;
+		}
+		
+		var pos:HScriptInfos = cast hs.interp.posInfos();
+		pos.funcName = funcToRun;
+		#if LUA_ALLOWED
+		if (hs.parentLua != null) {
+			pos.isLua = true;
+			if (hs.parentLua.lastCalledFunction != '')
+				pos.funcName = hs.parentLua.lastCalledFunction;
+		}
+		#end
+		
+		var errorString:String = 'Unknown Error';
+		if (Std.isOfType(e, IrisError)) {
+			errorString = Printer.errorToString(e, false);
+		} else if (e != null) {
+			errorString = Std.string(e);
+		}
+		
+		(hs.unsafe ? Iris.fatal : Iris.error) (errorString, pos);
 	}
 
 	override public function destroy()

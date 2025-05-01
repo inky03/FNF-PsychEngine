@@ -25,6 +25,8 @@ class StoryMenuState extends ScriptedState
 	var curDifficulty:Int = 1;
 
 	var txtWeekTitle:FlxText;
+	var blackBar:FlxSprite;
+	var bgYellow:FlxSprite;
 	var bgSprite:FlxSprite;
 
 	private static var curWeek:Int = 0;
@@ -53,11 +55,8 @@ class StoryMenuState extends ScriptedState
 		persistentUpdate = persistentDraw = true;
 		PlayState.isStoryMode = true;
 		WeekData.reloadWeekFiles(true);
-
-		#if DISCORD_ALLOWED
-		// Updating Discord Rich Presence
-		DiscordClient.changePresence("In the Menus", null);
-		#end
+		
+		rpcDetails = 'Story Menu';
 
 		if(WeekData.weeksList.length < 1)
 		{
@@ -79,14 +78,14 @@ class StoryMenuState extends ScriptedState
 		txtWeekTitle.alpha = 0.7;
 
 		var ui_tex = Paths.getSparrowAtlas('campaign_menu_UI_assets');
-		var bgYellow:FlxSprite = new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, 0xFFF9CF51);
+		bgYellow = new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, 0xFFF9CF51);
 		bgSprite = new FlxSprite(0, 56);
 
 		grpWeekText = new FlxTypedGroup<MenuItem>();
 		add(grpWeekText);
 
-		var blackBarThingie:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, 56, FlxColor.BLACK);
-		add(blackBarThingie);
+		blackBar = new FlxSprite().makeGraphic(FlxG.width, 56, FlxColor.BLACK);
+		add(blackBar);
 
 		grpWeekCharacters = new FlxTypedGroup<MenuCharacter>();
 

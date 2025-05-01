@@ -2,7 +2,7 @@ package options;
 
 import openfl.utils.Assets;
 
-class LanguageSubState extends MusicBeatSubstate
+class LanguageSubState extends ScriptedSubState
 {
 	#if TRANSLATIONS_ALLOWED
 	var grpLanguages:FlxTypedGroup<Alphabet> = new FlxTypedGroup<Alphabet>();
@@ -13,6 +13,8 @@ class LanguageSubState extends MusicBeatSubstate
 	public function new()
 	{
 		super();
+		
+		rpcDetails = 'Language Select Menu';
 		
 		var bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.color = 0xFFea71fd;
@@ -102,8 +104,9 @@ class LanguageSubState extends MusicBeatSubstate
 	}
 
 	var changedLanguage:Bool = false;
-	override function update(elapsed:Float)
-	{
+	override function update(elapsed:Float) {
+		preUpdate(elapsed);
+		
 		super.update(elapsed);
 
 		var mult:Int = (FlxG.keys.pressed.SHIFT) ? 4 : 1;
@@ -137,20 +140,26 @@ class LanguageSubState extends MusicBeatSubstate
 			updateTitleText();
 			changeSelected();
 		}
+		
+		postUpdate(elapsed);
 	}
 
-	function changeSelected(change:Int = 0)
-	{
-		curSelected = FlxMath.wrap(curSelected + change, 0, languages.length-1);
-		for (num => lang in grpLanguages) {
-			lang.targetY = num - curSelected;
-			
-			lang.alpha = (num == curSelected ? 1 : .6);
-			lang.color = (ClientPrefs.data.language == languages[num] ? 0xffffcc33 : FlxColor.WHITE);
-		}
+	function changeSelected(change:Int = 0) {
+		var next:Int = FlxMath.wrap(curSelected + change, 0, languages.length - 1);
 		
-		if (change != 0)
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+		if (callOnScripts('onSelectItem', [languages[next], next], true) != psychlua.LuaUtils.Function_Stop) {
+			curSelected = next;
+			
+			for (num => lang in grpLanguages) {
+				lang.targetY = num - curSelected;
+				
+				lang.alpha = (num == curSelected ? 1 : .6);
+				lang.color = (ClientPrefs.data.language == languages[num] ? 0xffffcc33 : FlxColor.WHITE);
+			}
+			
+			if (change != 0)
+				FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+		}
 	}
 	
 	function updateTitleText() {

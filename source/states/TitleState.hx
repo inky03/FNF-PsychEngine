@@ -67,6 +67,8 @@ class TitleState extends ScriptedState
 	override public function create():Void {
 		Paths.clearStoredMemory();
 		Paths.clearUnusedMemory();
+		
+		rpcDetails = 'Title Screen';
 
 		if (!initialized) {
 			ClientPrefs.loadPrefs();
@@ -500,31 +502,27 @@ class TitleState extends ScriptedState
 
 	private var sickBeats:Int = 0; //Basically curBeat but won't be skipped if you hold the tab or resize the screen
 	public static var closedState:Bool = false;
-	override function beatHit()
-	{
-		super.beatHit();
-
-		if(logoBl != null)
+	override function beatHit() {
+		if (logoBl != null)
 			logoBl.animation.play('bump', true);
 
-		if(gfDance != null)
-		{
+		if (gfDance != null) {
 			danceLeft = !danceLeft;
-			if(!useIdle)
-			{
-				if (danceLeft)
+			if (!useIdle) {
+				if (danceLeft) {
 					gfDance.animation.play('danceRight');
-				else
+				} else {
 					gfDance.animation.play('danceLeft');
+				}
 			}
-			else if(curBeat % 2 == 0) gfDance.animation.play('idle', true);
+			else if(curBeat % 2 == 0) {
+				gfDance.animation.play('idle', true);
+			}
 		}
 
-		if(!closedState)
-		{
-			sickBeats++;
-			switch (sickBeats)
-			{
+		if (!closedState) {
+			sickBeats ++;
+			switch (sickBeats) {
 				case 1:
 					//FlxG.sound.music.stop();
 					FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
@@ -561,6 +559,16 @@ class TitleState extends ScriptedState
 					skipIntro();
 			}
 		}
+		
+		super.beatHit();
+	}
+	
+	override function stepHit():Void {
+		var syncTime:Float = FlxG.sound.music.time + Conductor.offset;
+		if (Math.abs(Conductor.songPosition - syncTime) > 10)
+			Conductor.songPosition = syncTime;
+		
+		super.stepHit();
 	}
 
 	var skippedIntro:Bool = false;
