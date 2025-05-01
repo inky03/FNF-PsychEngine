@@ -18,11 +18,7 @@ import openfl.events.Event;
 import openfl.display.StageScaleMode;
 import lime.app.Application;
 import states.TitleState;
-
-#if HSCRIPT_ALLOWED
-import crowplexus.iris.Iris;
-import psychlua.HScript.HScriptInfos;
-#end
+import psychlua.HScript;
 
 #if (linux || mac)
 import lime.graphics.Image;
@@ -94,42 +90,9 @@ class Main extends Sprite
 		Mods.loadTopMod();
 
 		FlxG.save.bind('funkin', CoolUtil.getSavePath());
+		Difficulty.resetList();
 		Highscore.load();
-
-		#if HSCRIPT_ALLOWED
-		function getMessageInfo(x:Any, ?pos:haxe.PosInfos, ?header:String):String {
-			var newPos:HScriptInfos = cast pos;
-			if (newPos.showLine == null) newPos.showLine = true;
-			var msgInfo:String = (newPos.funcName != null ? '(${newPos.funcName}) - ' : '')  + '${newPos.fileName}:';
-			#if LUA_ALLOWED
-			if (newPos.isLua == true) {
-				msgInfo += 'HScript:';
-				newPos.showLine = false;
-			}
-			#end
-			if (newPos.showLine == true) {
-				msgInfo += '${newPos.lineNumber}:';
-			}
-			return '${header ?? ''}$msgInfo $x';
-		}
-		
-		Iris.warn = function(x, ?pos:haxe.PosInfos) {
-			Iris.logLevel(WARN, x, pos);
-			ScriptedState.debugPrint(getMessageInfo(x, pos, 'WARNING: '), FlxColor.YELLOW);
-		}
-		Iris.error = function(x, ?pos:haxe.PosInfos) {
-			Iris.logLevel(ERROR, x, pos);
-			ScriptedState.debugPrint(getMessageInfo(x, pos, 'ERROR: '), FlxColor.RED);
-		}
-		Iris.fatal = function(x, ?pos:haxe.PosInfos) {
-			Iris.logLevel(FATAL, x, pos);
-			ScriptedState.debugPrint(getMessageInfo(x, pos, 'FATAL: '), 0xffbb0000, 17);
-		}
-		Iris.print = function(x, ?pos:haxe.PosInfos) {
-			Iris.logLevel(NONE, x, pos);
-			ScriptedState.debugPrint(getMessageInfo(x, pos, 'TRACE: '), FlxColor.CYAN);
-		}
-		#end
+		HScript.init();
 
 		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
 		Controls.instance = new Controls();

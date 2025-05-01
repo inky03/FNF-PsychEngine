@@ -35,8 +35,11 @@ import psychlua.FunkinLua;
 #if HSCRIPT_ALLOWED
 import crowplexus.iris.Iris;
 import crowplexus.iris.IrisConfig;
+import crowplexus.iris.ErrorSeverity;
 import crowplexus.hscript.Expr.Error as IrisError;
 import crowplexus.hscript.Printer;
+
+using crowplexus.iris.utils.Ansi;
 
 typedef HScriptInfos = {
 	> haxe.PosInfos,
@@ -93,7 +96,55 @@ class HScript extends Iris
 		}
 	}
 	#end
-
+	
+	public static function init():Void {
+		Iris.logLevel = (level:ErrorSeverity, x:Dynamic, ?pos:haxe.PosInfos) -> {
+			var newPos:HScriptInfos = cast pos;
+			if (newPos.showLine == null) newPos.showLine = true;
+			var msgInfo:String = (newPos.funcName != null ? '(${newPos.funcName}) - ' : '')  + '${newPos.fileName}:';
+			#if LUA_ALLOWED
+			if (newPos.isLua == true) {
+				msgInfo += 'HScript:';
+				newPos.showLine = false;
+			}
+			#end
+			if (newPos.showLine == true) {
+				msgInfo += '${newPos.lineNumber}:';
+			}
+			
+			var header:String = getErrorHeader(level);
+			var message:String = '$header$msgInfo $x';
+			
+			var errorColor:AnsiColor = switch(level) {
+				case NONE: CYAN;
+				case WARN: YELLOW;
+				case ERROR | FATAL: RED;
+			}
+			var printMessage:String = message.fg(errorColor).reset();
+			if (level == FATAL)
+				printMessage = printMessage.attr(INTENSITY_BOLD);
+			
+			Main.traces?.print(message, getErrorColor(level), level == FATAL ? 17 : 15);
+			Sys.println(printMessage);
+		}
+	}
+	static function getErrorHeader(level:ErrorSeverity):String {
+		return switch (level) {
+			case NONE: 'TRACE: ';
+			case WARN: 'WARNING: ';
+			case ERROR: 'ERROR: ';
+			case FATAL: 'FATAL: ';
+		}
+	}
+	static function getErrorColor(level:ErrorSeverity):FlxColor {
+		return switch (level) {
+			case NONE: FlxColor.CYAN;
+			case WARN: FlxColor.YELLOW;
+			case ERROR: FlxColor.RED;
+			case FATAL: 0xffbb0000;
+		}
+	}
+	
 	public var origin:String;
 	public var unsafe:Bool = false;
 	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false, ?state:flixel.FlxState) {
@@ -625,6 +676,8 @@ class CustomInterp extends crowplexus.hscript.Interp {
 #else
 class HScript
 {
+	public static function init():Void {}
+	
 	#if LUA_ALLOWED
 	public static function implement(funk:FunkinLua) {
 		funk.addLocalCallback("runHaxeCode", function(codeToRun:String, ?varsToBring:Any = null, ?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):Dynamic {

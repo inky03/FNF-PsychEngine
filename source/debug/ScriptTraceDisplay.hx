@@ -28,6 +28,7 @@ class ScriptTraceDisplay extends Sprite {
 		}
 		popUp ??= new TracePopUp();
 		
+		popUp.alphaMult = popUp.alpha = color.alphaFloat;
 		popUp.format.color = color.rgb;
 		popUp.format.size = size;
 		popUp.visible = true;
@@ -35,6 +36,7 @@ class ScriptTraceDisplay extends Sprite {
 		popUp.text = text;
 		popUp.alpha = 1;
 		
+		popUp.updateWidth();
 		popUp.defaultTextFormat = popUp.format;
 		popUp.hei = popUp.textHeight;
 		
@@ -45,8 +47,6 @@ class ScriptTraceDisplay extends Sprite {
 			addChild(popUp);
 		
 		updateTextsPosition();
-		
-		Sys.println(text);
 		
 		return popUp;
 	}
@@ -74,6 +74,7 @@ class TracePopUp extends TextField {
 	static var defaultShader:SimpleOutlineShader;
 	
 	public var format:TextFormat = new TextFormat(Paths.font('vcr.ttf'));
+	public var alphaMult:Float = 1;
 	public var aliveTime:Float = 0;
 	public var curWidth:Float = 0;
 	public var hei:Float = 0;
@@ -85,7 +86,7 @@ class TracePopUp extends TextField {
 		format.letterSpacing = -.5;
 		format.leading = -2;
 		multiline = true;
-		autoSize = LEFT;
+		wordWrap = true;
 		
 		defaultShader ??= new SimpleOutlineShader();
 		shader = defaultShader;
@@ -98,7 +99,7 @@ class TracePopUp extends TextField {
 		
 		if (aliveTime >= 5000) {
 			if (aliveTime < 5000 + 2000) {
-				alpha = 1 - (aliveTime - 5000) / 2000;
+				alpha = (1 - (aliveTime - 5000) / 2000) * alphaMult;
 			} else {
 				visible = false;
 			}

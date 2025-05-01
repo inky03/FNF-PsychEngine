@@ -6,6 +6,8 @@ class ScriptedState extends ScriptedSubState {
 	public var camOther:FlxCamera = null;
 	
 	public static function debugPrint(text:String, ?color:FlxColor, ?size:Int):TracePopUp {
+		Sys.println(text);
+		
 		return Main.traces.print(text, color, size);
 	}
 	
