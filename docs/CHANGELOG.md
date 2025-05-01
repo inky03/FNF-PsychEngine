@@ -16,6 +16,7 @@ The current list of differences from this fork to Psych Engine (1.0.4) are as fo
 	- Down-Scroll editor can be toggled in this menu
 	- "Toys" (based on MoonlightCatalyst's pull request) can be toggled in this menu
 		- Like the Buddies in the FPS Plus engine Chart Editor, they play sing animations on notes
+		- You can drag them around (doesn't save currently)
 - Fixed some bugs
 	- Inconsistencies / inaccuracies related to note and hold note timing (related to BPM changes)
 	- Ignore notetypes will not play hitsounds and will not make the strums glow

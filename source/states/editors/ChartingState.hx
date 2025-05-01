@@ -565,7 +565,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	function createToys() {
 		var centerX:Float = gridBg.x * .5;
 		
-		toyGroup = new FlxTypedSpriteGroup();
+		toyGroup ??= new FlxTypedSpriteGroup();
 		toyGroup.scrollFactor.set();
 		
 		lilbf = createToy('bf', centerX + 110, FlxG.height - 50);
@@ -749,6 +749,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 	var lastBeatHit:Int = 0;
 	var lastSongTime:Float = 0;
+	var draggingToy:Character = null;
+	
+	var toyPadding:Float = -25;
 	override function update(elapsed:Float)
 	{
 		preUpdate(elapsed);
@@ -760,8 +763,29 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			return;
 		}
 		
-		if (FlxG.keys.justPressed.T)
-			trace(scrollY);
+		// Toy dragging
+		if (FlxG.mouse.justReleased)
+			draggingToy = null;
+		
+		var selectedToy:Character = null;
+		for (i in 0 ... toyGroup.length) {
+			var toy:Character = toyGroup.members[toyGroup.length - i - 1];
+			
+			toy.setColorTransform();
+			if (draggingToy != null) {
+				if (draggingToy == toy) {
+					toy.setColorTransform(.75, .75, .75);
+					toy.x = Math.min(Math.max(toy.x + FlxG.mouse.deltaViewX, toyPadding), FlxG.width - toy.width - toyPadding);
+					toy.y = Math.min(Math.max(toy.y + FlxG.mouse.deltaViewY, toyPadding), FlxG.height - toy.height - toyPadding);
+				}
+			} else if (FlxG.mouse.overlaps(toy) && selectedToy == null) {
+				toy.setColorTransform(1.5, 1.5, 1.5);
+				selectedToy = toy;
+				
+				if (FlxG.mouse.justPressed)
+					draggingToy = toy;
+			}
+		}
 		
 		var charterFocus:Bool = PsychUIInputText.focusOn == null && lastFocus == null;
 		if(autoSaveCap > 0)
@@ -1490,7 +1514,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				
 				var lilchar:Character = (note.gfNote ? lilgf : (!note.mustPress ? lildad : lilbf));
 				lilchar.playAnim(singAnimations[note.noteData % 4], true);
-				lilchar.holdTimer = -Math.max(Conductor.stepCrochet * 1.25, note.sustainLength) / 1000 / playbackRate;
+				lilchar.holdTimer = Math.min(lilchar.holdTimer, -Math.max(Conductor.stepCrochet * 1.25, note.sustainLength) / 1000 / playbackRate);
 			}
 		}
 	}
@@ -4616,6 +4640,16 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			mainBox.setPosition(mainBoxPosition.x, mainBoxPosition.y);
 			infoBox.setPosition(infoBoxPosition.x, infoBoxPosition.y);
 			UIEvent(PsychUIBox.DROP_EVENT, btn); //to force a save
+		}, btnWid);
+		btn.text.alignment = LEFT;
+		tab_group.add(btn);
+		
+		btnY += 20;
+		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Reset Toys', () -> {
+			for (toy in toyGroup)
+				toy.destroy();
+			toyGroup.clear();
+			createToys();
 		}, btnWid);
 		btn.text.alignment = LEFT;
 		tab_group.add(btn);
