@@ -34,6 +34,10 @@ class CreditsState extends ScriptedState
 		#end
 
 		var defaultList:Array<Array<String>> = [ //Name - Icon name - Description - Link - BG Color
+			["Fork Contributors"],
+			["victoria",			"vi",				"Main Programmer, Additional Art",							"https://x.com/fnfin3d",					"82CDE3"],
+			["Moonlight_Catalyst",	"moonlightcatalyst","Chart Editor \"Toys\" Assistance",							"https://gamebanana.com/members/1960226",	"9898CB"],
+			[""],
 			["Psych Engine Team"],
 			["Shadow Mario",		"shadowmario",		"Main Programmer and Head of Psych Engine",					"https://ko-fi.com/shadowmario",	"444444"],
 			["Riveren",				"riveren",			"Main Artist/Animator of Psych Engine",						"https://x.com/riverennn",			"14967B"],
@@ -94,7 +98,7 @@ class CreditsState extends ScriptedState
 
 				var icon:AttachedSprite = new AttachedSprite(str);
 				if(str.endsWith('-pixel')) icon.antialiasing = false;
-				icon.xAdd = optionText.width + 10;
+				icon.xAdd = optionText.width + 25;
 				icon.sprTracker = optionText;
 	
 				// using a FlxGroup is too much fuss!
@@ -169,6 +173,12 @@ class CreditsState extends ScriptedState
 						changeSelection((checkNewHold - checkLastHold) * (controls.UI_UP ? -shiftMult : shiftMult));
 					}
 				}
+				
+				if(FlxG.mouse.wheel != 0)
+				{
+					FlxG.sound.play(Paths.sound('scrollMenu'), .2);
+					changeSelection(-FlxG.mouse.wheel);
+				}
 			}
 
 			if(controls.ACCEPT && (creditsStuff[curSelected][3] == null || creditsStuff[curSelected][3].length > 4)) {
@@ -191,7 +201,7 @@ class CreditsState extends ScriptedState
 				{
 					var lastX:Float = item.x;
 					item.screenCenter(X);
-					item.x = FlxMath.lerp(item.x - 70, lastX, lerpVal);
+					item.x = FlxMath.lerp(item.x - 85, lastX, lerpVal);
 				}
 				else
 				{
