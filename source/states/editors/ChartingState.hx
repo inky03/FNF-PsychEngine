@@ -1173,7 +1173,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			updateSelectionBox();
 		}
 		
-		if(FlxG.mouse.justPressed && (FlxG.mouse.overlaps(mainBox.bg) || FlxG.mouse.overlaps(infoBox.bg)))
+		if(FlxG.mouse.justPressed && (draggingToy != null || FlxG.mouse.overlaps(mainBox.bg) || FlxG.mouse.overlaps(infoBox.bg)))
 			ignoreClickForThisFrame = true;
 
 		var minX:Float = gridBg.x;
@@ -1288,7 +1288,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				{
 					var closeNotes:Array<MetaNote> = curRenderedNotes.members.filter(function(note:MetaNote)
 					{
-						var chartY:Float = FlxG.mouse.y - (downScroll ? -note.chartY - GRID_SIZE : note.chartY);
+						var chartY:Float = FlxG.mouse.y - calculateY(note);
 						return ((note.isEvent && noteData < 0) || (!note.isEvent && note.songData[1] == noteData)) && chartY >= 0 && chartY < GRID_SIZE;
 					});
 					closeNotes.sort(function(a:MetaNote, b:MetaNote) return Math.abs(a.strumTime - FlxG.mouse.y) < Math.abs(b.strumTime - FlxG.mouse.y) ? 1 : -1);
@@ -2306,10 +2306,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		refreshNotePosition(note);
 	}
 	function refreshNotePosition(note:MetaNote) {
-		note.y = note.chartY * GRID_SIZE * curZoom * (downScroll ? -1 : 1) + (GRID_SIZE / 2 - note.height / 2);
+		note.y = calculateY(note);
 		note.downScroll = downScroll;
+	}
+	function calculateY(note:MetaNote) {
+		var y:Float = note.chartY * GRID_SIZE * curZoom * (downScroll ? -1 : 1) + (GRID_SIZE / 2 - note.height / 2);
 		if (downScroll)
-			note.y -= GRID_SIZE;
+			y -= GRID_SIZE;
+		return y;
 	}
 
 	var characterData:Dynamic = {};

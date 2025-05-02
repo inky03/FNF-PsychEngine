@@ -46,6 +46,7 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 	- Updated RGB shader (to prevent color blending artifacts)
 	- Updated note texture to update glows and sustain notes
 - ~~Fixed a crash caused by an active video when exiting the state~~ *merged in 1.0.4*
+- F5 key to reload the current state
 - Cleaner master editor menu
 
 ## API changes
