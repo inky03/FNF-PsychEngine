@@ -944,7 +944,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					{
 						var snap:Float = Conductor.stepCrochet / (curQuant/16) / curZoom;
 						var timeAdd:Float = (FlxG.keys.pressed.SHIFT ? 4 : 1) / (holdingAlt ? 4 : 1) * FlxG.mouse.wheel * downScrollMult * snap;
-						var time:Float = Math.round((FlxG.sound.music.time + timeAdd) / snap) * snap;
+						var time:Float = Math.round((FlxG.sound.music.time - timeAdd) / snap) * snap;
 						if(time > 0) time += 0.000001; //goes at the start of a section more properly
 						FlxG.sound.music.time = time;
 					}
