@@ -48,7 +48,7 @@ class TypedAlphabet extends Alphabet
 					_timeToUpdate = 0;
 					break;
 				}
-				_timeToUpdate = 0;
+				_timeToUpdate -= delay;
 			}
 		}
 

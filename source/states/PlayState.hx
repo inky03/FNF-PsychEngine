@@ -176,7 +176,7 @@ class PlayState extends ScriptedState
 
 	public var ratingsData:Array<Rating> = Rating.loadDefault();
 
-	private var generatedMusic:Bool = false;
+	public var generatedMusic:Bool = false;
 	public var endingSong:Bool = false;
 	public var startingSong:Bool = false;
 	private var updateTime:Bool = true;
@@ -1581,10 +1581,10 @@ class PlayState extends ScriptedState
 
 	public var paused:Bool = false;
 	public var canReset:Bool = true;
-	var startedCountdown:Bool = false;
-	var canPause:Bool = true;
-	var freezeCamera:Bool = false;
-	var allowDebugKeys:Bool = true;
+	public var startedCountdown:Bool = false;
+	public var canPause:Bool = true;
+	public var freezeCamera:Bool = false;
+	public var allowDebugKeys:Bool = true;
 
 	override public function update(elapsed:Float)
 	{

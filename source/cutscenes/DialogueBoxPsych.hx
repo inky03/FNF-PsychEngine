@@ -6,6 +6,8 @@ import openfl.utils.Assets;
 import objects.TypedAlphabet;
 import cutscenes.DialogueCharacter;
 
+import states.PlayState;
+
 typedef DialogueFile = {
 	var dialogue:Array<DialogueLine>;
 }
@@ -20,8 +22,7 @@ typedef DialogueLine = {
 }
 
 // TO DO: Clean code? Maybe? idk
-class DialogueBoxPsych extends FlxSpriteGroup
-{
+class DialogueBoxPsych extends FlxSpriteGroup {
 	public static var DEFAULT_TEXT_X = 175;
 	public static var DEFAULT_TEXT_Y = 460;
 	public static var LONG_TEXT_ADD = 24;
@@ -29,6 +30,9 @@ class DialogueBoxPsych extends FlxSpriteGroup
 
 	var dialogue:TypedAlphabet;
 	var dialogueList:DialogueFile = null;
+	
+	public var canSkip(default, set):Bool = true;
+	public var canContinue:Bool = true;
 
 	public var finishThing:Void->Void;
 	public var nextDialogueThing:Void->Void = null;
@@ -48,8 +52,7 @@ class DialogueBoxPsych extends FlxSpriteGroup
 	var curCharacter:String = "";
 	//var charPositionList:Array<String> = ['left', 'center', 'right'];
 
-	public function new(dialogueList:DialogueFile, ?song:String = null)
-	{
+	public function new(dialogueList:DialogueFile, ?song:String = null) {
 		super();
 
 		//precache sounds
@@ -95,6 +98,7 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		skipText = new FlxText(FlxG.width - 320, FlxG.height - 30, 300, Language.getPhrase('dialogue_skip', 'Press BACK to Skip'), 16);
 		skipText.setFormat(null, 16, FlxColor.WHITE, RIGHT, OUTLINE_FAST, FlxColor.BLACK);
 		skipText.borderSize = 2;
+		
 		add(skipText);
 
 		startNextDialog();
@@ -154,8 +158,7 @@ class DialogueBoxPsych extends FlxSpriteGroup
 
 	public var closeSound:String = 'dialogueClose';
 	public var closeVolume:Float = 1;
-	override function update(elapsed:Float)
-	{
+	override function update(elapsed:Float) {
 		if(ignoreThisFrame) {
 			ignoreThisFrame = false;
 			super.update(elapsed);
@@ -166,43 +169,13 @@ class DialogueBoxPsych extends FlxSpriteGroup
 			bgFade.alpha += 0.5 * elapsed;
 			if(bgFade.alpha > 0.5) bgFade.alpha = 0.5;
 
-			var back:Bool = Controls.instance.BACK;
-			if(Controls.instance.ACCEPT || back) {
-				if(!daText.finishedText && !back)
-				{
-					daText.finishText();
-					if(skipDialogueThing != null) {
-						skipDialogueThing();
-					}
-				}
-				else if(back || currentText >= dialogueList.dialogue.length)
-				{
-					dialogueEnded = true;
-					for (i in 0...textBoxTypes.length) {
-						var checkArray:Array<String> = ['', 'center-'];
-						var animName:String = box.animation.curAnim.name;
-						for (j in 0...checkArray.length) {
-							if(animName == checkArray[j] + textBoxTypes[i] || animName == checkArray[j] + textBoxTypes[i] + 'Open') {
-								box.animation.play(checkArray[j] + textBoxTypes[i] + 'Open', true);
-							}
-						}
-					}
-
-					box.animation.curAnim.curFrame = box.animation.curAnim.frames.length - 1;
-					box.animation.curAnim.reverse();
-					if(daText != null)
-					{
-						daText.kill();
-						remove(daText);
-						daText.destroy();
-					}
-					skipText.visible = false;
-					updateBoxOffsets(box);
-					FlxG.sound.music.fadeOut(1, 0, (_) -> FlxG.sound.music.stop());
+			var back:Bool = (canSkip && Controls.instance.BACK);
+			if ((canContinue && Controls.instance.ACCEPT) || back) {
+				if (back) {
+					finishDialog();
 				} else {
-					startNextDialog();
+					advanceDialog(true);
 				}
-				FlxG.sound.play(Paths.sound(closeSound), closeVolume);
 			} else if(daText.finishedText) {
 				var char:DialogueCharacter = arrayCharacters[lastCharacter];
 				if(char != null && char.animation.curAnim != null && char.animationIsLoop() && char.animation.finished) {
@@ -313,11 +286,16 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		}
 		super.update(elapsed);
 	}
+	
+	function set_canSkip(yea:Bool):Bool {
+		skipText.visible = yea;
+		
+		return canSkip = yea;
+	}
 
 	var lastCharacter:Int = -1;
 	var lastBoxType:String = '';
-	function startNextDialog():Void
-	{
+	public function startNextDialog():Void {
 		var curDialogue:DialogueLine = null;
 		do {
 			curDialogue = dialogueList.dialogue[currentText];
@@ -382,6 +360,47 @@ class DialogueBoxPsych extends FlxSpriteGroup
 			nextDialogueThing();
 		}
 	}
+	
+	public function advanceDialog(finishText:Bool = false):Void {
+		if (!daText.finishedText && finishText) {
+			daText.finishText();
+			if (skipDialogueThing != null)
+				skipDialogueThing();
+		} else if (currentText >= dialogueList.dialogue.length) {
+			finishDialog();
+		} else {
+			startNextDialog();
+		}
+		FlxG.sound.play(Paths.sound(closeSound), closeVolume);
+	}
+	
+	public function finishDialog():Void {
+		if (dialogueEnded) return;
+		
+		dialogueEnded = true;
+		for (i in 0...textBoxTypes.length) {
+			var checkArray:Array<String> = ['', 'center-'];
+			var animName:String = box.animation.curAnim.name;
+			for (j in 0...checkArray.length) {
+				if(animName == checkArray[j] + textBoxTypes[i] || animName == checkArray[j] + textBoxTypes[i] + 'Open') {
+					box.animation.play(checkArray[j] + textBoxTypes[i] + 'Open', true);
+				}
+			}
+		}
+
+		box.animation.curAnim.curFrame = box.animation.curAnim.frames.length - 1;
+		box.animation.curAnim.reverse();
+		if(daText != null) {
+			daText.kill();
+			remove(daText);
+			daText.destroy();
+		}
+		skipText.visible = false;
+		updateBoxOffsets(box);
+		
+		if (PlayState.instance == null || !PlayState.instance.startedCountdown)
+			FlxG.sound.music.fadeOut(1, 0, (_) -> FlxG.sound.music.stop());
+	}
 
 	inline public static function parseDialogue(path:String):DialogueFile {
 		#if MODS_ALLOWED
@@ -391,8 +410,7 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		#end
 	}
 
-	inline public static function dummy():DialogueFile
-	{
+	inline public static function dummy():DialogueFile {
 		return { dialogue: [
 			{
 				expression: "talk",
