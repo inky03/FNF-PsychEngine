@@ -308,9 +308,10 @@ class LuaUtils
 				return PlayState.instance;
 			
 			default:
-				var obj:Dynamic = MusicBeatState.getVariables().get(objectName);
-				if(obj == null) obj = getVarInArray(MusicBeatState.getState(), objectName, allowMaps);
-				return obj;
+				var split:Array<String> = objectName.split('.');
+				if (split.length > 1)
+					return LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split, true, allowMaps), split[split.length - 1], allowMaps);
+				return getVarInArray(MusicBeatState.getState(), objectName, allowMaps);
 		}
 	}
 	
