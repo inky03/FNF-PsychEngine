@@ -129,6 +129,19 @@ class Tank extends BaseStage
 			spr.dance();
 		});
 	}
+	
+	override function onGameOverLoop() {
+		FlxG.sound.music.volume = .2;
+		
+		var gameOver:GameOverSubstate = GameOverSubstate.instance;
+		var exclude:Array<Int> = [];
+		//if (!ClientPrefs.cursing) exclude = [1, 3, 8, 13, 17, 21];
+
+		FlxG.sound.play(Paths.sound('jeffGameover/jeffGameover-' + FlxG.random.int(1, 25, exclude)), 1, false, null, true, () -> {
+			if (!gameOver.isEnding)
+				FlxG.sound.music.fadeIn(FlxG.sound.music.volume, 1, 4);
+		});
+	}
 
 	// Cutscenes
 	var cutsceneHandler:CutsceneHandler;

@@ -127,7 +127,7 @@ class CustomSubstate extends ScriptedSubState {
 		super.postUpdate(elapsed);
 	}
 	
-	public override function getStateName():String {
+	public override function customStateName():String {
 		return stateName;
 	}
 	

@@ -33,8 +33,6 @@ import substates.GameOverSubstate;
 import openfl.filters.ShaderFilter;
 #end
 
-import shaders.ErrorHandledShader;
-
 import objects.VideoSprite;
 import objects.Note.EventNote;
 import objects.*;
@@ -132,10 +130,12 @@ class PlayState extends ScriptedState
 		return stageUI == "pixel" || stageUI.endsWith("-pixel");
 
 	public static var SONG:SwagSong = null;
+	
 	public static var isStoryMode:Bool = false;
-	public static var storyWeek:Int = 0;
+	public static var storyVariables:Map<String, Dynamic> = [];
 	public static var storyPlaylist:Array<String> = [];
 	public static var storyDifficulty:Int = 1;
+	public static var storyWeek:Int = 0;
 
 	public var spawnTime:Float = 2000;
 	public var playMissSound:Bool = true;
@@ -163,6 +163,7 @@ class PlayState extends ScriptedState
 	public var camZooming:Bool = false;
 	public var camZoomingMult:Float = 1;
 	public var camZoomingDecay:Float = 1;
+	public var camZoomingDisabled:Bool = false;
 	private var curSong:String = "";
 
 	public var gfSpeed:Int = 1;
@@ -611,7 +612,7 @@ class PlayState extends ScriptedState
 		var splash:NoteSplash = new NoteSplash();
 		grpNoteSplashes.add(splash);
 		splash.alpha = 0.000001; //cant make it invisible or it won't allow precaching
-
+		
 		stagesFunc(function(stage:BaseStage) stage.createPost());
 		super.create();
 		Paths.clearUnusedMemory();
@@ -1901,6 +1902,7 @@ class PlayState extends ScriptedState
 	function doDeathCheck(?skipHealthCheck:Bool = false) {
 		if (((skipHealthCheck && instakillOnMiss) || health <= 0) && !practiceMode && !isDead && gameOverTimer == null)
 		{
+			stagesFunc((stage:BaseStage) -> stage.onGameOver());
 			var ret:Dynamic = callOnScripts('onGameOver', null, true);
 			if(ret != LuaUtils.Function_Stop)
 			{
@@ -2224,72 +2226,52 @@ class PlayState extends ScriptedState
 	}
 
 	public function moveCameraSection(?sec:Null<Int>):Void {
-		if(sec == null) sec = curSection;
-		if(sec < 0) sec = 0;
+		if (sec == null) sec = curSection;
+		if (sec < 0) sec = 0;
 
-		if(SONG.notes[sec] == null) return;
+		if (SONG.notes[sec] == null) return;
 
-		if (gf != null && SONG.notes[sec].gfSection)
-		{
+		if (gf != null && SONG.notes[sec].gfSection) {
 			moveCameraToGirlfriend();
-			callOnScripts('onMoveCamera', ['gf']);
-			return;
+		} else {
+			moveCamera(SONG.notes[sec].mustHitSection != true);	
 		}
-
-		var isDad:Bool = (SONG.notes[sec].mustHitSection != true);
-		moveCamera(isDad);
-		if (isDad)
-			callOnScripts('onMoveCamera', ['dad']);
-		else
-			callOnScripts('onMoveCamera', ['boyfriend']);
 	}
 	
-	public function moveCameraToGirlfriend()
-	{
-		camFollow.setPosition(gf.getMidpoint().x, gf.getMidpoint().y);
-		camFollow.x += gf.cameraPosition[0] + girlfriendCameraOffset[0];
-		camFollow.y += gf.cameraPosition[1] + girlfriendCameraOffset[1];
-		tweenCamIn();
+	public function moveCameraToGirlfriend() {
+		moveCamera(false, true);
 	}
-
-	var cameraTwn:FlxTween;
-	public function moveCamera(isDad:Bool)
-	{
-		if(isDad)
-		{
-			if(dad == null) return;
-			camFollow.setPosition(dad.getMidpoint().x + 150, dad.getMidpoint().y - 100);
-			camFollow.x += dad.cameraPosition[0] + opponentCameraOffset[0];
-			camFollow.y += dad.cameraPosition[1] + opponentCameraOffset[1];
-			tweenCamIn();
-		}
-		else
-		{
-			if(boyfriend == null) return;
-			camFollow.setPosition(boyfriend.getMidpoint().x - 100, boyfriend.getMidpoint().y - 100);
-			camFollow.x -= boyfriend.cameraPosition[0] - boyfriendCameraOffset[0];
-			camFollow.y += boyfriend.cameraPosition[1] + boyfriendCameraOffset[1];
-
-			if (songName == 'tutorial' && cameraTwn == null && FlxG.camera.zoom != 1)
-			{
-				cameraTwn = FlxTween.tween(FlxG.camera, {zoom: 1}, (Conductor.stepCrochet * 4 / 1000), {ease: FlxEase.elasticInOut, onComplete:
-					function (twn:FlxTween)
-					{
-						cameraTwn = null;
-					}
-				});
+	
+	public function moveCamera(isDad:Bool, isGf:Bool = false) {
+		var character:String;
+		if (isGf) {
+			if (gf != null) {
+				camFollow.setPosition(gf.getMidpoint().x, gf.getMidpoint().y);
+				camFollow.x += gf.cameraPosition[0] + girlfriendCameraOffset[0];
+				camFollow.y += gf.cameraPosition[1] + girlfriendCameraOffset[1];
 			}
+			
+			character = 'gf';
+		} else if (isDad) {
+			if (dad != null) {
+				camFollow.setPosition(dad.getMidpoint().x + 150, dad.getMidpoint().y - 100);
+				camFollow.x += dad.cameraPosition[0] + opponentCameraOffset[0];
+				camFollow.y += dad.cameraPosition[1] + opponentCameraOffset[1];
+			}
+			
+			character = 'dad';
+		} else {
+			if (boyfriend != null) {
+				camFollow.setPosition(boyfriend.getMidpoint().x - 100, boyfriend.getMidpoint().y - 100);
+				camFollow.x -= boyfriend.cameraPosition[0] - boyfriendCameraOffset[0];
+				camFollow.y += boyfriend.cameraPosition[1] + boyfriendCameraOffset[1];
+			}
+			
+			character = 'boyfriend';
 		}
-	}
-
-	public function tweenCamIn() {
-		if (songName == 'tutorial' && cameraTwn == null && FlxG.camera.zoom != 1.3) {
-			cameraTwn = FlxTween.tween(FlxG.camera, {zoom: 1.3}, (Conductor.stepCrochet * 4 / 1000), {ease: FlxEase.elasticInOut, onComplete:
-				function (twn:FlxTween) {
-					cameraTwn = null;
-				}
-			});
-		}
+		
+		stagesFunc((stage:BaseStage) -> stage.onMoveCamera(character));
+		callOnScripts('onMoveCamera', [character]);
 	}
 
 	public function finishSong(?ignoreNoteOffset:Bool = false):Void
@@ -2395,7 +2377,7 @@ class PlayState extends ScriptedState
 				else
 				{
 					var difficulty:String = Difficulty.getFilePath();
-
+					
 					trace('LOADING NEXT SONG');
 					trace(Paths.formatToSongPath(PlayState.storyPlaylist[0]) + difficulty);
 
@@ -2868,7 +2850,7 @@ class PlayState extends ScriptedState
 
 		if(result == LuaUtils.Function_Stop) return;
 
-		if (songName != 'tutorial')
+		if (!camZoomingDisabled)
 			camZooming = true;
 
 		if(note.noteType == 'Hey!' && dad.hasAnimation('hey'))
@@ -3240,76 +3222,6 @@ class PlayState extends ScriptedState
 
 			if(unlock) Achievements.unlock(name);
 		}
-	}
-	#end
-
-	#if (!flash && sys)
-	public var runtimeShaders:Map<String, Array<String>> = new Map<String, Array<String>>();
-	public function createRuntimeShader(shaderName:String):ErrorHandledRuntimeShader
-	{
-		if(!ClientPrefs.data.shaders) return new ErrorHandledRuntimeShader(shaderName);
-
-		#if (!flash && MODS_ALLOWED && sys)
-		if(!runtimeShaders.exists(shaderName) && !initLuaShader(shaderName))
-		{
-			FlxG.log.warn('Shader $shaderName is missing!');
-			return new ErrorHandledRuntimeShader(shaderName);
-		}
-
-		var arr:Array<String> = runtimeShaders.get(shaderName);
-		return new ErrorHandledRuntimeShader(shaderName, arr[0], arr[1]);
-		#else
-		FlxG.log.warn("Platform unsupported for Runtime Shaders!");
-		return null;
-		#end
-	}
-
-	public function initLuaShader(name:String, ?glslVersion:Int = 120)
-	{
-		if(!ClientPrefs.data.shaders) return false;
-
-		#if (MODS_ALLOWED && !flash && sys)
-		if(runtimeShaders.exists(name))
-		{
-			FlxG.log.warn('Shader $name was already initialized!');
-			return true;
-		}
-
-		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'shaders/'))
-		{
-			var frag:String = folder + name + '.frag';
-			var vert:String = folder + name + '.vert';
-			var found:Bool = false;
-			if(FileSystem.exists(frag))
-			{
-				frag = File.getContent(frag);
-				found = true;
-			}
-			else frag = null;
-
-			if(FileSystem.exists(vert))
-			{
-				vert = File.getContent(vert);
-				found = true;
-			}
-			else vert = null;
-
-			if(found)
-			{
-				runtimeShaders.set(name, [frag, vert]);
-				//trace('Found shader $name!');
-				return true;
-			}
-		}
-			#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
-			addTextToDebug('Missing shader $name .frag AND .vert files!', FlxColor.RED);
-			#else
-			FlxG.log.warn('Missing shader $name .frag AND .vert files!');
-			#end
-		#else
-		FlxG.log.warn('This platform doesn\'t support Runtime Shaders!');
-		#end
-		return false;
 	}
 	#end
 }

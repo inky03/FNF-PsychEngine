@@ -49,7 +49,7 @@ class CustomState extends ScriptedState {
 		postUpdate(elapsed);
 	}
 	
-	public override function getStateName():String {
+	public override function customStateName():String {
 		return stateName;
 	}
 }

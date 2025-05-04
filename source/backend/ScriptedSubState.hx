@@ -14,15 +14,9 @@ import crowplexus.hscript.Expr.Error as IrisError;
 import crowplexus.hscript.Printer;
 #end
 
-import debug.ScriptTraceDisplay;
-
 class ScriptedSubState extends MusicBeatSubstate {
 	#if LUA_ALLOWED public var luaArray:Array<FunkinLua> = []; #end
 	#if HSCRIPT_ALLOWED public var hscriptArray:Array<HScript> = []; #end
-	
-	public function addTextToDebug(text:String, ?color:FlxColor, ?size:Int):TracePopUp {
-		return ScriptedState.debugPrint(text, color, size);
-	}
 	
 	var multiScript:Bool = true;
 	
@@ -39,8 +33,14 @@ class ScriptedSubState extends MusicBeatSubstate {
 		#if SCRIPTS_ALLOWED startStateScripts(); #end
 	}
 	
+	var _shouldUpdate:Bool = true;
 	public function preUpdate(elapsed:Float):Void {
-		callOnScripts('onUpdate', [elapsed]);
+		_shouldUpdate = (callOnScripts('onUpdate', [elapsed], true) != LuaUtils.Function_Stop);
+	}
+	public override function update(elapsed:Float):Void {
+		if (_shouldUpdate)
+			super.update(elapsed);
+		_shouldUpdate = true;
 	}
 	public function postUpdate(elapsed:Float):Void {
 		callOnScripts('onUpdatePost', [elapsed]);
@@ -52,9 +52,22 @@ class ScriptedSubState extends MusicBeatSubstate {
 	}
 	
 	public override function draw():Void {
-		callOnScripts('onDraw');
+		if (callOnScripts('onDraw', true) == LuaUtils.Function_Stop) return;
 		super.draw();
 		callOnScripts('onDrawPost');
+	}
+	
+	public override function openSubState(subState:flixel.FlxSubState):Void {
+		var stopped:Bool = (callOnHScript('onOpenSubState', [subState], true) == LuaUtils.Function_Stop);
+		stopped = (stopped || callOnLuas('onOpenSubState', [getStateName(subState)], true) == LuaUtils.Function_Stop);
+		
+		if (!stopped)
+			super.openSubState(subState);
+	}
+	
+	public override function close():Void {
+		if (callOnScripts('onClose', true) != LuaUtils.Function_Stop)
+			super.close();
 	}
 	
 	public override function sectionHit(section:Int):Void {
@@ -97,7 +110,15 @@ class ScriptedSubState extends MusicBeatSubstate {
 		super.destroy();
 	}
 	
-	public function getStateName():String { // Used to load the appropriate substate script
+	public static function getStateName(state:flixel.FlxSubState):String { // Used to load the appropriate substate script
+		if (state is ScriptedSubState) {
+			return cast(state, ScriptedSubState).customStateName();
+		} else {
+			var clsName:String = Type.getClassName(Type.getClass(state));
+			return clsName.substr(clsName.lastIndexOf('.') + 1);
+		}
+	}
+	public function customStateName():String { 
 		var clsName:String = Type.getClassName(Type.getClass(this));
 		return clsName.substr(clsName.lastIndexOf('.') + 1);
 	}
@@ -112,12 +133,12 @@ class ScriptedSubState extends MusicBeatSubstate {
 		#if HSCRIPT_ALLOWED
 		if (multiScript) {
 			for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'scripts')) {
-				var path:String = '$folder/${getFolderName()}/${getStateName()}.hx';
+				var path:String = '$folder/${getFolderName()}/${customStateName()}.hx';
 				if (FileSystem.exists(path))
-					loaded = (loaded || initHScript(path) != null);
+					loaded = (initHScript(path) != null || loaded);
 			}
 		} else {
-			var file:String = 'scripts/${getFolderName()}/${getStateName()}.hx';
+			var file:String = 'scripts/${getFolderName()}/${customStateName()}.hx';
 			var path:String = Paths.modFolders(file);
 			if (FileSystem.exists(path))
 				loaded = (initHScript(path) != null);

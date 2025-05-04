@@ -1,5 +1,8 @@
 package backend;
 
+import debug.ScriptTraceDisplay;
+import shaders.ErrorHandledShader;
+
 class MusicBeatSubstate extends flixel.FlxSubState {
 	var stepsToDo:Int = 0;
 	
@@ -185,4 +188,68 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 			if(stage != null && stage.exists && stage.active)
 				func(stage);
 	}
+	
+	public function addTextToDebug(text:String, ?color:FlxColor, ?size:Int):TracePopUp {
+		return ScriptedState.debugPrint(text, color, size);
+	}
+	
+	// shaders
+	#if (!flash && sys)
+	public var runtimeShaders:Map<String, Array<String>> = [];
+	
+	public function createRuntimeShader(shaderName:String):ErrorHandledRuntimeShader {
+		if (!ClientPrefs.data.shaders)
+			return new ErrorHandledRuntimeShader(shaderName);
+		
+		if (!runtimeShaders.exists(shaderName) && !initRuntimeShader(shaderName)) {
+			FlxG.log.warn('Shader $shaderName is missing!');
+			return new ErrorHandledRuntimeShader(shaderName);
+		}
+		
+		var arr:Array<String> = runtimeShaders.get(shaderName);
+		return new ErrorHandledRuntimeShader(shaderName, arr[0], arr[1]);
+	}
+	
+	public function initLuaShader(name:String, ?glslVersion:Int) { initRuntimeShader(name, glslVersion); }
+	public function initRuntimeShader(name:String, glslVersion:Int = 120):Bool {
+		if (!ClientPrefs.data.shaders)
+			return false;
+		
+		if (runtimeShaders.exists(name)) {
+			FlxG.log.warn('Shader $name is already initialized!');
+			return true;
+		}
+		
+		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'shaders')) {
+			var frag:String = '$folder/$name.frag';
+			var vert:String = '$folder/$name.vert';
+			var found:Bool = false;
+			
+			if (FileSystem.exists(frag)) {
+				frag = File.getContent(frag);
+				found = true;
+			} else {
+				frag = null;
+			}
+			if (FileSystem.exists(vert)) {
+				vert = File.getContent(vert);
+				found = true;
+			} else {
+				vert = null;
+			}
+
+			if (found) {
+				runtimeShaders.set(name, [frag, vert]);
+				return true;
+			}
+		}
+		#if (SCRIPTS_ALLOWED)
+		addTextToDebug('No .frag or .vert code found for shader "$name"!', FlxColor.RED);
+		#else
+		FlxG.log.warn('No .frag or .vert code found for shader "$name"!');
+		#end
+		
+		return false;
+	}
+	#end
 }

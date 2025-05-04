@@ -93,6 +93,15 @@ class BaseStage extends FlxBasic
 	public function opponentNoteHit(note:Note) {}
 	public function noteMiss(note:Note) {}
 	public function noteMissPress(direction:Int) {}
+	
+	// Other
+	public function onMoveCamera(character:String) {}
+	
+	// Game Over
+	public function onGameOver() {}
+	public function onGameOverLoop() {}
+	public function onGameOverStart() {}
+	public function onGameOverConfirm(retry:Bool) {}
 
 	// Things to replace FlxGroup stuff and inject sprites directly into the state
 	function add(object:FlxBasic) return FlxG.state.add(object);
