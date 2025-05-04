@@ -207,9 +207,9 @@ class ReflectionFunctions
 				parent = varParent;
 			}
 			
-			if(funcToRun.length > 0) {
+			args ??= [];
+			if (funcToRun.length > 0)
 				return callMethodFromObject(parent, funcToRun, parseInstances(args));
-			}
 			return Reflect.callMethod(null, parent, parseInstances(args));
 		});
 		Lua_helper.add_callback(lua, "callMethodFromClass", function(className:String, funcToRun:String, ?args:Array<Dynamic>) {
