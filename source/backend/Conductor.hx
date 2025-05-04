@@ -114,7 +114,7 @@ class Conductor
 					stepTime: totalSteps,
 					songTime: totalPos,
 					bpm: curBPM,
-					stepCrochet: calculateCrochet(curBPM)/4
+					stepCrochet: calculateCrochet(curBPM) / 4
 				};
 				bpmChangeMap.push(event);
 			}
@@ -157,7 +157,15 @@ class Conductor
 	public static function set_bpm(newBPM:Float):Float {
 		crochet = calculateCrochet(newBPM);
 		stepCrochet = crochet / 4;
+		bpm = newBPM;
+		
+		if (bpmChangeMap == null || bpmChangeMap.length == 0) {
+			mapBPMChanges();
+		} else if (Math.abs(bpm - bpmChangeMap[0].bpm) < 1) {
+			bpmChangeMap[0].stepCrochet = stepCrochet;
+			bpmChangeMap[0].bpm = bpm;
+		}
 
-		return bpm = newBPM;
+		return newBPM;
 	}
 }
