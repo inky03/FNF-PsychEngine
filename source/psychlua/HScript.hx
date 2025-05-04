@@ -622,33 +622,38 @@ class CustomFlxColor {
 }
 
 class CustomInterp extends crowplexus.hscript.Interp {
-	private var _instanceFields:Array<String> = [];
 	public var parentInstance(default, set):Dynamic = null;
+	var _instanceFields:Array<String> = [];
 	
 	function set_parentInstance(inst:Dynamic):Dynamic {
-		parentInstance = inst;
-		if(parentInstance == null)
-		{
+		if (inst == null) {
 			_instanceFields = [];
-			return inst;
+			return parentInstance = inst;
 		}
+		
 		_instanceFields = Type.getInstanceFields(Type.getClass(inst));
-		return inst;
+		return parentInstance = inst;
 	}
 
 	public function new() {
 		super();
 	}
 	
+	function hasField(o:Dynamic, id:String):Dynamic { // lol
+		try {
+			Reflect.setProperty(o, id, Reflect.getProperty(o, id));
+			return true;
+		} catch (e:Dynamic) {}
+		return false;
+	}
 	override function get(o:Dynamic, id:String):Dynamic {
-		if (o == null) {
+		if (o == null)
 			error(EInvalidAccess(id));
-		}
 		
 		var val:Dynamic = Reflect.getProperty(o, id);
 		val ??= Reflect.field(o, id);
 		
-		if (val == null && !Reflect.hasField(o, id) && o is FlxBasic) {
+		if (val == null && !hasField(o, id) && o is FlxBasic) {
 			return cast(o, FlxBasic).getVar(id);
 		} else {
 			return val;
@@ -658,10 +663,14 @@ class CustomInterp extends crowplexus.hscript.Interp {
 		if (o == null)
 			error(EInvalidAccess(id));
 		
-		if (Reflect.hasField(o, id) || Reflect.getProperty(o, id) != null || Type.typeof(o) == TObject) {
+		try {
 			Reflect.setProperty(o, id, v);
-		} else if (o is FlxBasic) {
-			cast(o, FlxBasic).setVar(id, v);
+		} catch (e:Dynamic) {
+			if (o is FlxBasic) {
+				cast(o, FlxBasic).setVar(id, v);
+			} else {
+				throw e;
+			}
 		}
 		return v;
 	}

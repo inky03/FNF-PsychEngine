@@ -199,7 +199,7 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	}
 	
 	// shaders
-	#if (!flash && sys)
+	#if sys
 	public var runtimeShaders:Map<String, Array<String>> = [];
 	
 	public function createRuntimeShader(shaderName:String):ErrorHandledRuntimeShader {
@@ -215,7 +215,7 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		return new ErrorHandledRuntimeShader(shaderName, arr[0], arr[1]);
 	}
 	
-	public function initLuaShader(name:String, ?glslVersion:Int) { initRuntimeShader(name, glslVersion); }
+	public function initLuaShader(name:String, ?glslVersion:Int):Bool { return initRuntimeShader(name, glslVersion); }
 	public function initRuntimeShader(name:String, glslVersion:Int = 120):Bool {
 		if (!ClientPrefs.data.shaders)
 			return false;
@@ -228,22 +228,19 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'shaders')) {
 			var frag:String = '$folder/$name.frag';
 			var vert:String = '$folder/$name.vert';
-			var found:Bool = false;
 			
 			if (FileSystem.exists(frag)) {
 				frag = File.getContent(frag);
-				found = true;
 			} else {
 				frag = null;
 			}
 			if (FileSystem.exists(vert)) {
 				vert = File.getContent(vert);
-				found = true;
 			} else {
 				vert = null;
 			}
 
-			if (found) {
+			if (frag != null || vert != null) {
 				runtimeShaders.set(name, [frag, vert]);
 				return true;
 			}
