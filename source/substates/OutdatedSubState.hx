@@ -14,8 +14,7 @@ class OutdatedSubState extends MusicBeatSubstate
 	var bg:FlxSprite;
 	var warnText:FlxText;
 
-	override function create()
-	{
+	override function create() {
 		super.create();
 
 		bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
@@ -45,16 +44,15 @@ Thank you for using the engine!',
 
 	override function update(elapsed:Float)
 	{
-		if(!leftState) {
+		if (!leftState) {
 			if (controls.ACCEPT) {
 				leftState = true;
 				CoolUtil.browserLoad("https://github.com/inky03/FNF-PsychEngine");
-			}
-			else if(controls.BACK) {
+			} else if(controls.BACK) {
 				leftState = true;
 			}
-			if(leftState)
-			{
+			
+			if (leftState) {
 				FlxG.sound.play(Paths.sound('cancelMenu'));
 				FlxTween.tween(bg, { alpha: 0.0 }, 0.9, { ease: FlxEase.sineOut });
 				FlxTween.tween(warnText, {alpha: 0}, 1, {

@@ -410,6 +410,8 @@ class MainMenuState extends ScriptedState
 			if (column == CENTER)
 				camFollow.y = selectedItem.getGraphicMidpoint().y;
 			camFollow.x = selectedItem.getGraphicMidpoint().x;
+			
+			callOnScripts('onSelectItemPost', [selectedItem, curSelected]);
 		} else {
 			curColumn = oldColumn;
 			curSelected = oldSelected;

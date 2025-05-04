@@ -517,6 +517,8 @@ class FreeplayState extends ScriptedState
 			positionHighscore();
 			missingText.visible = false;
 			missingTextBG.visible = false;
+			
+			callOnScripts('onChangeDifficultyPost', [Difficulty.getString(curDifficulty), curDifficulty]);
 		}
 	}
 
@@ -569,6 +571,8 @@ class FreeplayState extends ScriptedState
 
 			changeDiff();
 			_updateSongLastDifficulty();
+			
+			callOnScripts('onSelectItemPost', [songs[next], next]);
 		}
 	}
 

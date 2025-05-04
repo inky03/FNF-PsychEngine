@@ -380,7 +380,7 @@ class TitleState extends ScriptedState
 				titleText.color = FlxColor.WHITE;
 				titleText.alpha = 1;
 				
-				if(titleText != null) titleText.animation.play('press');
+				if (titleText != null) titleText.animation.play('press');
 
 				FlxG.camera.flash(ClientPrefs.data.flashing ? FlxColor.WHITE : 0x4CFFFFFF, 1);
 				FlxG.sound.play(Paths.sound('confirmMenu'), 0.7);
@@ -388,12 +388,12 @@ class TitleState extends ScriptedState
 				transitioning = true;
 				// FlxG.sound.music.stop();
 
-				new FlxTimer().start(1, function(tmr:FlxTimer)
-				{
+				new FlxTimer().start(1, (_) -> {
 					MusicBeatState.switchState(new MainMenuState());
 					closedState = true;
 				});
-				// FlxG.sound.play(Paths.music('titleShoot'), 0.7);
+				
+				callOnScripts('onAccept');
 			}
 			#if TITLE_SCREEN_EASTER_EGG
 			else if (FlxG.keys.firstJustPressed() != FlxKey.NONE)
@@ -520,44 +520,47 @@ class TitleState extends ScriptedState
 			}
 		}
 
-		if (!closedState) {
-			sickBeats ++;
-			switch (sickBeats) {
-				case 1:
-					//FlxG.sound.music.stop();
-					FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
-					FlxG.sound.music.fadeIn(4, 0, 0.7);
-				case 2:
-					createCoolText(['Psych Engine by'], 40);
-				case 4:
-					addMoreText('Shadow Mario', 40);
-					addMoreText('Riveren', 40);
-				case 5:
-					deleteCoolText();
-				case 6:
-					createCoolText(['Not associated', 'with'], -40);
-				case 8:
-					addMoreText('newgrounds', -40);
-					ngSpr.visible = true;
-				case 9:
-					deleteCoolText();
-					ngSpr.visible = false;
-				case 10:
-					createCoolText([curWacky[0]]);
-				case 12:
-					addMoreText(curWacky[1]);
-				case 13:
-					deleteCoolText();
-				case 14:
-					addMoreText('Friday');
-				case 15:
-					addMoreText('Night');
-				case 16:
-					addMoreText('Funkin'); // credTextShit.text += '\nFunkin';
+		if (!closedState && sickBeats <= beat) {
+			for (b in sickBeats ... beat + 1) {
+				switch (b) {
+					case 0:
+						//FlxG.sound.music.stop();
+						FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
+						FlxG.sound.music.fadeIn(4, 0, 0.7);
+					case 1:
+						createCoolText(['Psych Engine by'], 40);
+					case 3:
+						addMoreText('Shadow Mario', 40);
+						addMoreText('Riveren', 40);
+					case 4:
+						deleteCoolText();
+					case 5:
+						createCoolText(['Not associated', 'with'], -40);
+					case 7:
+						addMoreText('newgrounds', -40);
+						ngSpr.visible = true;
+					case 8:
+						deleteCoolText();
+						ngSpr.visible = false;
+					case 9:
+						createCoolText([curWacky[0]]);
+					case 11:
+						addMoreText(curWacky[1]);
+					case 12:
+						deleteCoolText();
+					case 13:
+						addMoreText('Friday');
+					case 14:
+						addMoreText('Night');
+					case 15:
+						addMoreText('Funkin'); // credTextShit.text += '\nFunkin';
 
-				case 17:
-					skipIntro();
+					case 16:
+						skipIntro();
+				}
 			}
+			
+			sickBeats = beat + 1;
 		}
 		
 		super.beatHit(beat);
