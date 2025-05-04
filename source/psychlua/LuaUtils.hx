@@ -11,14 +11,12 @@ class ExtraDataMacro {
 		var pos:Position = Context.currentPos();
 		var fields:Array<Field> = Context.getBuildFields();
 		
-		fields.push({
+		fields = fields.concat([{
 			pos: pos,
 			access: [APublic],
 			name: 'extraData',
 			kind: FieldType.FProp('default', 'never', macro:Map<String, Dynamic>, macro $v{[]})
-		});
-		
-		fields.push({
+		}, {
 			pos: pos,
 			name: 'getVar',
 			access: [APublic],
@@ -27,8 +25,7 @@ class ExtraDataMacro {
 				args: [{type: macro:String, name: 'id'}],
 				expr: macro { return extraData.get(id); }
 			})
-		});
-		fields.push({
+		}, {
 			pos: pos,
 			name: 'setVar',
 			access: [APublic],
@@ -36,8 +33,7 @@ class ExtraDataMacro {
 				args: [{type: macro:String, name: 'id'}, {type: macro:Dynamic, name: 'value'}],
 				expr: macro { extraData.set(id, value); }
 			})
-		});
-		fields.push({
+		}, {
 			pos: pos,
 			name: 'removeVar',
 			access: [APublic],
@@ -45,8 +41,7 @@ class ExtraDataMacro {
 				args: [{type: macro:String, name: 'id'}],
 				expr: macro { extraData.remove(id); }
 			})
-		});
-		fields.push({
+		}, {
 			pos: pos,
 			name: 'hasVar',
 			access: [APublic],
@@ -55,7 +50,7 @@ class ExtraDataMacro {
 				args: [{type: macro:String, name: 'id'}],
 				expr: macro { return extraData.exists(id); }
 			})
-		});
+		}]);
 		
 		return fields;
 	}
