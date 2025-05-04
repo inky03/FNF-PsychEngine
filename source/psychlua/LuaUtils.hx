@@ -1,5 +1,68 @@
 package psychlua;
 
+#if macro
+
+import haxe.macro.Expr;
+import haxe.macro.Type;
+import haxe.macro.Context;
+
+class ExtraDataMacro {
+	static macro function build():Array<Field> {
+		var pos:Position = Context.currentPos();
+		var fields:Array<Field> = Context.getBuildFields();
+		
+		fields.push({
+			pos: pos,
+			access: [APublic],
+			name: 'extraData',
+			kind: FieldType.FProp('default', 'never', macro:Map<String, Dynamic>, macro $v{[]})
+		});
+		
+		fields.push({
+			pos: pos,
+			name: 'getVar',
+			access: [APublic],
+			kind: FieldType.FFun({
+				ret: macro:Dynamic,
+				args: [{type: macro:String, name: 'id'}],
+				expr: macro { return extraData.get(id); }
+			})
+		});
+		fields.push({
+			pos: pos,
+			name: 'setVar',
+			access: [APublic],
+			kind: FieldType.FFun({
+				args: [{type: macro:String, name: 'id'}, {type: macro:Dynamic, name: 'value'}],
+				expr: macro { extraData.set(id, value); }
+			})
+		});
+		fields.push({
+			pos: pos,
+			name: 'removeVar',
+			access: [APublic],
+			kind: FieldType.FFun({
+				args: [{type: macro:String, name: 'id'}],
+				expr: macro { extraData.remove(id); }
+			})
+		});
+		fields.push({
+			pos: pos,
+			name: 'hasVar',
+			access: [APublic],
+			kind: FieldType.FFun({
+				ret: macro:Dynamic,
+				args: [{type: macro:String, name: 'id'}],
+				expr: macro { return extraData.exists(id); }
+			})
+		});
+		
+		return fields;
+	}
+}
+
+#else
+
 import backend.WeekData;
 import objects.Character;
 import backend.StageData;
@@ -519,3 +582,4 @@ class LuaUtils
 		return camera;
 	}
 }
+#end

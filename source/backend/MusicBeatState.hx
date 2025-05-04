@@ -15,8 +15,8 @@ class MusicBeatState extends MusicBeatSubstate {
 	public static function getState():MusicBeatSubstate {
 		return cast (FlxG.state, MusicBeatSubstate);
 	}
-	public static function getVariables() {
-		return getState().variables;
+	public static function getVariables():Map<String, Dynamic> {
+		return FlxG.state.extraData;
 	}
 	
 	public override function create() {

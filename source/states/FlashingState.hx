@@ -5,7 +5,7 @@ import flixel.FlxSubState;
 import flixel.effects.FlxFlicker;
 import lime.app.Application;
 
-class FlashingState extends MusicBeatState
+class FlashingState extends ScriptedState
 {
 	public static var leftState:Bool = false;
 
@@ -15,6 +15,8 @@ class FlashingState extends MusicBeatState
 
 	override function create()
 	{
+		preCreate();
+		
 		super.create();
 		
 		rpcDetails = 'Title Screen';
@@ -35,8 +37,8 @@ class FlashingState extends MusicBeatState
 		texts.add(warnText);
 
 		final keys = ["Yes", "No"];
-		for (i in 0...keys.length) {
-			final button = new FlxText(0, 0, FlxG.width, keys[i]);
+		for (i => key in keys) {
+			final button = new FlxText(0, 0, FlxG.width, key);
 			button.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
 			button.y = (warnText.y + warnText.height) + 24;
 			button.x += (128 * i) - 80;
@@ -50,6 +52,8 @@ class FlashingState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+		
 		if(leftState) {
 			super.update(elapsed);
 			return;
@@ -76,6 +80,7 @@ class FlashingState extends MusicBeatState
 						});
 					});
 				});
+				callOnScripts('onAccept', [isYes]);
 			} else {
 				FlxG.sound.play(Paths.sound('cancelMenu'));
 				FlxTween.tween(texts, {alpha: 0}, 1, {
@@ -84,6 +89,8 @@ class FlashingState extends MusicBeatState
 			}
 		}
 		super.update(elapsed);
+		
+		postUpdate(elapsed);
 	}
 
 	function updateItems() {

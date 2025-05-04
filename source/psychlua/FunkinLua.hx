@@ -1672,13 +1672,20 @@ class FunkinLua {
 		return (type != Lua.LUA_TNONE && type != Lua.LUA_TNIL);
 	}
 
-	public function set(variable:String, data:Dynamic) {
-		if(lua == null) {
+	public function set(variable:String, data:Dynamic):Void {
+		if (lua == null)
 			return;
-		}
-
+		
 		Convert.toLua(lua, data);
 		Lua.setglobal(lua, variable);
+	}
+	
+	public function get(variable:String):Dynamic {
+		if (lua == null)
+			return null;
+		
+		Lua.getglobal(lua, variable);
+		return Convert.fromLua(lua, -1);
 	}
 
 	public function stop() {

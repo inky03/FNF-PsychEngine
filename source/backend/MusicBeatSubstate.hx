@@ -18,7 +18,6 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	var _psychCameraInitialized:Bool = false;
 	
 	public var stages:Array<BaseStage> = [];
-	public var variables:Map<String, Dynamic> = [];
 	
 	public var rpcDetails:Null<String> = null;
 	public var rpcState:Null<String> = null;
@@ -48,8 +47,13 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	}
 	
 	public var controls(get, never):Controls;
-	function get_controls() {
+	function get_controls():Controls {
 		return Controls.instance;
+	}
+	
+	public var variables(get, never):Map<String, Dynamic>;
+	function get_variables():Map<String, Dynamic> {
+		return extraData;
 	}
 	
 	public override function update(elapsed:Float) {

@@ -260,22 +260,17 @@ class HScript extends Iris
 		}
 
 		// Functions & Variables
-		var variableMap:Map<String, Dynamic>;
-		if (parentState is MusicBeatState) {
-			variableMap = cast(parentState, MusicBeatState).variables;
-		} else {
-			variableMap = MusicBeatState.getVariables();
-		}
+		var variableMap:Map<String, Dynamic> = parentState.extraData;
 		
 		set('setVar', function(name:String, value:Dynamic) {
 			variableMap.set(name, value);
 			return value;
 		});
 		set('getVar', function(name:String) {
-			var result:Dynamic = null;
-			if (variableMap.exists(name))
-				result = variableMap.get(name);
-			return result;
+			return variableMap.get(name);
+		});
+		set('hasVar', function(name:String) {
+			return variableMap.exists(name);
 		});
 		set('removeVar', function(name:String)
 		{
@@ -644,8 +639,25 @@ class CustomInterp extends crowplexus.hscript.Interp {
 	public function new() {
 		super();
 	}
-
-	override function resolve(id: String): Dynamic {
+	
+	override function get(o:Dynamic, id:String):Dynamic {
+		if (o == null) {
+			error(EInvalidAccess(id));
+		}
+		
+		var val:Dynamic = try {
+			Reflect.getProperty(o, id);
+		} catch (e:Dynamic) {
+			Reflect.field(o, id);
+		}
+		
+		if (val == null && !Reflect.hasField(o, id) && o is FlxBasic) {
+			return cast(o, FlxBasic).getVar(id);
+		} else {
+			return val;
+		}
+	}
+	override function resolve(id:String):Dynamic {
 		if (locals.exists(id)) 
 			return locals.get(id).r;
 		if (variables.exists(id))
@@ -655,16 +667,29 @@ class CustomInterp extends crowplexus.hscript.Interp {
 		
 		if (FunkinLua.customFunctions.exists(id))
 			return FunkinLua.customFunctions.get(id);
-		if (parentInstance != null && _instanceFields.contains(id))
-			return Reflect.getProperty(parentInstance, id);
+		if (parentInstance != null) {
+			if (_instanceFields.contains(id)) {
+				return Reflect.getProperty(parentInstance, id);
+			} else if (parentInstance is FlxBasic) {
+				var basic:FlxBasic = cast parentInstance;
+				if (basic.hasVar(id))
+					return basic.getVar(id);
+			}
+		}
 		
 		error(EUnknownVariable(id));
 		return null;
 	}
-	
-	override function setVar(id:String, v:Dynamic) {
-		if (parentInstance != null && _instanceFields.contains(id))
-			return Reflect.setProperty(parentInstance, id, v);
+	override function setVar(id:String, v:Dynamic):Void {
+		if (parentInstance != null) {
+			if (_instanceFields.contains(id)) {
+				return Reflect.setProperty(parentInstance, id, v);
+			} else if (parentInstance is FlxBasic) {
+				var basic:FlxBasic = cast parentInstance;
+				if (basic.hasVar(id))
+					return basic.setVar(id, v);
+			}
+		}
 		
 		variables.set(id, v);
 		

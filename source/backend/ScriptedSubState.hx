@@ -372,4 +372,40 @@ class ScriptedSubState extends MusicBeatSubstate {
 		}
 		#end
 	}
+	
+	public override function getVar(id:String):Dynamic {
+		if (hasVar(id))
+			return super.getVar(id);
+		for (script in luaArray) {
+			if (script.exists(id))
+				return script.get(id);
+		}
+		for (script in hscriptArray) {
+			if (script.exists(id))
+				return script.get(id);
+		}
+		return null;
+	}
+	public override function setVar(id:String, value:Dynamic):Void {
+		for (script in luaArray) {
+			if (script.exists(id))
+				script.set(id, value);
+		}
+		for (script in hscriptArray) {
+			if (script.exists(id))
+				script.set(id, value);
+		}
+		return super.setVar(id, value);
+	}
+	public override function hasVar(id:String):Bool {
+		for (script in luaArray) {
+			if (script.exists(id))
+				return true;
+		}
+		for (script in hscriptArray) {
+			if (script.exists(id))
+				return true;
+		}
+		return super.hasVar(id);
+	}
 }

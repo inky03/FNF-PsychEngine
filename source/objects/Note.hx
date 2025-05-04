@@ -49,8 +49,6 @@ class Note extends FlxSprite
 		'No Animation'
 	];
 
-	public var extraData:Map<String, Dynamic> = new Map<String, Dynamic>();
-
 	public var strumTime:Float = 0;
 	public var noteData:Int = 0;
 
