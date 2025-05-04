@@ -657,6 +657,17 @@ class CustomInterp extends crowplexus.hscript.Interp {
 			return val;
 		}
 	}
+	override function set(o:Dynamic, id:String, v:Dynamic):Dynamic {
+		if (o == null)
+			error(EInvalidAccess(id));
+		
+		if (Reflect.hasField(o, id) || Reflect.getProperty(o, id) != null) {
+			Reflect.setProperty(o, id, v);
+		} else if (o is FlxBasic) {
+			cast(o, FlxBasic).setVar(id, v);
+		}
+		return v;
+	}
 	override function resolve(id:String):Dynamic {
 		if (locals.exists(id)) 
 			return locals.get(id).r;
