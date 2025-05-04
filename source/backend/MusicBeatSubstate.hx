@@ -57,7 +57,8 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	}
 	
 	public override function update(elapsed:Float) {
-		MusicBeatState.timePassedOnState += elapsed;
+		if (subState == null)
+			MusicBeatState.timePassedOnState += elapsed;
 		
 		var oldStep:Int = curStep;
 		updateStep();
