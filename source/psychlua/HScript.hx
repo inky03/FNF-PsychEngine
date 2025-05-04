@@ -645,11 +645,8 @@ class CustomInterp extends crowplexus.hscript.Interp {
 			error(EInvalidAccess(id));
 		}
 		
-		var val:Dynamic = try {
-			Reflect.getProperty(o, id);
-		} catch (e:Dynamic) {
-			Reflect.field(o, id);
-		}
+		var val:Dynamic = Reflect.getProperty(o, id);
+		val ??= Reflect.field(o, id);
 		
 		if (val == null && !Reflect.hasField(o, id) && o is FlxBasic) {
 			return cast(o, FlxBasic).getVar(id);
@@ -661,7 +658,7 @@ class CustomInterp extends crowplexus.hscript.Interp {
 		if (o == null)
 			error(EInvalidAccess(id));
 		
-		if (Reflect.hasField(o, id) || Reflect.getProperty(o, id) != null) {
+		if (Reflect.hasField(o, id) || Reflect.getProperty(o, id) != null || Type.typeof(o) == TObject) {
 			Reflect.setProperty(o, id, v);
 		} else if (o is FlxBasic) {
 			cast(o, FlxBasic).setVar(id, v);
