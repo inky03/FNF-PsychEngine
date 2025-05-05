@@ -1,6 +1,7 @@
 package backend;
 
 import debug.ScriptTraceDisplay;
+import psychlua.GlobalScriptHandler;
 
 class ScriptedState extends ScriptedSubState {
 	public var camOther:FlxCamera = null;
@@ -13,6 +14,7 @@ class ScriptedState extends ScriptedSubState {
 	
 	public override function create():Void {
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
+		GlobalScriptHandler.refreshScripts();
 		
 		super.create();
 		
@@ -33,6 +35,16 @@ class ScriptedState extends ScriptedSubState {
 			initPsychCamera();
 		
 		super.preCreate();
+	}
+	override function _preCreate():Void {
+		#if SCRIPTS_ALLOWED startStateScripts(); #end
+		
+		GlobalScriptHandler.call('onCreateState', [this]);
+	}
+	override function _postCreate():Void {
+		callOnScripts('onCreatePost');
+		
+		GlobalScriptHandler.call('onCreateStatePost', [this]);
 	}
 	
 	public function initPsychCamera():PsychCamera {

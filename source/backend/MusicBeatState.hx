@@ -3,6 +3,7 @@ package backend;
 import flixel.FlxState;
 import backend.PsychCamera;
 import psychlua.CustomState;
+import psychlua.GlobalScriptHandler;
 
 class MusicBeatState extends MusicBeatSubstate {
 	public var camOther:FlxCamera = null;
@@ -25,12 +26,14 @@ class MusicBeatState extends MusicBeatSubstate {
 		super.create();
 		
 		if (!FlxTransitionableState.skipNextTransOut)
-			openSubState(new CustomFadeTransition(0.5, true));
+			openSubState(new CustomFadeTransition(.5, true));
 		FlxTransitionableState.skipNextTransOut = false;
 		
 		timePassedOnState = 0;
 	}
 	public override function preCreate():Void {
+		GlobalScriptHandler.refreshScripts();
+		
 		if (camOther == null) {
 			camOther = new FlxCamera();
 			camOther.bgColor.alpha = 0;
@@ -42,49 +45,61 @@ class MusicBeatState extends MusicBeatSubstate {
 		
 		super.preCreate();
 	}
+	override function _preCreate():Void {
+		GlobalScriptHandler.call('onCreateState', [this]);
+	}
+	override function _postCreate():Void {
+		GlobalScriptHandler.call('onCreateStatePost', [this]);
+	}
 	
 	public function initPsychCamera():PsychCamera {
 		var camera = new PsychCamera();
 		FlxG.cameras.reset(camera);
 		FlxG.cameras.setDefaultDrawTarget(camera, true);
 		_psychCameraInitialized = true;
-		//trace('initialized psych camera ' + Sys.cpuTime());
 		return camera;
 	}
 
-	public static function switchState(nextState:FlxState = null) {
-		if (nextState == null) nextState = FlxG.state;
-		if (nextState == FlxG.state) {
-			resetState();
-			return;
+	public static function switchState(?nextState:FlxState):Void {
+		if (GlobalScriptHandler.call('onSwitchState', [nextState]) != psychlua.LuaUtils.Function_Stop) {
+			if (nextState == null)
+				return resetState();
+			
+			if (FlxTransitionableState.skipNextTransIn) {
+				FlxG.switchState(nextState);
+			} else {
+				startTransition(nextState);
+			}
+			
+			FlxTransitionableState.skipNextTransIn = false;
 		}
-
-		if(FlxTransitionableState.skipNextTransIn) FlxG.switchState(nextState);
-		else startTransition(nextState);
-		FlxTransitionableState.skipNextTransIn = false;
 	}
 
-	public static function resetState() {
-		if(FlxTransitionableState.skipNextTransIn) FlxG.resetState();
-		else startTransition();
+	public static function resetState():Void {
+		if (FlxTransitionableState.skipNextTransIn) {
+			FlxG.resetState();
+		} else {
+			startTransition();
+		}
+		
 		FlxTransitionableState.skipNextTransIn = false;
 	}
 
 	// Custom made Trans in
-	public static function startTransition(nextState:FlxState = null) {
-		if (nextState == null)
-			nextState = FlxG.state;
-
-		FlxG.state.openSubState(new CustomFadeTransition(0.5, false));
-		if (nextState == FlxG.state) {
-			if (nextState is CustomState) {
-				var customState:CustomState = cast nextState;
-				CustomFadeTransition.finishCallback = () -> FlxG.switchState(new CustomState(customState.stateName));
-			} else {
-				CustomFadeTransition.finishCallback = () -> FlxG.resetState();
-			}
+	public static function startTransition(?nextState:FlxState):Void {
+		FlxG.state.openSubState(new CustomFadeTransition(.5, false));
+		
+		nextState ??= FlxG.state;
+		
+		if (nextState is CustomState) {
+			var customState:CustomState = cast nextState;
+			CustomFadeTransition.finishCallback = () -> FlxG.switchState(new CustomState(customState.stateName));
 		} else {
-			CustomFadeTransition.finishCallback = () -> FlxG.switchState(nextState);
+			if (nextState == FlxG.state) {
+				CustomFadeTransition.finishCallback = () -> FlxG.resetState();
+			} else {
+				CustomFadeTransition.finishCallback = () -> FlxG.switchState(nextState);
+			}
 		}
 	}
 }

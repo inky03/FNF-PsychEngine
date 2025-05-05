@@ -2,6 +2,7 @@ package backend;
 
 import debug.ScriptTraceDisplay;
 import shaders.ErrorHandledShader;
+import psychlua.GlobalScriptHandler;
 
 class MusicBeatSubstate extends flixel.FlxSubState {
 	var stepsToDo:Int = 0;
@@ -34,9 +35,21 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		super.create();
 		
 		updatePresence();
+		postCreate();
 	}
 	public function preCreate():Void {
 		_pre = true;
+		
+		_preCreate();
+	}
+	public function postCreate():Void {
+		_postCreate();
+	}
+	function _preCreate():Void {
+		GlobalScriptHandler.call('onCreateSubState', [this]);
+	}
+	function _postCreate():Void {
+		GlobalScriptHandler.call('onCreateSubStatePost', [this]);
 	}
 	
 	public function updatePresence():Void {
@@ -57,8 +70,15 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	}
 	
 	public override function update(elapsed:Float) {
-		if (subState == null)
+		if (subState == null) {
 			MusicBeatState.timePassedOnState += elapsed;
+			
+			if (FlxG.keys.justPressed.F5 && !GlobalScriptHandler.resetting) { // add keybind?
+				reset();
+			} else {
+				GlobalScriptHandler.resetting = false;
+			}
+		}
 		
 		var oldStep:Int = curStep;
 		updateStep();
@@ -77,16 +97,14 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 			}
 		}
 		
-		if (FlxG.save.data != null) FlxG.save.data.fullscreen = FlxG.fullscreen;
+		if (FlxG.save.data != null)
+			FlxG.save.data.fullscreen = FlxG.fullscreen;
 			
 		stagesFunc((stage:BaseStage) -> stage.update(elapsed));
-		
-		if (FlxG.keys.justPressed.F5) // add keybind?
-			reset();
-		
 		super.update(elapsed);
 	}
 	public function reset():Void {
+		GlobalScriptHandler.refreshScripts(FlxG.keys.pressed.SHIFT);
 		MusicBeatState.switchState(FlxG.state);
 	}
 	
@@ -173,6 +191,8 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 
 		if (step % 4 == 0)
 			beatHit(curBeat);
+		
+		GlobalScriptHandler.call('onStepHit', [step]);
 	}
 	public function beatHit(beat:Int):Void {
 		stagesFunc(function(stage:BaseStage) {
@@ -180,12 +200,16 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 			stage.curBeat = beat;
 			stage.beatHit();
 		});
+		
+		GlobalScriptHandler.call('onBeatHit', [beat]);
 	}
 	public function sectionHit(section:Int):Void {
 		stagesFunc(function(stage:BaseStage) {
 			stage.curSection = section;
 			stage.sectionHit();
 		});
+		
+		GlobalScriptHandler.call('onSectionHit', [section]);
 	}
 	
 	public function stagesFunc(func:BaseStage->Void) {
@@ -196,6 +220,11 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	
 	public function addTextToDebug(text:String, ?color:FlxColor, ?size:Int):TracePopUp {
 		return ScriptedState.debugPrint(text, color, size);
+	}
+	
+	public override function openSubState(subState:flixel.FlxSubState):Void {
+		if (GlobalScriptHandler.call('onOpenSubState', [this]) != psychlua.LuaUtils.Function_Stop)
+			super.openSubState(subState);
 	}
 	
 	// shaders

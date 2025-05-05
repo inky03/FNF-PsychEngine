@@ -18,6 +18,7 @@ import openfl.events.Event;
 import openfl.display.StageScaleMode;
 import lime.app.Application;
 import states.TitleState;
+import psychlua.GlobalScriptHandler;
 import psychlua.HScript;
 
 #if (linux || mac)
@@ -92,7 +93,9 @@ class Main extends Sprite
 		FlxG.save.bind('funkin', CoolUtil.getSavePath());
 		Difficulty.resetList();
 		Highscore.load();
+		
 		HScript.init();
+		GlobalScriptHandler.init();
 
 		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
 		Controls.instance = new Controls();
@@ -136,7 +139,7 @@ class Main extends Sprite
 		#end
 
 		// shader coords fix
-		FlxG.signals.gameResized.add(function (w, h) {
+		FlxG.signals.gameResized.add((w:Int, h:Int) -> {
 		     if (FlxG.cameras != null) {
 			   for (cam in FlxG.cameras.list) {
 				if (cam != null && cam.filters != null)
