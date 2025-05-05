@@ -54,8 +54,24 @@ class FunkinLua {
 	public var hscript:HScript = null;
 	#end
 
-	public var callbacks:Map<String, Dynamic> = new Map<String, Dynamic>();
-	public static var customFunctions:Map<String, Dynamic> = new Map<String, Dynamic>();
+	public var callbacks:Map<String, Dynamic> = [];
+	public static var customFunctions:Map<String, Dynamic> = [];
+	
+	public static function initFromFile(file:String, ?parent:FlxState):FunkinLua {
+		var newScript:FunkinLua = null;
+		
+		try {
+			newScript = new FunkinLua(file, parent);
+			newScript.call('onCreate');
+			
+			trace('lua file loaded succesfully:' + file);
+		} catch(e:Dynamic) {
+			ScriptedState.debugPrint('FATAL: $e', 0xffbb0000, 18);
+			newScript = null;
+		}
+		
+		return newScript;
+	}
 
 	public function new(scriptName:String, ?state:FlxState) { // TODO: allat
 		lua = LuaL.newstate();
@@ -1619,11 +1635,12 @@ class FunkinLua {
 	//main
 	public var lastCalledFunction:String = '';
 	public static var lastCalledScript:FunkinLua = null;
-	public function call(func:String, args:Array<Dynamic>):Dynamic {
+	public function call(func:String, ?args:Array<Dynamic>):Dynamic {
 		if(closed) return LuaUtils.Function_Continue;
 
 		lastCalledFunction = func;
 		lastCalledScript = this;
+		args ??= [];
 		try {
 			if(lua == null) return LuaUtils.Function_Continue;
 

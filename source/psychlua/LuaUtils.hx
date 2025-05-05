@@ -101,38 +101,35 @@ class LuaUtils
 	public static function setVarInArray(instance:Dynamic, variable:String, value:Dynamic, allowMaps:Bool = false):Any
 	{
 		var splitProps:Array<String> = variable.split('[');
-		if(splitProps.length > 1)
-		{
+		if (splitProps.length > 1) {
 			var target:Dynamic = null;
-			if(MusicBeatState.getVariables().exists(splitProps[0]))
-			{
-				var retVal:Dynamic = MusicBeatState.getVariables().get(splitProps[0]);
-				if(retVal != null)
+			
+			if (instance.hasVar != null && instance.hasVar(variable)) {
+				var retVal:Dynamic = instance.getVar(splitProps[0]);
+				if (retVal != null)
 					target = retVal;
+			} else {
+				target = Reflect.getProperty(instance, splitProps[0]);
 			}
-			else target = Reflect.getProperty(instance, splitProps[0]);
 
-			for (i in 1...splitProps.length)
-			{
+			for (i in 1...splitProps.length) {
 				var j:Dynamic = splitProps[i].substr(0, splitProps[i].length - 1);
-				if(i >= splitProps.length-1) //Last array
+				if (i >= splitProps.length - 1) //Last array
 					target[j] = value;
 				else //Anything else
 					target = target[j];
 			}
+			
 			return target;
 		}
 
-		if(allowMaps && isMap(instance))
-		{
-			//trace(instance);
+		if (allowMaps && isMap(instance)) {
 			instance.set(variable, value);
 			return value;
 		}
 
-		if(instance is MusicBeatState && MusicBeatState.getVariables().exists(variable))
-		{
-			MusicBeatState.getVariables().set(variable, value);
+		if (instance.hasVar != null && instance.hasVar(variable)) {
+			instance.setVar(variable, value);
 			return value;
 		}
 		Reflect.setProperty(instance, variable, value);
@@ -141,36 +138,31 @@ class LuaUtils
 	public static function getVarInArray(instance:Dynamic, variable:String, allowMaps:Bool = false):Any
 	{
 		var splitProps:Array<String> = variable.split('[');
-		if(splitProps.length > 1)
-		{
+		if (splitProps.length > 1) {
 			var target:Dynamic = null;
-			if(MusicBeatState.getVariables().exists(splitProps[0]))
-			{
-				var retVal:Dynamic = MusicBeatState.getVariables().get(splitProps[0]);
-				if(retVal != null)
+			
+			if (instance.hasVar != null && instance.hasVar(splitProps[0])) {
+				var retVal:Dynamic = instance.getVar(splitProps[0]);
+				if (retVal != null)
 					target = retVal;
-			}
-			else
+			} else {
 				target = Reflect.getProperty(instance, splitProps[0]);
+			}
 
-			for (i in 1...splitProps.length)
-			{
+			for (i in 1...splitProps.length) {
 				var j:Dynamic = splitProps[i].substr(0, splitProps[i].length - 1);
 				target = target[j];
 			}
+			
 			return target;
 		}
 		
-		if(allowMaps && isMap(instance))
-		{
-			//trace(instance);
+		if (allowMaps && isMap(instance))
 			return instance.get(variable);
-		}
 
-		if(instance is MusicBeatState && MusicBeatState.getVariables().exists(variable))
-		{
-			var retVal:Dynamic = MusicBeatState.getVariables().get(variable);
-			if(retVal != null)
+		if (instance.hasVar != null && instance.hasVar(variable)) {
+			var retVal:Dynamic = instance.getVar(variable);
+			if (retVal != null)
 				return retVal;
 		}
 		return Reflect.getProperty(instance, variable);
@@ -247,18 +239,11 @@ class LuaUtils
 		return null;
 	}
 	
-	public static function isMap(variable:Dynamic)
-	{
-		/*switch(Type.typeof(variable)){
-			case ValueType.TClass(haxe.ds.StringMap) | ValueType.TClass(haxe.ds.ObjectMap) | ValueType.TClass(haxe.ds.IntMap) | ValueType.TClass(haxe.ds.EnumValueMap):
-				return true;
-			default:
-				return false;
-		}*/
-
-		//trace(variable);
-		if(variable.exists != null && variable.keyValueIterator != null) return true;
-		return false;
+	public static function isMap(variable:Dynamic):Bool {
+		return switch (Type.typeof(variable)) {
+			case TClass(haxe.ds.StringMap) | TClass(haxe.ds.ObjectMap) | TClass(haxe.ds.IntMap) | TClass(haxe.ds.EnumValueMap): true;
+			default: false;
+		}
 	}
 
 	public static function setGroupStuff(leArray:Dynamic, variable:String, value:Dynamic, ?allowMaps:Bool = false) {
@@ -315,6 +300,32 @@ class LuaUtils
 		}
 	}
 	
+	public static var fieldCache:Map<String, Array<String>> = [];
+	public static function hasField(o:Dynamic, id:String):Bool {
+		if (o == null)
+			return false;
+		if (Reflect.hasField(o, id) || Reflect.field(o, id) != null || Type.typeof(o) == TObject)
+			return true;
+		
+		var name:String;
+		var cls:Class<Dynamic>;
+		
+		if (o is Class) {
+			cls = o;
+			name = '##CLASS_${Type.getClassName(cls)}';
+			
+			if (!fieldCache.exists(name))
+				fieldCache.set(name, Type.getClassFields(cls));
+		} else {
+			cls = Type.getClass(o);
+			name = '##INST_${Type.getClassName(cls)}';
+			
+			if (!fieldCache.exists(name))
+				fieldCache.set(name, Type.getInstanceFields(cls));
+		}
+		
+		return fieldCache[name].contains(id);
+	}
 	public static function isOfTypes(value:Any, types:Array<Dynamic>)
 	{
 		for (type in types)
