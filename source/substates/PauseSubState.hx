@@ -173,21 +173,10 @@ class PauseSubState extends ScriptedSubState
 			return;
 		}
 
-		if(FlxG.keys.justPressed.F5)
-		{
-			FlxTransitionableState.skipNextTransIn = true;
-			FlxTransitionableState.skipNextTransOut = true;
-			PlayState.nextReloadAll = true;
-			MusicBeatState.resetState();
-		}
-
 		updateSkipTextStuff();
-		if (controls.UI_UP_P)
-		{
+		if (controls.UI_UP_P) {
 			changeSelection(-1);
-		}
-		if (controls.UI_DOWN_P)
-		{
+		} if (controls.UI_DOWN_P) {
 			changeSelection(1);
 		}
 
@@ -340,6 +329,13 @@ class PauseSubState extends ScriptedSubState
 		
 		postUpdate(elapsed);
 	}
+	
+	public override function reset():Void {
+		FlxTransitionableState.skipNextTransIn = true;
+		FlxTransitionableState.skipNextTransOut = true;
+		PlayState.nextReloadAll = true;
+		MusicBeatState.resetState();
+	}
 
 	function deleteSkipTimeText()
 	{
@@ -392,7 +388,9 @@ class PauseSubState extends ScriptedSubState
 			}
 			missingText.visible = false;
 			missingTextBG.visible = false;
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+			
+			if (change != 0)
+				FlxG.sound.play(Paths.sound('scrollMenu'), .4);
 			
 			callOnScripts('onSelectItemPost', [grpMenuShit.members[curSelected], curSelected]);
 		}

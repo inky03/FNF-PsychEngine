@@ -14,9 +14,9 @@ import psychlua.LuaUtils;
 
 class BaseOptionsMenu extends ScriptedSubState
 {
+	private var optionsArray:Array<Option>;
 	private var curOption:Option = null;
 	private var curSelected:Int = 0;
-	private var optionsArray:Array<Option>;
 
 	private var grpOptions:FlxTypedGroup<Alphabet>;
 	private var checkboxGroup:FlxTypedGroup<CheckboxThingie>;
@@ -55,11 +55,6 @@ class BaseOptionsMenu extends ScriptedSubState
 		descBox.alpha = 0.6;
 		add(descBox);
 
-		var titleText:Alphabet = new Alphabet(75, 45, title, true);
-		titleText.setScale(0.6);
-		titleText.alpha = 0.4;
-		add(titleText);
-
 		descText = new FlxText(50, 600, 1180, "", 32);
 		descText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		descText.scrollFactor.set();
@@ -69,6 +64,11 @@ class BaseOptionsMenu extends ScriptedSubState
 	
 	public override function create():Void {
 		preCreate();
+		
+		var titleText:Alphabet = new Alphabet(75, 45, title, true);
+		titleText.setScale(0.6);
+		titleText.alpha = 0.4;
+		add(titleText);
 		
 		setupOptions();
 		changeSelection();
@@ -138,12 +138,9 @@ class BaseOptionsMenu extends ScriptedSubState
 			return;
 		}
 
-		if (controls.UI_UP_P)
-		{
+		if (controls.UI_UP_P) {
 			changeSelection(-1);
-		}
-		if (controls.UI_DOWN_P)
-		{
+		} if (controls.UI_DOWN_P) {
 			changeSelection(1);
 		}
 
@@ -152,10 +149,8 @@ class BaseOptionsMenu extends ScriptedSubState
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 		}
 
-		if(nextAccept <= 0)
-		{
-			switch(curOption.type)
-			{
+		if (curOption != null && nextAccept <= 0) {
+			switch(curOption.type) {
 				case BOOL:
 					if(controls.ACCEPT) {
 						var nextValue:Bool = (curOption.getValue() == true ? false : true);
@@ -303,9 +298,8 @@ class BaseOptionsMenu extends ScriptedSubState
 			}
 		}
 
-		if(nextAccept > 0) {
+		if (nextAccept > 0)
 			nextAccept -= 1;
-		}
 		
 		postUpdate(elapsed);
 	}
@@ -496,6 +490,8 @@ class BaseOptionsMenu extends ScriptedSubState
 	}
 	
 	function changeSelection(change:Int = 0) {
+		if (optionsArray.length == 0) return;
+		
 		var next:Int = FlxMath.wrap(curSelected + change, 0, optionsArray.length - 1);
 		
 		if (callOnScripts('onSelectItem', [optionsArray[next], next], true) != psychlua.LuaUtils.Function_Stop) {
@@ -506,11 +502,15 @@ class BaseOptionsMenu extends ScriptedSubState
 			
 			if (change != 0)
 				FlxG.sound.play(Paths.sound('scrollMenu'));
+			
+			callOnScripts('onSelectItemPost', [curOption, curSelected]);
 		}
 	}
 	
 	function updateTexts():Void {
-		descText.text = optionsArray[curSelected].description;
+		var option:Option = optionsArray[curSelected];
+		
+		descText.text = option?.description ?? 'Option unavailable';
 		descText.screenCenter(Y);
 		descText.y += 270;
 
@@ -531,7 +531,8 @@ class BaseOptionsMenu extends ScriptedSubState
 		descBox.updateHitbox();
 	}
 
-	function reloadCheckboxes()
+	function reloadCheckboxes() {
 		for (checkbox in checkboxGroup)
 			checkbox.daValue = Std.string(optionsArray[checkbox.ID].getValue()) == 'true'; //Do not take off the Std.string() from this, it will break a thing in Mod Settings Menu
+	}
 }

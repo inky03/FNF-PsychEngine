@@ -6,8 +6,6 @@ import backend.WeekData;
 import backend.Song;
 import backend.Rating;
 
-import flixel.FlxBasic;
-import flixel.FlxObject;
 import flixel.FlxSubState;
 import flixel.util.FlxSort;
 import flixel.util.FlxStringUtil;

@@ -139,11 +139,10 @@ class ModSettingsSubState extends BaseOptionsMenu
 			return;
 		}
 		
-		title = '$name Mod Settings';
-		
 		super();
 		
-		rpcDetails = 'Mod Settings ($name)'; //for Discord Rich Presence
+		title = '$name - Mod Settings';
+		// rpcDetails = 'Mod Settings ($name)'; //for Discord Rich Presence
 
 		bg.alpha = 0.75;
 		bg.color = FlxColor.WHITE;
