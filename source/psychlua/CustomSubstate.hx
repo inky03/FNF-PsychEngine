@@ -4,7 +4,7 @@ import flixel.FlxObject;
 
 class CustomSubstate extends ScriptedSubState {
 	public static var name:String = 'unnamed';
-	public static var instance:CustomSubstate;
+	public static var instance:ScriptedSubState;
 	
 	public var stateName:String;
 	public var parentState:ScriptedSubState = null;
@@ -58,6 +58,7 @@ class CustomSubstate extends ScriptedSubState {
 	
 	public override function create() {
 		CustomSubstate.name = stateName;
+		CustomSubstate.instance = this;
 		
 		if (Std.isOfType(_parentState, ScriptedSubState)) {
 			parentState = cast _parentState;
@@ -65,13 +66,12 @@ class CustomSubstate extends ScriptedSubState {
 			parentState = cast FlxG.state;
 		}
 		
-		instance = this;
-		parentState?.setOnHScript('customSubstate', instance);
-		
 		cameras = [FlxG.cameras.list[FlxG.cameras.list.length - 1]];
 		
-		preCreate();
+		parentState?.setOnHScript('customSubstate', this);
+		parentState?.setOnScripts('customSubstateName', stateName);
 		parentState?.callOnScripts('onCustomSubstateCreate', [stateName]);
+		preCreate();
 		super.create();
 		parentState?.callOnScripts('onCustomSubstateCreatePost', [stateName]);
 	}
@@ -100,7 +100,7 @@ class CustomSubstate extends ScriptedSubState {
 		}
 		
 		if (!loaded) {
-			var e:String = #if SCRIPTS_ALLOWED 'Custom sub-state code wasn\'t found or had errors, for "$stateName"' #else 'State scripts are unsupported in this build' #end;
+			var e:String = #if SCRIPTS_ALLOWED 'Custom sub-state code was not found / had errors, for "$stateName"' #else 'State scripts are unsupported in this build' #end;
 			ScriptedState.debugPrint(e, FlxColor.YELLOW);
 			close();
 		}
@@ -110,7 +110,6 @@ class CustomSubstate extends ScriptedSubState {
 		super();
 		stateName = name;
 		multiScript = false;
-		parentState?.setOnHScript('customSubstateName', stateName);
 	}
 	
 	public override function update(elapsed:Float) {
@@ -133,11 +132,11 @@ class CustomSubstate extends ScriptedSubState {
 	
 	public override function destroy() {
 		parentState?.callOnScripts('onCustomSubstateDestroy', [stateName]);
+		parentState?.setOnScripts('customSubstateName', null);
+		parentState?.setOnHScript('customSubstate', null);
 		instance = null;
 		name = 'unnamed';
-
-		parentState?.setOnHScript('customSubstate', null);
-		parentState?.setOnHScript('customSubstateName', stateName);
+		
 		super.destroy();
 	}
 }
