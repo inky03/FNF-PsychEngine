@@ -877,20 +877,14 @@ class FunkinLua {
 							ease: myOptions.ease,
 							startDelay: myOptions.startDelay,
 							loopDelay: myOptions.loopDelay,
-
-							onUpdate: function(twn:FlxTween) {
-								if(myOptions.onUpdate != null) luaCallGlobal(myOptions.onUpdate, [null, vars]);
-							},
-							onStart: function(twn:FlxTween) {
-								if(myOptions.onStart != null) luaCallGlobal(myOptions.onStart, [null, vars]);
-							},
-							onComplete: function(twn:FlxTween) {
-								if(myOptions.onComplete != null) luaCallGlobal(myOptions.onComplete, [null, vars]);
-							}
+							
+							onComplete: (myOptions.onComplete == null ? null : function(twn:FlxTween) luaCallGlobal(myOptions.onComplete, [null, vars])),
+							onUpdate: (myOptions.onUpdate == null ? null : function(twn:FlxTween) luaCallGlobal(myOptions.onUpdate, [null, vars])),
+							onStart: (myOptions.onStart == null ? null : function(twn:FlxTween) luaCallGlobal(myOptions.onStart, [null, vars])),
 						} : null);
 					}
 				} else {
-					luaTrace('startTween: No values on 2nd argument!', false, false, FlxColor.RED);
+					luaTrace('startTween: No values provided on 2nd argument!', false, false, FlxColor.RED);
 				}
 			}
 			else luaTrace('startTween: Couldnt find object: ' + vars, false, false, FlxColor.RED);

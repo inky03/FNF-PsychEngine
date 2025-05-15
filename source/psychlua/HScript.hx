@@ -114,7 +114,7 @@ class HScript extends Iris {
 	}
 	
 	public static function printError(message:String, level:ErrorSeverity = ERROR, ?customColor:FlxColor) {
-		var errorColor:AnsiColor = switch(level) {
+		var errorColor:AnsiColor = switch(level) { // TODO: move this (and somehow remove the dependency on hscript iris)
 			case NONE: CYAN;
 			case WARN: YELLOW;
 			case ERROR | FATAL: RED;

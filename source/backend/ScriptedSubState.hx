@@ -164,7 +164,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 	#end
 	
 	#if LUA_ALLOWED
-	function startLuas():Bool { // TO IMPLEMENT
+	function startLuas():Bool {
 		var loaded:Bool = false;
 		
 		if (multiScript) {
