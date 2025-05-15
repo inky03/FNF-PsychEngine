@@ -22,6 +22,7 @@ class MusicBeatState extends MusicBeatSubstate {
 	
 	public override function create() {
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
+		FlxG.fixedTimestep = false;
 		
 		super.create();
 		

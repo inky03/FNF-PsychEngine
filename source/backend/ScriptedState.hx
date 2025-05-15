@@ -3,6 +3,10 @@ package backend;
 import debug.ScriptTraceDisplay;
 import psychlua.GlobalScriptHandler;
 
+#if LUA_ALLOWED
+import psychlua.FunkinLua;
+#end
+
 class ScriptedState extends ScriptedSubState {
 	public var camOther:FlxCamera = null;
 	
@@ -14,7 +18,6 @@ class ScriptedState extends ScriptedSubState {
 	
 	public override function create():Void {
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
-		GlobalScriptHandler.refreshScripts();
 		
 		super.create();
 		
@@ -25,6 +28,8 @@ class ScriptedState extends ScriptedSubState {
 		MusicBeatState.timePassedOnState = 0;
 	}
 	public override function preCreate():Void {
+		GlobalScriptHandler.refreshScripts();
+		
 		if (camOther == null) {
 			camOther = new FlxCamera();
 			camOther.bgColor.alpha = 0;
@@ -46,6 +51,23 @@ class ScriptedState extends ScriptedSubState {
 		
 		GlobalScriptHandler.call('onCreateStatePost', [this]);
 	}
+	#if SCRIPTS_ALLOWED
+	public override function startStateScripts():Bool {
+		var loaded:Bool = false;
+		
+		#if HSCRIPT_ALLOWED
+		loaded = startHScripts();
+		#end
+		#if LUA_ALLOWED
+		FunkinLua.registerFunctions();
+		GlobalScriptHandler.call('onRegisterLuaAPI');
+		callOnHScript('onRegisterLuaAPI');
+		loaded = (startLuas() || loaded);
+		#end
+		
+		return loaded;
+	}
+	#end
 	
 	public function initPsychCamera():PsychCamera {
 		var camera = new PsychCamera();

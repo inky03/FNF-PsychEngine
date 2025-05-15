@@ -10,11 +10,10 @@ class CustomSubstate extends ScriptedSubState {
 	public var parentState:ScriptedSubState = null;
 	
 	#if LUA_ALLOWED
-	public static function implement(funk:FunkinLua) {
-		var lua = funk.lua;
-		Lua_helper.add_callback(lua, "openCustomSubstate", openCustomSubstate);
-		Lua_helper.add_callback(lua, "closeCustomSubstate", closeCustomSubstate);
-		Lua_helper.add_callback(lua, "insertToCustomSubstate", insertToCustomSubstate);
+	public static function implement() {
+		FunkinLua.registerFunction("openCustomSubstate", openCustomSubstate);
+		FunkinLua.registerFunction("closeCustomSubstate", closeCustomSubstate);
+		FunkinLua.registerFunction("insertToCustomSubstate", insertToCustomSubstate);
 	}
 	#end
 	

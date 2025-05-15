@@ -133,22 +133,15 @@ class ScriptedSubState extends MusicBeatSubstate {
 		var loaded:Bool = false;
 		
 		#if HSCRIPT_ALLOWED
-		if (multiScript) {
-			for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'scripts')) {
-				var path:String = '$folder/${getFolderName()}/${customStateName()}.hx';
-				if (FileSystem.exists(path))
-					loaded = (initHScript(path) != null || loaded);
-			}
-		} else {
-			var file:String = 'scripts/${getFolderName()}/${customStateName()}.hx';
-			var path:String = Paths.modFolders(file);
-			if (FileSystem.exists(path))
-				loaded = (initHScript(path) != null);
-		}
+		loaded = startHScripts();
+		#end
+		#if LUA_ALLOWED
+		loaded = (startLuas() || loaded);
 		#end
 		
 		return loaded;
 	}
+	
 	public function destroyScripts():Void {
 		#if LUA_ALLOWED
 		for (lua in luaArray) {
@@ -171,6 +164,24 @@ class ScriptedSubState extends MusicBeatSubstate {
 	#end
 	
 	#if LUA_ALLOWED
+	function startLuas():Bool { // TO IMPLEMENT
+		var loaded:Bool = false;
+		
+		if (multiScript) {
+			for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'scripts')) {
+				var path:String = '$folder/${getFolderName()}/${customStateName()}.lua';
+				if (FileSystem.exists(path))
+					loaded = (initLuaScript(path) != null || loaded);
+			}
+		} else {
+			var file:String = 'scripts/${getFolderName()}/${customStateName()}.lua';
+			var path:String = Paths.modFolders(file);
+			if (FileSystem.exists(path))
+				loaded = (initLuaScript(path) != null);
+		}
+		
+		return loaded;
+	}
 	public function startLuasNamed(luaFile:String) {
 		#if MODS_ALLOWED
 		var luaToLoad:String = Paths.modFolders(luaFile);
@@ -200,6 +211,24 @@ class ScriptedSubState extends MusicBeatSubstate {
 	#end
 	
 	#if HSCRIPT_ALLOWED
+	function startHScripts():Bool {
+		var loaded:Bool = false;
+		
+		if (multiScript) {
+			for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'scripts')) {
+				var path:String = '$folder/${getFolderName()}/${customStateName()}.hx';
+				if (FileSystem.exists(path))
+					loaded = (initHScript(path) != null || loaded);
+			}
+		} else {
+			var file:String = 'scripts/${getFolderName()}/${customStateName()}.hx';
+			var path:String = Paths.modFolders(file);
+			if (FileSystem.exists(path))
+				loaded = (initHScript(path) != null);
+		}
+		
+		return loaded;
+	}
 	public function startHScriptsNamed(scriptFile:String) {
 		#if MODS_ALLOWED
 		var scriptToLoad:String = Paths.modFolders(scriptFile);
@@ -235,6 +264,16 @@ class ScriptedSubState extends MusicBeatSubstate {
 		
 		return result;
 	}
+	public function callOnScriptsExt(func:String, ?argsLua:Array<Dynamic>, ?argsHScript:Array<Dynamic>, ignoreStops:Bool = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
+		excludeValues ??= [];
+		excludeValues.push(LuaUtils.Function_Continue);
+		
+		var result:Dynamic = callOnLuas(func, argsLua, ignoreStops, exclusions, excludeValues);
+		if (result == null || excludeValues.contains(result))
+			result = callOnHScript(func, argsHScript, ignoreStops, exclusions, excludeValues);
+		
+		return result;
+	}
 	public function callOnLuas(func:String, ?args:Array<Dynamic>, ignoreStops:Bool = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
 		var returnVal:Dynamic = LuaUtils.Function_Continue;
 		#if LUA_ALLOWED
@@ -245,31 +284,28 @@ class ScriptedSubState extends MusicBeatSubstate {
 		excludeValues.push(LuaUtils.Function_Continue);
 
 		var arr:Array<FunkinLua> = [];
-		for (script in luaArray)
-		{
-			if(script.closed)
-			{
+		for (script in luaArray) 	{
+			if (script.closed) {
 				arr.push(script);
 				continue;
 			}
 
-			if(exclusions.contains(script.scriptName))
+			if (exclusions.contains(script.scriptName))
 				continue;
 
 			var myValue:Dynamic = script.call(func, args);
-			if((myValue == LuaUtils.Function_StopLua || myValue == LuaUtils.Function_StopAll) && !excludeValues.contains(myValue) && !ignoreStops)
-			{
+			if ((myValue == LuaUtils.Function_StopLua || myValue == LuaUtils.Function_StopAll) && !excludeValues.contains(myValue) && !ignoreStops) {
 				returnVal = myValue;
 				break;
 			}
 
-			if(myValue != null && !excludeValues.contains(myValue))
+			if (myValue != null && !excludeValues.contains(myValue))
 				returnVal = myValue;
 
-			if(script.closed) arr.push(script);
+			if (script.closed) arr.push(script);
 		}
 
-		if(arr.length > 0)
+		if (arr.length > 0)
 			for (script in arr)
 				luaArray.remove(script);
 		#end
@@ -286,7 +322,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 		excludeValues.push(LuaUtils.Function_Continue);
 		
 		for (script in hscriptArray) {
-			if (script == null || !script.exists(funcToCall) || exclusions.contains(script.origin))
+			if (script.closed || !script.exists(funcToCall) || exclusions.contains(script.origin))
 				continue;
 
 			var callValue = script.call(funcToCall, args);
@@ -317,7 +353,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 		
 		exclusions ??= [];
 		for (script in luaArray) {
-			if (exclusions.contains(script.scriptName))
+			if (script.closed || exclusions.contains(script.scriptName))
 				continue;
 
 			script.set(variable, args);
@@ -330,47 +366,11 @@ class ScriptedSubState extends MusicBeatSubstate {
 		
 		exclusions ??= [];
 		for (script in hscriptArray) {
-			if (exclusions.contains(script.origin))
+			if (script.closed || exclusions.contains(script.origin))
 				continue;
 
 			script.set(variable, args);
 		}
 		#end
-	}
-	
-	public override function getVar(id:String):Dynamic {
-		if (hasVar(id))
-			return super.getVar(id);
-		for (script in luaArray) {
-			if (script.exists(id))
-				return script.get(id);
-		}
-		for (script in hscriptArray) {
-			if (script.exists(id))
-				return script.get(id);
-		}
-		return null;
-	}
-	public override function setVar(id:String, value:Dynamic):Void {
-		for (script in luaArray) {
-			if (script.exists(id))
-				script.set(id, value);
-		}
-		for (script in hscriptArray) {
-			if (script.exists(id))
-				script.set(id, value);
-		}
-		return super.setVar(id, value);
-	}
-	public override function hasVar(id:String):Bool {
-		for (script in luaArray) {
-			if (script.exists(id))
-				return true;
-		}
-		for (script in hscriptArray) {
-			if (script.exists(id))
-				return true;
-		}
-		return super.hasVar(id);
 	}
 }

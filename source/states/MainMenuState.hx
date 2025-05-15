@@ -316,7 +316,7 @@ class MainMenuState extends ScriptedState
 					case RIGHT: rightItem;
 				}
 				
-				if (callOnScripts('onAccept', [item], true) != psychlua.LuaUtils.Function_Stop) {
+				if (callOnScriptsExt('onAccept', [curSelected], [item, curSelected], true) != psychlua.LuaUtils.Function_Stop) {
 					FlxG.sound.play(Paths.sound('confirmMenu'));
 					selectedSomethin = true;
 					FlxG.mouse.visible = false;
@@ -389,7 +389,7 @@ class MainMenuState extends ScriptedState
 				newSelectedItem = rightItem;
 		}
 		
-		if (forced || callOnScripts('onSelectItem', [selectedItem, curSelected], true) != psychlua.LuaUtils.Function_Stop) {
+		if (forced || callOnScriptsExt('onSelectItem', [curSelected], [selectedItem, curSelected], true) != psychlua.LuaUtils.Function_Stop) {
 			if (selectedItem != null)
 				selectedItem.selected = false;
 			newSelectedItem.selected = true;
@@ -411,7 +411,7 @@ class MainMenuState extends ScriptedState
 				camFollow.y = selectedItem.getGraphicMidpoint().y;
 			camFollow.x = selectedItem.getGraphicMidpoint().x;
 			
-			callOnScripts('onSelectItemPost', [selectedItem, curSelected]);
+			callOnScriptsExt('onSelectItemPost', [curSelected], [selectedItem, curSelected]);
 		} else {
 			curColumn = oldColumn;
 			curSelected = oldSelected;

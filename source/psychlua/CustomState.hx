@@ -4,8 +4,8 @@ class CustomState extends ScriptedState {
 	public var stateName:String;
 	
 	#if LUA_ALLOWED
-	public static function implement(funk:FunkinLua) {
-		Lua_helper.add_callback(funk.lua, 'openCustomState', (name:String) -> MusicBeatState.switchState(new CustomState(name)));
+	public static function implement() {
+		FunkinLua.registerFunction('openCustomState', (name:String) -> MusicBeatState.switchState(new CustomState(name)));
 	}
 	#end
 	

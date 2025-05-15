@@ -13,9 +13,9 @@ class ExtraDataMacro {
 		
 		fields = fields.concat([{
 			pos: pos,
-			access: [APublic],
 			name: 'extraData',
-			kind: FieldType.FProp('default', 'never', macro:Map<String, Dynamic>, macro $v{[]})
+			access: [APublic],
+			kind: FieldType.FProp('default', 'null', macro:Map<String, Dynamic>, macro $v{[]})
 		}, {
 			pos: pos,
 			name: 'getVar',
@@ -30,8 +30,9 @@ class ExtraDataMacro {
 			name: 'setVar',
 			access: [APublic],
 			kind: FieldType.FFun({
+				ret: macro:Dynamic,
 				args: [{type: macro:String, name: 'id'}, {type: macro:Dynamic, name: 'value'}],
-				expr: macro { extraData.set(id, value); }
+				expr: macro { extraData.set(id, value); return value; }
 			})
 		}, {
 			pos: pos,
@@ -46,7 +47,7 @@ class ExtraDataMacro {
 			name: 'hasVar',
 			access: [APublic],
 			kind: FieldType.FFun({
-				ret: macro:Dynamic,
+				ret: macro:Bool,
 				args: [{type: macro:String, name: 'id'}],
 				expr: macro { return extraData.exists(id); }
 			})
@@ -84,9 +85,8 @@ class LuaUtils
 	public static final Function_StopLua:String = "##PSYCHLUA_FUNCTIONSTOPLUA";
 	public static final Function_StopHScript:String = "##PSYCHLUA_FUNCTIONSTOPHSCRIPT";
 	public static final Function_StopAll:String = "##PSYCHLUA_FUNCTIONSTOPALL";
-
-	public static function getLuaTween(options:Dynamic)
-	{
+	
+	public static function getLuaTween(options:Dynamic) {
 		return (options != null) ? {
 			type: getTweenTypeByString(options.type),
 			startDelay: options.startDelay,
@@ -97,79 +97,8 @@ class LuaUtils
 			ease: getTweenEaseByString(options.ease)
 		} : null;
 	}
-
-	public static function setVarInArray(instance:Dynamic, variable:String, value:Dynamic, allowMaps:Bool = false):Any
-	{
-		var splitProps:Array<String> = variable.split('[');
-		if (splitProps.length > 1) {
-			var target:Dynamic = null;
-			
-			if (instance.hasVar != null && instance.hasVar(variable)) {
-				var retVal:Dynamic = instance.getVar(splitProps[0]);
-				if (retVal != null)
-					target = retVal;
-			} else {
-				target = Reflect.getProperty(instance, splitProps[0]);
-			}
-
-			for (i in 1...splitProps.length) {
-				var j:Dynamic = splitProps[i].substr(0, splitProps[i].length - 1);
-				if (i >= splitProps.length - 1) //Last array
-					target[j] = value;
-				else //Anything else
-					target = target[j];
-			}
-			
-			return target;
-		}
-
-		if (allowMaps && isMap(instance)) {
-			instance.set(variable, value);
-			return value;
-		}
-
-		if (instance.hasVar != null && instance.hasVar(variable)) {
-			instance.setVar(variable, value);
-			return value;
-		}
-		Reflect.setProperty(instance, variable, value);
-		return value;
-	}
-	public static function getVarInArray(instance:Dynamic, variable:String, allowMaps:Bool = false):Any
-	{
-		var splitProps:Array<String> = variable.split('[');
-		if (splitProps.length > 1) {
-			var target:Dynamic = null;
-			
-			if (instance.hasVar != null && instance.hasVar(splitProps[0])) {
-				var retVal:Dynamic = instance.getVar(splitProps[0]);
-				if (retVal != null)
-					target = retVal;
-			} else {
-				target = Reflect.getProperty(instance, splitProps[0]);
-			}
-
-			for (i in 1...splitProps.length) {
-				var j:Dynamic = splitProps[i].substr(0, splitProps[i].length - 1);
-				target = target[j];
-			}
-			
-			return target;
-		}
-		
-		if (allowMaps && isMap(instance))
-			return instance.get(variable);
-
-		if (instance.hasVar != null && instance.hasVar(variable)) {
-			var retVal:Dynamic = instance.getVar(variable);
-			if (retVal != null)
-				return retVal;
-		}
-		return Reflect.getProperty(instance, variable);
-	}
-
-	public static function getModSetting(saveTag:String, ?modName:String = null)
-	{
+	
+	public static function getModSetting(saveTag:String, ?modName:String = null) {
 		#if MODS_ALLOWED
 		if(FlxG.save.data.modSettings == null) FlxG.save.data.modSettings = new Map<String, Dynamic>();
 
@@ -239,65 +168,155 @@ class LuaUtils
 		return null;
 	}
 	
-	public static function isMap(variable:Dynamic):Bool {
-		return switch (Type.typeof(variable)) {
-			case TClass(haxe.ds.StringMap) | TClass(haxe.ds.ObjectMap) | TClass(haxe.ds.IntMap) | TClass(haxe.ds.EnumValueMap): true;
-			default: false;
+	static function isQuote(string:String, pos:Int):Bool { // it isnt that deep bro
+		var char:String = string.charAt(pos);
+		return (char == '\'' || char == '"');
+	}
+	public static function getVariable(object:Dynamic, id:String, allowMaps:Bool = false):Dynamic {
+		if (object == FlxG.state && (id == 'game' || id == 'this' || id == 'instance'))
+			return FlxG.state;
+		
+		if (object == null) {
+			throw 'Null Object Reference';
+			return null;
+		}
+		
+		function getVariableFR(id:String):Dynamic {
+			if (allowMaps && isMap(object))
+				return object.get(id);
+			if (object.hasVar != null && object.hasVar(id))
+				return object.getVar(id);
+			return Reflect.getProperty(object, id);
+		}
+		
+		if (id.indexOf('[') == -1) {
+			return getVariableFR(id);
+		} else { // array / map access
+			if (id.indexOf('[') == 0) {
+				throw 'Malformed variable "$id"';
+				return null;
+			}
+			
+			var access:Array<String> = id.split('[');
+			var gotObj:Dynamic = getVariableFR(access.shift());
+			
+			for (i => item in access) {
+				if (item.indexOf(']') < item.length - 1) {
+					throw 'Malformed variable "$id"';
+					return null;
+				}
+				
+				var keyID:String = item.substr(0, -1);
+				
+				if (Std.isOfType(gotObj, Array)) {
+					gotObj = gotObj[Std.parseInt(keyID)];
+				} else if (isMap(gotObj) && isQuote(keyID, 0) && isQuote(keyID, keyID.length - 1)) {
+					var keyID:Dynamic = keyID.substring(1, keyID.length - 1);
+					switch (Type.typeof(gotObj)) {
+						case TClass(haxe.ds.IntMap): keyID = Std.parseInt(keyID);
+						default:
+					}
+					
+					gotObj = gotObj.get(keyID);
+				} else {
+					throw 'Array access is not allowed on ${Type.getClassName(Type.getClass(gotObj))}';
+					return null;
+				}
+			}
+			return gotObj;
 		}
 	}
-
-	public static function setGroupStuff(leArray:Dynamic, variable:String, value:Dynamic, ?allowMaps:Bool = false) {
-		var split:Array<String> = variable.split('.');
-		if(split.length > 1) {
-			var obj:Dynamic = Reflect.getProperty(leArray, split[0]);
-			for (i in 1...split.length-1)
-				obj = Reflect.getProperty(obj, split[i]);
-
-			leArray = obj;
-			variable = split[split.length-1];
+	public static function setVariable(object:Dynamic, id:String, value:Dynamic, allowMaps:Bool = false):Dynamic {
+		if (object == null) {
+			throw 'Null Object Reference';
+			return value;
 		}
-		if(allowMaps && isMap(leArray)) leArray.set(variable, value);
-		else Reflect.setProperty(leArray, variable, value);
+		
+		if (id.indexOf('[') == -1) {
+			if (allowMaps && isMap(object)) {
+				object.set(id, value);
+				return value;
+			}
+			if (object.hasVar != null && object.hasVar(id))
+				return object.setVar(id, value);
+			Reflect.setProperty(object, id, value);
+		} else { // array / map access
+			if (id.indexOf('[') == 0) {
+				throw 'Malformed variable "$id"';
+				return value;
+			}
+			
+			var access:Array<String> = id.split('[');
+			var gotObj:Dynamic = getVariable(object, access.shift());
+			
+			for (i => item in access) {
+				if (item.indexOf(']') < item.length - 1) {
+					throw 'Malformed variable "$id"';
+					return value;
+				}
+				
+				var keyID:String = item.substr(0, -1);
+				var isLast:Bool = (i == access.length - 1);
+				
+				if (Std.isOfType(gotObj, Array)) {
+					if (isLast) {
+						gotObj[Std.parseInt(keyID)] = value;
+					} else {
+						gotObj = gotObj[Std.parseInt(keyID)];
+					}
+				} else if (isMap(gotObj) && isQuote(keyID, 0) && isQuote(keyID, keyID.length - 1)) {
+					var keyID:Dynamic = keyID.substring(1, keyID.length - 1);
+					switch (Type.typeof(gotObj)) {
+						case TClass(haxe.ds.IntMap): keyID = Std.parseInt(keyID);
+						default:
+					}
+					
+					if (isLast) {
+						gotObj.set(keyID, value);
+					} else {
+						gotObj = gotObj.get(keyID);
+					}
+				} else {
+					throw 'Array access is not allowed on ${Type.getClassName(Type.getClass(gotObj))}';
+					return null;
+				}
+			}
+		}
+		
 		return value;
 	}
-	public static function getGroupStuff(leArray:Dynamic, variable:String, ?allowMaps:Bool = false) {
-		var split:Array<String> = variable.split('.');
-		if(split.length > 1) {
-			var obj:Dynamic = Reflect.getProperty(leArray, split[0]);
-			for (i in 1...split.length-1)
-				obj = Reflect.getProperty(obj, split[i]);
-
-			leArray = obj;
-			variable = split[split.length-1];
-		}
-
-		if(allowMaps && isMap(leArray)) return leArray.get(variable);
-		return Reflect.getProperty(leArray, variable);
-	}
-
-	public static function getPropertyLoop(split:Array<String>, ?getProperty:Bool=true, ?allowMaps:Bool = false):Dynamic
-	{
-		var obj:Dynamic = getObjectDirectly(split[0]);
-		var end = split.length;
-		if(getProperty) end = split.length-1;
-
-		for (i in 1...end) obj = getVarInArray(obj, split[i], allowMaps);
-		return obj;
-	}
-
-	public static function getObjectDirectly(objectName:String, ?allowMaps:Bool = false):Dynamic
-	{
-		switch(objectName)
-		{
-			case 'this' | 'instance' | 'game':
-				return PlayState.instance;
+	
+	public static function getPropertyLoop(variable:String, allowMaps:Bool = false, ?base:Dynamic):Dynamic {
+		if (variable.indexOf('.') != -1) {
+			var obj:Dynamic = base;
+			for (id in variable.split('.'))
+				obj = getVariable(obj, id);
 			
-			default:
-				var split:Array<String> = objectName.split('.');
-				if (split.length > 1)
-					return LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split, true, allowMaps), split[split.length - 1], allowMaps);
-				return getVarInArray(MusicBeatState.getState(), objectName, allowMaps);
+			return obj;
+		} else {
+			return getVariable(base, variable);
 		}
+	}
+	public static function setPropertyLoop(variable:String, value:Dynamic, allowMaps:Bool = false, ?base:Dynamic):Dynamic {
+		if (variable.indexOf('.') != -1) {
+			var split:Array<String> = variable.split('.');
+			var obj:Dynamic = base;
+			for (i => id in split) {
+				if (i < split.length - 1) {
+					obj = getVariable(obj, id);
+				} else {
+					setVariable(obj, id, value);
+				}
+			}
+			
+			return value;
+		} else {
+			return setVariable(base, variable, value);
+		}
+	}
+	
+	public static function getObjectDirectly(objectName:String, allowMaps:Bool = false):Dynamic {
+		return getPropertyLoop(objectName, allowMaps, FlxG.state);
 	}
 	
 	public static var fieldCache:Map<String, Array<String>> = [];
@@ -337,14 +356,21 @@ class LuaUtils
 	public static function isLuaSupported(value:Any):Bool {
 		return (value == null || isOfTypes(value, [Bool, Int, Float, String, Array]) || Type.typeof(value) == TObject);
 	}
+	public static function isMap(variable:Dynamic):Bool {
+		return switch (Type.typeof(variable)) {
+			case TClass(haxe.ds.StringMap) | TClass(haxe.ds.ObjectMap) | TClass(haxe.ds.IntMap) | TClass(haxe.ds.EnumValueMap): true;
+			default: false;
+		}
+	}
 	
 	public static function getTargetInstance():MusicBeatSubstate {
-		if (PlayState.instance != null) return PlayState.instance.isDead ? GameOverSubstate.instance : PlayState.instance;
+		if (PlayState.instance != null) return (PlayState.instance.isDead ? GameOverSubstate.instance : PlayState.instance);
 		return MusicBeatState.getState();
 	}
 
-	public static inline function getLowestCharacterGroup():FlxSpriteGroup
-	{
+	public static inline function getLowestCharacterGroup():FlxSpriteGroup {
+		if (PlayState.instance == null) return null;
+		
 		var stageData:StageFile = StageData.getStageFile(PlayState.SONG.stage);
 		var group:FlxSpriteGroup = (stageData.hide_girlfriend ? PlayState.instance.boyfriendGroup : PlayState.instance.gfGroup);
 
@@ -459,12 +485,9 @@ class LuaUtils
 	public static function formatVariable(tag:String)
 		return tag.trim().replace(' ', '_').replace('.', '');
 
-	public static function tweenPrepare(tag:String, vars:String) {
-		if(tag != null) cancelTween(tag);
-		var variables:Array<String> = vars.split('.');
-		var sexyProp:Dynamic = LuaUtils.getObjectDirectly(variables[0]);
-		if(variables.length > 1) sexyProp = LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(variables), variables[variables.length-1]);
-		return sexyProp;
+	public static function tweenPrepare(tag:String, object:String) {
+		if (tag != null) cancelTween(tag);
+		return getObjectDirectly(object);
 	}
 
 	public static function getBuildTarget():String
@@ -579,14 +602,41 @@ class LuaUtils
 	}
 
 	public static function cameraFromString(cam:String):FlxCamera {
-		switch(cam.toLowerCase()) {
-			case 'camgame' | 'game': return PlayState.instance.camGame;
-			case 'camhud' | 'hud': return PlayState.instance.camHUD;
-			case 'camother' | 'other': return PlayState.instance.camOther;
+		var game:PlayState = PlayState.instance;
+		var camera:Dynamic;
+		if (game != null) {
+			switch (cam.toLowerCase()) {
+				case 'camother' | 'other': return game.camOther;
+				case 'camgame' | 'game': return game.camGame;
+				case 'camhud' | 'hud': return game.camHUD;
+				default:
+			}
+			
+			camera = MusicBeatState.getVariables().get(cam);
+			if (camera == null || !Std.isOfType(camera, FlxCamera))
+				camera = game.camGame;
+		} else {
+			switch (cam.toLowerCase()) {
+				case 'camgame' | 'game': return FlxG.camera;
+				default:
+			}
+			
+			camera = MusicBeatState.getVariables().get(cam);
+			if (camera == null || !Std.isOfType(camera, FlxCamera))
+				camera = FlxG.camera;
 		}
-		var camera:FlxCamera = MusicBeatState.getVariables().get(cam);
-		if (camera == null || !Std.isOfType(camera, FlxCamera)) camera = PlayState.instance.camGame;
 		return camera;
+	}
+	
+	public static function cameraString(cam:String):String {
+		switch(cam.toLowerCase()) {
+			case 'camgame' | 'game': return 'camGame';
+			case 'camhud' | 'hud': return 'camHUD';
+			case 'camother' | 'other': return 'camOther';
+		}
+		var customCamera:FlxCamera = MusicBeatState.getVariables().get(cam);
+		if (customCamera != null && Std.isOfType(customCamera, FlxCamera)) return cam;
+		return 'camGame';
 	}
 }
 #end

@@ -269,10 +269,9 @@ class StoryMenuState extends ScriptedState
 				selectWeek();
 		}
 
-		if (controls.BACK && !movedBack && !selectedWeek)
-		{
-			FlxG.sound.play(Paths.sound('cancelMenu'));
+		if (controls.BACK && !movedBack && !selectedWeek) {
 			movedBack = true;
+			FlxG.sound.play(Paths.sound('cancelMenu'));
 			MusicBeatState.switchState(new MainMenuState());
 		}
 
@@ -290,74 +289,108 @@ class StoryMenuState extends ScriptedState
 
 	var movedBack:Bool = false;
 	var selectedWeek:Bool = false;
-	var stopspamming:Bool = false;
-	
-	public static function prepareWeek(songArray:Array<String>, difficulty:Int) {
-		PlayState.storyDifficulty = difficulty;
-		PlayState.storyPlaylist = songArray;
-		PlayState.isStoryMode = true;
-		
-		var diffic:String = Difficulty.getFilePath(difficulty) ?? '';
-		
-		Song.loadFromJson(PlayState.storyPlaylist[0].toLowerCase() + diffic, PlayState.storyPlaylist[0].toLowerCase());
-		PlayState.campaignMisses = 0;
-		PlayState.campaignScore = 0;
-	}
 
-	function selectWeek()
-	{
+	function selectWeek() {
 		if (callOnScripts('onAccept', [loadedWeeks[curWeek], curWeek], true) != psychlua.LuaUtils.Function_Stop) {
-			if (!weekIsLocked(loadedWeeks[curWeek].fileName))
-			{
-				// We can't use Dynamic Array .copy() because that crashes HTML5, here's a workaround.
-				var leWeek:Array<Dynamic> = loadedWeeks[curWeek].songs;
-				var songArray:Array<String> = [];
-				for (week in leWeek)
-					songArray.push(week[0]);
-				
-				try {
+			if (!weekIsLocked(loadedWeeks[curWeek].fileName)) {
+				if (loadWeek(loadedWeeks[curWeek], curDifficulty)) {
 					selectedWeek = true;
-					prepareWeek(songArray, curDifficulty);
-					PlayState.storyVariables.clear();
-				} catch(e:Dynamic) {
-					trace('ERROR! $e');
-					return;
-				}
-				
-				if (stopspamming == false) {
-					FlxG.sound.play(Paths.sound('confirmMenu'));
-
 					grpWeekText.members[curWeek].isFlashing = true;
+					
 					for (char in grpWeekCharacters.members) {
 						if (char.character != '' && char.hasConfirmAnimation)
 							char.animation.play('confirm');
 					}
-					stopspamming = true;
+					
+					FlxG.sound.play(Paths.sound('confirmMenu'));
 				}
-
-				var directory = StageData.forceNextDirectory;
-				LoadingState.loadNextDirectory();
-				StageData.forceNextDirectory = directory;
-
-				@:privateAccess
-				if (PlayState._lastLoadedModDirectory != Mods.currentModDirectory) {
-					trace('CHANGED MOD DIRECTORY, RELOADING STUFF');
-					Paths.freeGraphicsFromMemory();
-				}
-				LoadingState.prepareToSong();
-				new FlxTimer().start(1, (_) -> {
-					#if !SHOW_LOADING_SCREEN FlxG.sound.music.stop(); #end
-					LoadingState.loadAndSwitchState(new PlayState(), true);
-					FreeplayState.destroyFreeplayVocals();
-				});
-				
-				#if (MODS_ALLOWED && DISCORD_ALLOWED)
-				DiscordClient.loadModRPC();
-				#end
 			} else {
 				FlxG.sound.play(Paths.sound('cancelMenu'));
 			}
 		}
+	}
+	
+	static function prepareWeek(week:WeekData, difficultyIdx:Int = -1) {
+		if (difficultyIdx == -1)
+			difficultyIdx = PlayState.storyDifficulty;
+		
+		var diffName:String = Difficulty.getFilePath(difficultyIdx) ?? '';
+		
+		PlayState.storyWeekData = week;
+		PlayState.storyDifficulty = difficultyIdx;
+		PlayState.storyPlaylist = [for (song in week.songs) song[0]];
+		
+		Song.loadFromJson(PlayState.storyPlaylist[0].toLowerCase() + diffName, PlayState.storyPlaylist[0].toLowerCase());
+		PlayState.isStoryMode = true;
+		PlayState.campaignMisses = 0;
+		PlayState.campaignScore = 0;
+		
+		PlayState.storyVariables.clear();
+	}
+	
+	public static function getWeek(fileName:String):WeekData {
+		var weekPath:String = Paths.getPath('weeks/$fileName.json');
+		var weekFile:WeekFile = WeekData.getWeekFile(weekPath);
+		if (weekFile != null) {
+			var weekData:WeekData = new WeekData(weekFile, fileName);
+			return weekData;
+		}
+		return null;
+	}
+	
+	public static function loadWeek(?weekData:WeekData, difficultyIdx:Int = -1):Bool {
+		try {
+			prepareWeek(weekData ?? PlayState.storyWeekData, difficultyIdx);
+		} catch(e:Dynamic) {
+			trace('ERROR! $e');
+			return false;
+		}
+		
+		var directory = StageData.forceNextDirectory;
+		LoadingState.loadNextDirectory();
+		StageData.forceNextDirectory = directory;
+
+		@:privateAccess
+		if (PlayState._lastLoadedModDirectory != Mods.currentModDirectory) {
+			trace('CHANGED MOD DIRECTORY, RELOADING STUFF');
+			Paths.freeGraphicsFromMemory();
+		}
+		LoadingState.prepareToSong();
+		new FlxTimer().start(1, (_) -> {
+			#if !SHOW_LOADING_SCREEN FlxG.sound.music.stop(); #end
+			LoadingState.loadAndSwitchState(new PlayState(), true);
+			FreeplayState.destroyFreeplayVocals();
+		});
+		
+		#if (MODS_ALLOWED && DISCORD_ALLOWED)
+		DiscordClient.loadModRPC();
+		#end
+		
+		return true;
+	}
+	
+	public static function loadSong(?name:String, difficultyIdx:Int = -1):Void {
+		if (name == null || name.length < 1)
+			name = Song.loadedSongName;
+		if (difficultyIdx == -1)
+			difficultyIdx = PlayState.storyDifficulty;
+
+		var formattedSong:String = Highscore.formatSong(name, difficultyIdx);
+		FlxG.state.persistentUpdate = false;
+		Song.loadFromJson(formattedSong, name);
+		PlayState.storyDifficulty = difficultyIdx;
+		LoadingState.loadAndSwitchState(new PlayState());
+		
+		if (FlxG.sound.music != null) {
+			FlxG.sound.music.volume = 0;
+			FlxG.sound.music.pause();
+		}
+		var game:PlayState = PlayState.instance;
+		if (game != null && game.vocals != null) {
+			game.vocals.volume = 0;
+			game.vocals.pause();
+		}
+		FlxG.camera.followLerp = 0;
 	}
 
 	function changeDifficulty(change:Int = 0):Void

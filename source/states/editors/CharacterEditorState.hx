@@ -18,7 +18,7 @@ import states.editors.content.PsychJsonPrinter;
 @:bitmap("assets/images/debugger/cursorCross.png")
 class GraphicCursorCross extends openfl.display.BitmapData {}
 
-class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler.PsychUIEvent
+class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.PsychUIEvent
 {
 	var character:Character;
 	var ghost:FlxSprite;
@@ -79,6 +79,8 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		FlxG.cameras.add(camHUD, false);
 
 		loadBG();
+		
+		preCreate();
 
 		silhouettes = new FlxSpriteGroup();
 		add(silhouettes);
@@ -861,6 +863,8 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 	var undoOffsets:Array<Float> = null;
 	override function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+		
 		super.update(elapsed);
 
 		if(PsychUIInputText.focusOn != null)
@@ -1067,6 +1071,8 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 			}
 			return;
 		}
+		
+		postUpdate(elapsed);
 	}
 
 	final assetFolder = 'week1';  //load from assets/week1/

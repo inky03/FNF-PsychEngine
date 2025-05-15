@@ -183,7 +183,9 @@ class CreditsState extends ScriptedState
 			}
 
 			if(controls.ACCEPT && (creditsStuff[curSelected][3] == null || creditsStuff[curSelected][3].length > 4)) {
-				CoolUtil.browserLoad(creditsStuff[curSelected][3]);
+				if (callOnScripts('onAccept', [creditsStuff[curSelected], curSelected], true) != psychlua.LuaUtils.Function_Stop) {
+					CoolUtil.browserLoad(creditsStuff[curSelected][3]);
+				}
 			}
 			if (controls.BACK)
 			{

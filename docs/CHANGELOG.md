@@ -45,7 +45,11 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 - Notes
 	- Updated RGB shader (to prevent color blending artifacts)
 	- Updated note texture to update glows and sustain notes
+- "De-hardcoded" some specific behaviors
+	- Tutorial camera (behavior now in stage class rather than PlayState, can be disabled)
+	- Captain game over lines (behavior now in stage class rather than Game Over class)
 - ~~Fixed a crash caused by an active video when exiting the state~~ *merged in 1.0.4*
+- Set Property event should work better (probably)
 - F5 key to reload the current state
 - Cleaner master editor menu
 
@@ -53,7 +57,20 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 
 ### Lua
 
-- Switch to a custom state in Lua with `openCustomState('stateName')` (note Custom States scripts only admit HScript, regardless)
+- EXTENDED Scripting (VERY EXPERIMENTAL)
+	- Lua scripting unsupported on Global scripts (and will probably remain this way because of its shortcomings)
+	- Custom State and Sub-state code now also admits Lua scripting!!
+- New functions
+	- Switch to a custom state in Lua with `openCustomState('stateName')`
+	- `loadWeek(weekFilename:String, ?difficultyIndex:Int)` to load a custom week
+- Backend rewrite
+	- Some function code previously stuck in Lua API functions is now available in other classes for more convenience
+		- ex. `PlayState.exitSong`, `StoryMenuState.loadSong`
+		- This also makes them easily available for HScript to use
+	- You can now use the map accessor in `getProperty`, `setProperty` (and variants)
+		- ex. `debugPrint(getProperty('boyfriend.animOffsets["singLEFT"]'))` to get bf's left pose animation offsets
+	- All API functions have been "modernized" to be able to take objects within objects
+		- ex. `playAnim('strumLineNotes.members[0]', 'confirm', true)` to play confirm animation in the first strum note
 - ~~Objects can now be returned into tables from `runHaxeCode` and `runHaxeFunction`~~ *merged in 1.0.4*
 - Try compiling with `-D UNHOLYWANDERER04` to add an absolutely exquisite, brand new Lua function
 - `antialiasing` variable is now available as a default Lua variable
@@ -61,14 +78,32 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 
 ### HScript
 
-- State Scripting (EXPERIMENTAL)
+- EXTENDED Scripting (EXPERIMENTAL)
+	- Global Scripts
+		- Run absolutely everywhere
+		- `onCreate` is called when the mod is initialized and `onDestroy` when the mod is unloaded (ex. disabled in Mods menu)
+		- Register custom Lua API functions in `onRegisterLuaAPI`
+			- like `createGlobalCallback` but better? i guess?
+			- Example:
+				```haxe
+				function onRegisterLuaAPI() {
+					FunkinLua.registerFunction('testFunction', function() {
+						debugPrint('hi!!', 0xffff00)
+					});
+				}
+				```
+				```lua
+				function onCreate() {
+					testFunction() -- will print "hi!!"
+				}
+				```
 	- Custom States
 		- Switch to a custom state in HScript with `MusicBeatState.switchState(new CustomState('stateName'))`
 		- Will only admit the highest priority script (to prevent major code conflicts)
 		- All features **scriptable states** have
 	- Custom Sub-states
 		- Now admit script files; loads from `scripts/substates/SubStateName.hx`
-	- Scriptable States
+	- Scriptable States (OUTDATED, WILL PROBABLY MAKE API PAGE?)
 		- MainMenuState
 			- Adapted for scripting flexibility
 			- Functions
@@ -106,8 +141,15 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 				function onSectionHit(section) {}
 				function onDestroy() {}
 				```
+- Custom variables defined with `setVar` on objects can be accessed like regular fields
+	- Example:
+		```haxe
+		boyfriend.setVar('penisInches', {flaccid: 3, erect: 9});
+		boyfriend.penisInches.erect; // 9
+		boyfriend.penisInches.flaccid = 1.5;
+		```
 - More default imports
-	- `MusicBeatState`, `MusicBeatSubstate` and variants, for convenience
+	- `FunkinLua`, `MusicBeatState`, `MusicBeatSubstate` and variants, for convenience
 - Fixed crashes on specific circumstances (errors that previously weren't correctly caught, ex. Null Function Pointer)
 - Setting game variables without using `game.` is now allowed (it was previously only allowed for getting)
 - `createGlobalCallback` now also makes the callback globally available in HScript scripts
@@ -117,9 +159,12 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 
 - DCE is disabled and [almost] all classes are included, to remove scripting limitations
 - Added `curDecSection`
-- `onStepHit`, `onBeatHit` and `onSectionHit` functions
+- `onStepHit`, `onBeatHit` and `onSectionHit` callbacks
 	- Will now also trigger in 0 and negative time marks
 	- Now have the respective step, beat or section passed as the first function argument
+- New callbacks
+	- `onGameOverLoop`, when the game over loop starts
+	- `onDraw`, `onDrawPost` - the former can be stopped to use custom state / substate drawing behavior (very smart, but also very dangerous)
 - FATAL script errors only print at the top left of the screen instead of making a new window alert
 	- These errors are highlighted in dark red, and are bigger than the other printed text
 - Script trace messages are now rendered in OpenFL instead of HaxeFlixel, so they will remain on top of the screen at any time
@@ -133,12 +178,26 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 	- Most functions now have their step & beat equivalents
 	- `Conductor.copyBPMChanges` to copy a BPM change array to a new array
 	- `Conductor.defaultBPMChangeMap` to make default BPM change array based on an initial BPM value
+- Dialogue
+	- Useful for mid-song dialogue
+	- If closed, will not stop the song if it's already playing
+	- `canContinue` and `canSkip` variables to disable certain inputs during dialogue
+	- `advanceDialog(finishText:Bool = false)` and `finishDialog()` to force the dialogue to advance and end, respectively
 - MusicBeatState
-	- Unified with MusicBeatSubstate (now extends)
+	- Unified with MusicBeatSubstate (`MusicBeatState` extends `MusicBeatSubstate`)
+	- Now contains the runtime shaders map, rather than PlayState (useful for scripting purposes)
 	- Added `curDecSection`
 	- `stepHit`, `beatHit` and `sectionHit` functions
 		- Will now also trigger in 0 and negative time marks
 		- Now have the respective step, beat or section passed as the first function argument
+- Psychlua package
+	- (a lot actually.)
+	- FunkinLua
+		- Most functions are now registered only once (per state creation), to speed up function loading times (`registeredFunctions` map)
+	- LuaUtils
+		- `getVarInArray` and `setVarInArray` have been replaced by `getVariable` and `setVariable`
+	- HScript
+		- `callOnScriptsEx` (to provide diff. arguments for Lua and HScript function calls)
 - Notes
 	- Improvements to note scroll direction and sustain note scaling
 		- `correctionOffset` is no longer needed due to this and has been removed
@@ -148,12 +207,14 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 	- `Note.followStrumNote` second argument "fakeCrochet" has been removed (as it was useless)
 	- Strum **press** animation is now strictly only played on a ghost tap
 - States
-	- Play State
+	- PlayState
 		- Added variable `ghostTapping`, so it can be modified without having to change user preferences
 		- `stageUI`, `uiPrefix` and `uiPostfix` behavior has been adjusted (this also affects note textures)
 		- `addTextToDebug` function now has an argument for size and returns the text itself
-	- Backend (MusicBeat)
-		- State and substate classes are unified (`MusicBeatState` extends `MusicBeatSubstate`)
+		- `storyVariables` for static variables useful for scripting - will remain intact until next week played
+		- `storyWeekData` for well, the data for the current week.
+	- BaseStage
+		- Added `onMoveCamera` and `onGameOver [Loop / Start / Confirm]` functions
 - Changed all libraries to use their latest versions (that previously weren't)
 	- HScript Iris (1.1.3 used in release -> git used in fork)
 		- Fixed increment / decrement operator `var ++` `var --`

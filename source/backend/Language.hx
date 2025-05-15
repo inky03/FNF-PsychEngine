@@ -1,5 +1,9 @@
 package backend;
 
+#if LUA_ALLOWED
+import psychlua.FunkinLua;
+#end
+
 class Language
 {
 	public static var defaultLangName:String = 'English (US)'; //en-US
@@ -93,14 +97,9 @@ class Language
 	#end
 
 	#if LUA_ALLOWED
-	public static function addLuaCallbacks(lua:State) {
-		Lua_helper.add_callback(lua, "getTranslationPhrase", function(key:String, ?defaultPhrase:String, ?values:Array<Dynamic> = null) {
-			return getPhrase(key, defaultPhrase, values);
-		});
-
-		Lua_helper.add_callback(lua, "getFileTranslation", function(key:String) {
-			return getFileTranslation(key);
-		});
+	public static function implement():Void {
+		FunkinLua.registerFunction("getTranslationPhrase", function(key:String, ?defaultPhrase:String, ?values:Array<Dynamic> = null) return getPhrase(key, defaultPhrase, values));
+		FunkinLua.registerFunction("getFileTranslation", function(key:String) return getFileTranslation(key));
 	}
 	#end
 }

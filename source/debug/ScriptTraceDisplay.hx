@@ -9,8 +9,14 @@ class ScriptTraceDisplay extends Sprite {
 	public var borderPadding:Float = 10;
 	public var textPadding:Float = 2;
 	
+	var minHeight:Float = 0;
+	
 	public function new() {
 		super();
+		
+		var placeholder:TracePopUp = print('!');
+		minHeight = placeholder.hei;
+		placeholder.visible = false;
 	}
 	
 	public override function __enterFrame(dt:Float) {
@@ -18,7 +24,7 @@ class ScriptTraceDisplay extends Sprite {
 			text.update(dt);
 	}
 	
-	public function print(text:String, color:FlxColor = FlxColor.WHITE, size:Int = 15):TracePopUp {
+	public function print(text:String = 'null', color:FlxColor = FlxColor.WHITE, size:Int = 15):TracePopUp {
 		var popUp:TracePopUp = null;
 		for (text in texts) {
 			if (!text.visible) {
@@ -38,7 +44,7 @@ class ScriptTraceDisplay extends Sprite {
 		
 		popUp.updateWidth();
 		popUp.defaultTextFormat = popUp.format;
-		popUp.hei = popUp.textHeight;
+		popUp.hei = Math.max(minHeight, popUp.textHeight);
 		
 		texts.remove(popUp);
 		texts.insert(0, popUp);

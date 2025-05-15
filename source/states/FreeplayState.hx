@@ -330,7 +330,7 @@ class FreeplayState extends ScriptedState
 		}
 		else if(FlxG.keys.justPressed.SPACE)
 		{
-			if (instPlaying != curSelected && !player.playingMusic && callOnScripts('onMusicPlayer', [true, songs[curSelected]], true) != psychlua.LuaUtils.Function_Stop)
+			if (instPlaying != curSelected && !player.playingMusic && callOnScriptsExt('onMusicPlayer', [true, curSelected], [true, songs[curSelected]], true) != psychlua.LuaUtils.Function_Stop)
 			{
 				destroyFreeplayVocals();
 				FlxG.sound.music.volume = 0;
@@ -398,16 +398,16 @@ class FreeplayState extends ScriptedState
 				player.switchPlayMusic();
 				player.pauseOrResume(true);
 				
-				callOnScripts('onMusicPlayerPost', [true, songs[curSelected]]);
+				callOnScriptsExt('onMusicPlayerPost', [true, curSelected], [true, songs[curSelected]]);
 			}
-			else if (instPlaying == curSelected && player.playingMusic && callOnScripts('onMusicPlayer', [!player.playing, songs[curSelected]], true) != psychlua.LuaUtils.Function_Stop)
+			else if (instPlaying == curSelected && player.playingMusic && callOnScriptsExt('onMusicPlayer', [!player.playing, curSelected], [!player.playing, songs[curSelected]], true) != psychlua.LuaUtils.Function_Stop)
 			{
 				player.pauseOrResume(!player.playing);
 				
-				callOnScripts('onMusicPlayerPost', [player.playing, songs[curSelected]]);
+				callOnScriptsExt('onMusicPlayerPost', [true, curSelected], [player.playing, songs[curSelected]]);
 			}
 		}
-		else if (controls.ACCEPT && !player.playingMusic && callOnScripts('onAccept', [songs[curSelected]], true) != psychlua.LuaUtils.Function_Stop)
+		else if (controls.ACCEPT && !player.playingMusic && callOnScriptsExt('onAccept', [curSelected], [songs[curSelected], curSelected], true) != psychlua.LuaUtils.Function_Stop)
 		{
 			persistentUpdate = false;
 			var songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
@@ -572,7 +572,7 @@ class FreeplayState extends ScriptedState
 			changeDiff();
 			_updateSongLastDifficulty();
 			
-			callOnScripts('onSelectItemPost', [songs[next], next]);
+			callOnScriptsExt('onSelectItemPost', [next], [songs[next], next]);
 		}
 	}
 

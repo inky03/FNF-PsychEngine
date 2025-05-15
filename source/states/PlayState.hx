@@ -130,6 +130,7 @@ class PlayState extends ScriptedState
 	public static var SONG:SwagSong = null;
 	
 	public static var isStoryMode:Bool = false;
+	public static var storyWeekData:WeekData = null;
 	public static var storyVariables:Map<String, Dynamic> = [];
 	public static var storyPlaylist:Array<String> = [];
 	public static var storyDifficulty:Int = 1;
@@ -830,12 +831,48 @@ class PlayState extends ScriptedState
 		return null;
 	}
 
-	function startAndEnd()
-	{
-		if(endingSong)
+	function startAndEnd() {
+		if (endingSong) {
 			endSong();
-		else
+		} else {
 			startCountdown();
+		}
+	}
+	
+	public static function restartSong(skipTransition:Bool = false):Void {
+		PlayState.instance.paused = true; // For lua
+		FlxG.sound.music.volume = 0;
+		PlayState.instance.vocals.volume = 0;
+
+		if (skipTransition) {
+			FlxTransitionableState.skipNextTransIn = true;
+			FlxTransitionableState.skipNextTransOut = true;
+		}
+		MusicBeatState.resetState();
+	}
+	public static function exitSong(skipTransition:Bool = false):Void {
+		if (skipTransition) {
+			FlxTransitionableState.skipNextTransIn = true;
+			FlxTransitionableState.skipNextTransOut = true;
+		}
+		
+		#if DISCORD_ALLOWED DiscordClient.resetClientID(); #end
+		
+		PlayState.deathCounter = 0;
+		PlayState.seenCutscene = false;
+		
+		Mods.loadTopMod();
+		if (PlayState.isStoryMode) {
+			MusicBeatState.switchState(new StoryMenuState());
+		} else {
+			MusicBeatState.switchState(new FreeplayState());
+		}
+
+		FlxG.sound.playMusic(Paths.music('freakyMenu'));
+		PlayState.instance.canResync = false;
+		PlayState.changedDifficulty = false;
+		PlayState.chartingMode = false;
+		FlxG.camera.followLerp = 0;
 	}
 
 	var dialogueCount:Int = 0;
@@ -2189,25 +2226,22 @@ class PlayState extends ScriptedState
 				}
 
 			case 'Set Property':
-				try
-				{
-					var trueValue:Dynamic = value2.trim();
-					if (trueValue == 'true' || trueValue == 'false') trueValue = trueValue == 'true';
-					else if (flValue2 != null) trueValue = flValue2;
-					else trueValue = value2;
-
-					var split:Array<String> = value1.split('.');
-					if(split.length > 1) {
-						LuaUtils.setVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1], trueValue);
+				try {
+					var set:Dynamic = value2.trim();
+					
+					if (set == 'true' || set == 'false') {
+						set = (set == 'true');
+					} else if (flValue2 != null) {
+						set = flValue2;
 					} else {
-						LuaUtils.setVarInArray(this, value1, trueValue);
+						set = value2;
 					}
-				}
-				catch(e:Dynamic)
-				{
+					
+					LuaUtils.setPropertyLoop(value1, set, false, this);
+				} catch(e:haxe.Exception) {
 					var len:Int = e.message.indexOf('\n') + 1;
-					if(len <= 0) len = e.message.length;
-					#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
+					if (len <= 0) len = e.message.length;
+					#if (SCRIPTS_ALLOWED)
 					addTextToDebug('ERROR ("Set Property" Event) - ' + e.message.substr(0, len), FlxColor.RED);
 					#else
 					FlxG.log.warn('ERROR ("Set Property" Event) - ' + e.message.substr(0, len));
