@@ -15,7 +15,7 @@ class ReflectionFunctions
 	static final instanceStr:Dynamic = "##PSYCHLUA_STRINGTOOBJ";
 	
 	public static function implement() {
-		FunkinLua.registerFunction("getPropertyFromClass", function(classVar:String, variable:String, ?allowMaps:Bool = false) {
+		FunkinLua.registerFunction("getPropertyFromClass", function(classVar:String, variable:String, allowMaps:Bool = false) {
 			var cls:Dynamic = Type.resolveClass(classVar);
 			if (cls == null) {
 				FunkinLua.luaTrace('getPropertyFromClass: Class $classVar not found', false, false, FlxColor.RED);
@@ -24,13 +24,14 @@ class ReflectionFunctions
 			
 			return LuaUtils.getPropertyLoop(variable, allowMaps, cls);
 		});
-		FunkinLua.registerFunction("setPropertyFromClass", function(classVar:String, variable:String, value:Dynamic, ?allowMaps:Bool = false, ?allowInstances:Bool = false) {
+		FunkinLua.registerFunction("setPropertyFromClass", function(classVar:String, variable:String, value:Dynamic, allowMaps:Bool = false, allowInstances:Bool = false) {
 			var cls:Dynamic = Type.resolveClass(classVar);
 			if (cls == null) {
 				FunkinLua.luaTrace('getPropertyFromClass: Class $classVar not found', false, false, FlxColor.RED);
 				return null;
 			}
 			
+			if (allowInstances) value = parseInstances(value);
 			return LuaUtils.setPropertyLoop(variable, value, allowMaps, cls);
 		});
 		FunkinLua.registerFunction("callMethodFromClass", function(className:String, funcToRun:String, ?args:Array<Dynamic>) {
@@ -62,20 +63,21 @@ class ReflectionFunctions
 				}
 			}
 		});
-		FunkinLua.registerFunction("instanceArg", function(instanceName:String, ?className:String = null) {
-			var retStr:String ='$instanceStr::$instanceName';
-			if(className != null) retStr += '::$className';
+		FunkinLua.registerFunction("instanceArg", function(instanceName:String, ?className:String) {
+			var retStr:String = '$instanceStr::$instanceName';
+			if (className != null) retStr += '::$className';
 			return retStr;
 		});
 	}
 	public static function implementLocal(funk:FunkinLua) {
-		funk.addLocalCallback("getProperty", function(variable:String, ?allowMaps:Bool = false) {
+		funk.addLocalCallback("getProperty", function(variable:String, allowMaps:Bool = false) {
 			return LuaUtils.getPropertyLoop(variable, allowMaps, funk.parentState);
 		});
-		funk.addLocalCallback("setProperty", function(variable:String, value:Dynamic, ?allowMaps:Bool = false, ?allowInstances:Bool = false) {
-			return LuaUtils.setPropertyLoop(variable, value, allowMaps, funk.parentState);
+		funk.addLocalCallback("setProperty", function(variable:String, value:Dynamic, allowMaps:Bool = false, allowInstances:Bool = false) {
+			if (allowInstances) value = parseInstances(value);
+			LuaUtils.setPropertyLoop(variable, value, allowMaps, funk.parentState);
 		});
-		funk.addLocalCallback("getPropertyFromGroup", function(group:String, index:Int, variable:String, ?allowMaps:Bool = false) {
+		funk.addLocalCallback("getPropertyFromGroup", function(group:String, index:Int, variable:String, allowMaps:Bool = false) {
 			if (index < 0) {
 				FunkinLua.luaTrace('getPropertyFromGroup: Index can\'t be negative!', false, false, FlxColor.RED);
 				return null;
@@ -100,32 +102,32 @@ class ReflectionFunctions
 			}
 			return null;
 		});
-		funk.addLocalCallback("setPropertyFromGroup", function(group:String, index:Int, variable:String, value:Dynamic, ?allowMaps:Bool = false, ?allowInstances:Bool = false) {
+		funk.addLocalCallback("setPropertyFromGroup", function(group:String, index:Int, variable:String, value:Dynamic, allowMaps:Bool = false, allowInstances:Bool = false) {
 			if (index < 0) {
 				FunkinLua.luaTrace('setPropertyFromGroup: Index can\'t be negative!', false, false, FlxColor.RED);
 				return value;
 			}
 			
 			var groupOrArray:Dynamic = LuaUtils.getPropertyLoop(group, allowMaps, funk.parentState);
+			if (allowInstances) value = parseInstances(value);
 
 			if (groupOrArray != null) {
 				if (groupOrArray.length != null) {
 					if (index >= groupOrArray.length) {
 						FunkinLua.luaTrace('setPropertyFromGroup: Index ($index) exceeds length of object $group!', false, false, FlxColor.RED);
-						return null;
+						return;
 					}
 				}
 				if (groupOrArray is Array) {
-					return LuaUtils.setPropertyLoop(variable, value, allowMaps, groupOrArray[index]);
+					LuaUtils.setPropertyLoop(variable, value, allowMaps, groupOrArray[index]);
 				} else {
-					return LuaUtils.setPropertyLoop(variable, value, allowMaps, Reflect.getProperty(groupOrArray, 'members')[index]);
+					LuaUtils.setPropertyLoop(variable, value, allowMaps, Reflect.getProperty(groupOrArray, 'members')[index]);
 				}
 			} else {
 				FunkinLua.luaTrace('setPropertyFromGroup: Object $group doesn\'t exist!', false, false, FlxColor.RED);
 			}
-			return value;
 		});
-		funk.addLocalCallback("addToGroup", function(group:String, tag:String, ?index:Int = -1) {
+		funk.addLocalCallback("addToGroup", function(group:String, tag:String, index:Int = -1) {
 			var obj:FlxSprite = LuaUtils.getPropertyLoop(tag, false, funk.parentState);
 			if (obj == null || obj.destroy == null) {
 				FunkinLua.luaTrace('addToGroup: Object $tag is not valid!', false, false, FlxColor.RED);
@@ -150,7 +152,7 @@ class ReflectionFunctions
 				groupOrArray.insert(index, obj);
 			}
 		});
-		funk.addLocalCallback("removeFromGroup", function(group:String, ?index:Int = -1, ?tag:String = null, ?destroy:Bool = true) {
+		funk.addLocalCallback("removeFromGroup", function(group:String, index:Int = -1, ?tag:String, destroy:Bool = true) {
 			var obj:FlxSprite = null;
 			if (tag != null) {
 				obj = LuaUtils.getPropertyLoop(tag, false, funk.parentState);
@@ -181,10 +183,10 @@ class ReflectionFunctions
 					if (destroy) obj.destroy();
 			}
 		});
-		funk.addLocalCallback("callMethod", function(funcToRun:String, ?args:Array<Dynamic>) {
+		funk.addLocalCallback("callMethod", function(funcToRun:String, args:Array<Dynamic>) {
 			return callMethodFromObject(funk.parentState, funcToRun, parseInstances(args ?? []));
 		});
-		funk.addLocalCallback("addInstance", function(objectName:String, ?inFront:Bool = false) {
+		funk.addLocalCallback("addInstance", function(objectName:String, inFront:Bool = false) {
 			var obj:Dynamic = LuaUtils.getObjectDirectly(objectName);
 			var instance = LuaUtils.getTargetInstance();
 			
