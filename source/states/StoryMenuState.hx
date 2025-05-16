@@ -431,7 +431,7 @@ class StoryMenuState extends ScriptedState
 	var intendedScore:Int = 0;
 
 	function changeWeek(change:Int = 0):Void {
-		var next:Int = FlxMath.wrap(change, 0, loadedWeeks.length - 1);
+		var next:Int = FlxMath.wrap(curWeek + change, 0, loadedWeeks.length - 1);
 		
 		if (callOnScripts('onSelectItem', [loadedWeeks[next], next], true) != psychlua.LuaUtils.Function_Stop) {
 			curWeek = next;
