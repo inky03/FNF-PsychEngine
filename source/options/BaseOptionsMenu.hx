@@ -249,7 +249,7 @@ class BaseOptionsMenu extends ScriptedSubState
 											curOption.change();
 										}
 										
-									case PERCENT:
+									case FLOAT | PERCENT:
 										var target:Float = FlxMath.roundDecimal(holdValue, curOption.decimals);
 										if (callOnScripts('onChangeItem', [curOption, target], true) != LuaUtils.Function_Stop && curOption.getValue() != target) {
 											curOption.setValue(target);
