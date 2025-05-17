@@ -2792,7 +2792,7 @@ class PlayState extends ScriptedState
 		callOnScripts('noteMissPress', [direction]);
 	}
 
-	function noteMissCommon(direction:Int, note:Note = null)
+	function noteMissCommon(direction:Int, ?note:Note)
 	{
 		// score and data
 		var subtract:Float = pressMissDamage;
@@ -2800,9 +2800,9 @@ class PlayState extends ScriptedState
 
 		// GUITAR HERO SUSTAIN CHECK LOL!!!!
 		if (note != null && guitarHeroSustains && note.parent == null) {
-			if(note.tail.length > 0) {
+			if (note.tail.length > 0) {
 				note.alpha = 0.35;
-				for(childNote in note.tail) {
+				for (childNote in note.tail) {
 					childNote.alpha = note.alpha;
 					childNote.missed = true;
 					childNote.canBeHit = false;
@@ -2844,33 +2844,33 @@ class PlayState extends ScriptedState
 			opponentVocals.volume = 0;
 			doDeathCheck(true);
 		}
-
+		
 		var lastCombo:Int = combo;
 		combo = 0;
 
 		health -= subtract * healthLoss;
+		if (!endingSong) songMisses ++;
 		songScore -= 10;
-		if(!endingSong) songMisses++;
-		totalPlayed++;
+		totalPlayed ++;
 		RecalculateRating(true);
 
 		// play character anims
-		var char:Character = boyfriend;
-		if((note != null && note.gfNote) || (SONG.notes[curSection] != null && SONG.notes[curSection].gfSection)) char = gf;
+		var char:Character = getNoteCharacter(note, boyfriend);
+		if (char != null) {
+			if ((note == null || !note.noMissAnimation) && char.hasMissAnimations) {
+				var postfix:String = '';
+				if (note != null) postfix = note.animSuffix;
 
-		if(char != null && (note == null || !note.noMissAnimation) && char.hasMissAnimations)
-		{
-			var postfix:String = '';
-			if(note != null) postfix = note.animSuffix;
-
-			var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, direction)))] + 'miss' + postfix;
-			char.playAnim(animToPlay, true);
-
-			if(char != gf && lastCombo > 5 && gf != null && gf.hasAnimation('sad'))
-			{
-				gf.playAnim('sad');
-				gf.specialAnim = true;
+				var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, direction)))] + 'miss' + postfix;
+				char.playAnim(animToPlay, true);
 			}
+			
+			if (gf != null && char != gf)
+				gf.playComboDropAnim(combo);
+			if (dad != null && char != dad)
+				dad.playComboDropAnim(combo);
+			if (boyfriend != null && char != boyfriend)
+				boyfriend.playComboDropAnim(combo);
 		}
 		vocals.volume = 0;
 	}
@@ -2884,30 +2884,28 @@ class PlayState extends ScriptedState
 
 		if (!camZoomingDisabled)
 			camZooming = true;
-
-		if(note.noteType == 'Hey!' && dad.hasAnimation('hey'))
-		{
-			dad.playAnim('hey', true);
-			dad.specialAnim = true;
-			dad.heyTimer = 0.6;
-		}
-		else if(!note.noAnimation)
-		{
-			var char:Character = dad;
-			var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, note.noteData)))] + note.animSuffix;
-			if(note.gfNote) char = gf;
-
-			if(char != null)
-			{
+		
+		var char:Character = getNoteCharacter(note, dad);
+		if (char != null) {
+			if (note.noteType == 'Hey!' && char.hasAnimation('hey')) {
+				char.playAnim('hey', true);
+				char.specialAnim = true;
+				char.heyTimer = 0.6;
+			} else if(!note.noAnimation) {
+				var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, note.noteData)))] + note.animSuffix;
+				
 				var canPlay:Bool = true;
-				if(note.isSustainNote)
-				{
+				if (note.isSustainNote) {
 					var holdAnim:String = animToPlay + '-hold';
-					if(char.animation.exists(holdAnim)) animToPlay = holdAnim;
-					if(char.getAnimationName() == holdAnim || char.getAnimationName() == holdAnim + '-loop') canPlay = false;
+					if (char.hasAnimation(holdAnim))
+						animToPlay = holdAnim;
+					if (char.getAnimationName() == holdAnim || char.getAnimationName() == holdAnim + '-loop')
+						canPlay = false;
 				}
 
-				if(canPlay) char.playAnim(animToPlay, true);
+				if (canPlay)
+					char.playAnim(animToPlay, true);
+				
 				char.holdTimer = 0;
 			}
 		}
@@ -2941,76 +2939,71 @@ class PlayState extends ScriptedState
 
 		if (note.hitsoundVolume > 0 && !note.hitsoundDisabled)
 			FlxG.sound.play(Paths.sound(note.hitsound), note.hitsoundVolume);
-
-		if(!note.hitCausesMiss) //Common notes
-		{
-			if(!note.noAnimation)
-			{
+		
+		var char:Character = null;
+		if (!note.hitCausesMiss) { //Common notes
+			if (!note.noAnimation) {
 				var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, note.noteData)))] + note.animSuffix;
-
-				var char:Character = boyfriend;
-				var animCheck:String = 'hey';
-				if(note.gfNote)
-				{
-					char = gf;
-					animCheck = 'cheer';
-				}
-
-				if(char != null)
-				{
+				
+				char = getNoteCharacter(note, boyfriend);
+				if (char != null) {
 					var canPlay:Bool = true;
-					if(note.isSustainNote)
-					{
+					if (note.isSustainNote) {
 						var holdAnim:String = animToPlay + '-hold';
-						if(char.animation.exists(holdAnim)) animToPlay = holdAnim;
-						if(char.getAnimationName() == holdAnim || char.getAnimationName() == holdAnim + '-loop') canPlay = false;
+						if (char.hasAnimation(holdAnim))
+							animToPlay = holdAnim;
+						if (char.getAnimationName() == holdAnim || char.getAnimationName() == holdAnim + '-loop')
+							canPlay = false;
 					}
 	
-					if(canPlay) char.playAnim(animToPlay, true);
+					if (canPlay) char.playAnim(animToPlay, true);
 					char.holdTimer = 0;
-
-					if(note.noteType == 'Hey!')
-					{
-						if(char.hasAnimation(animCheck))
-						{
-							char.playAnim(animCheck, true);
-							char.specialAnim = true;
-							char.heyTimer = 0.6;
+					
+					if (note.noteType == 'Hey!') {
+						for (animCheck in ['hey', 'cheer']) {
+							if (char.hasAnimation(animCheck)) {
+								char.playAnim(animCheck, true);
+								char.specialAnim = true;
+								char.heyTimer = 0.6;
+								break;
+							}
 						}
 					}
 				}
 			}
 
-			if(!cpuControlled)
-			{
+			if (!cpuControlled) {
 				var spr = playerStrums.members[note.noteData];
-				if(spr != null) spr.playAnim('confirm', true);
+				if (spr != null) spr.playAnim('confirm', true);
+			} else {
+				strumPlayAnim(false, Std.int(Math.abs(note.noteData)), Conductor.stepCrochet * 1.25 / 1000 / playbackRate);
 			}
-			else strumPlayAnim(false, Std.int(Math.abs(note.noteData)), Conductor.stepCrochet * 1.25 / 1000 / playbackRate);
 			vocals.volume = 1;
 
-			if (!note.isSustainNote)
-			{
-				combo++;
-				if(combo > 9999) combo = 9999;
+			if (!note.isSustainNote) {
+				combo ++;
 				popUpScore(note);
+				
+				if (gf != null && char != gf)
+					gf.playComboAnim(combo);
+				if (dad != null && char != dad)
+					dad.playComboAnim(combo);
+				if (boyfriend != null && char != boyfriend)
+					boyfriend.playComboAnim(combo);
 			}
 			var gainHealth:Bool = true; // prevent health gain, *if* sustains are treated as a singular note
 			if (guitarHeroSustains && note.isSustainNote) gainHealth = false;
 			if (gainHealth) health += note.hitHealth * healthGain;
 
-		}
-		else //Notes that count as a miss if you hit them (Hurt notes for example)
-		{
-			if(!note.noMissAnimation)
-			{
-				switch(note.noteType)
-				{
+		} else { //Notes that count as a miss if you hit them (Hurt notes for example)
+			char = getNoteCharacter(note, boyfriend);
+			
+			if (!note.noMissAnimation) {
+				switch (note.noteType) {
 					case 'Hurt Note':
-						if(boyfriend.hasAnimation('hurt'))
-						{
-							boyfriend.playAnim('hurt', true);
-							boyfriend.specialAnim = true;
+						if (char != null && char.hasAnimation('hurt')) {
+							char.playAnim('hurt', true);
+							char.specialAnim = true;
 						}
 				}
 			}
@@ -3024,6 +3017,17 @@ class PlayState extends ScriptedState
 		var result:Dynamic = callOnLuas('goodNoteHit', [notes.members.indexOf(note), leData, leType, isSus]);
 		if(result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) callOnHScript('goodNoteHit', [note]);
 		if(!note.isSustainNote) invalidateNote(note);
+	}
+	
+	public function getNoteCharacter(?note:Note, ?defaultCharacter:Character):Character {
+		if (note == null) return defaultCharacter;
+		
+		if (note.character == null) {
+			var isGFNote:Bool = (note.gfNote || (SONG.notes[curSection] != null && note.mustPress == SONG.notes[curSection].mustHitSection && SONG.notes[curSection].gfSection));
+			note.character = (isGFNote ? gf : defaultCharacter);
+		}
+		
+		return note.character;
 	}
 
 	public function invalidateNote(note:Note):Void {
