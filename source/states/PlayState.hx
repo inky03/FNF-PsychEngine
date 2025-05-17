@@ -3024,7 +3024,7 @@ class PlayState extends ScriptedState
 		
 		if (note.character == null) {
 			var isGFNote:Bool = (note.gfNote || (SONG.notes[curSection] != null && note.mustPress == SONG.notes[curSection].mustHitSection && SONG.notes[curSection].gfSection));
-			note.character = (isGFNote ? gf : defaultCharacter);
+			return (isGFNote ? gf : defaultCharacter);
 		}
 		
 		return note.character;
