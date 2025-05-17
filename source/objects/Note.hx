@@ -504,8 +504,7 @@ class Note extends FlxSprite
 
 	public function clipToStrumNote(myStrum:StrumNote)
 	{
-		if((mustPress || !ignoreNote) && (wasGoodHit || (prevNote.wasGoodHit && !canBeHit)))
-		{
+		if ((mustPress || !ignoreNote) && wasGoodHit) {
 			var clipDistance:Float = Math.max(-distance, 0);
 			clipRect ??= new FlxRect(0, 0, frameWidth);
 			

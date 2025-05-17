@@ -1760,28 +1760,25 @@ class PlayState extends ScriptedState
 							var strum:StrumNote = strumGroup.members[daNote.noteData];
 							daNote.followStrumNote(strum, songSpeed / playbackRate);
 
-							if(daNote.mustPress)
-							{
+							if (daNote.mustPress) {
 								if(cpuControlled && !daNote.blockHit && daNote.canBeHit && (daNote.isSustainNote || daNote.strumTime <= Conductor.songPosition))
 									goodNoteHit(daNote);
-							}
-							else if (daNote.wasGoodHit && !daNote.hitByOpponent && !daNote.ignoreNote)
+							} else if (daNote.wasGoodHit && !daNote.hitByOpponent && !daNote.ignoreNote)
 								opponentNoteHit(daNote);
 
-							if(daNote.isSustainNote && strum.sustainReduce) daNote.clipToStrumNote(strum);
+							if (daNote.isSustainNote && strum.sustainReduce)
+								daNote.clipToStrumNote(strum);
 
 							// Kill extremely late notes and cause misses
-							if (!daNote.canBeHit) {
-								if (!daNote.tooLate && !daNote.wasGoodHit && daNote.strumTime < Conductor.songPosition - Conductor.safeZoneOffset) {
-									if (daNote.mustPress && !cpuControlled && !daNote.ignoreNote && !endingSong)
-										noteMiss(daNote);
-									daNote.tooLate = true;
-								}
-								
-								if (daNote.tooLate && Conductor.songPosition - daNote.strumTime - daNote.sustainLength > noteKillOffset) {
-									daNote.active = daNote.visible = false;
-									invalidateNote(daNote);
-								}
+							if (!daNote.canBeHit && !daNote.tooLate && !daNote.wasGoodHit && daNote.strumTime < Conductor.songPosition - Conductor.safeZoneOffset) {
+								if (daNote.mustPress && !cpuControlled && !daNote.ignoreNote && !endingSong)
+									noteMiss(daNote);
+								daNote.tooLate = true;
+							}
+							
+							if ((daNote.tooLate || daNote.wasGoodHit) && Conductor.songPosition - daNote.strumTime - daNote.sustainLength > noteKillOffset) {
+								daNote.active = daNote.visible = false;
+								invalidateNote(daNote);
 							}
 							
 							if (!daNote.exists || !daNote.alive)
@@ -1790,10 +1787,9 @@ class PlayState extends ScriptedState
 					}
 					else
 					{
-						notes.forEachAlive(function(daNote:Note)
-						{
+						notes.forEachAlive(function(daNote:Note) {
 							daNote.canBeHit = false;
-							daNote.wasGoodHit = false;
+							// daNote.wasGoodHit = false;
 						});
 					}
 				}
