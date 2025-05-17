@@ -99,29 +99,28 @@ class GameOverSubstate extends ScriptedSubState
 			overlay.visible = false;
 			add(overlay);
 
-			boyfriend.animation.callback = function(name:String, frameNumber:Int, frameIndex:Int) {
-				switch(name) {
+			boyfriend.animation.onFrameChange.add(function(name:String, frameNumber:Int, frameIndex:Int) {
+				switch (name) {
 					case 'firstDeath':
 						if (frameNumber >= 36 - 1) {
 							overlay.visible = true;
 							overlay.animation.play('deathLoop');
-							boyfriend.animation.callback = null;
+							boyfriend.animation.onFrameChange.removeAll();
 						}
 					default:
-						boyfriend.animation.callback = null;
+						boyfriend.animation.onFrameChange.removeAll();
 				}
-			}
+			});
 
 			if (PlayState.instance.gf != null && PlayState.instance.gf.curCharacter == 'nene') {
 				var neneKnife:FlxSprite = new FlxSprite(boyfriend.x - 450, boyfriend.y - 250);
 				neneKnife.frames = Paths.getSparrowAtlas('NeneKnifeToss');
 				neneKnife.animation.addByPrefix('anim', 'knife toss', 24, false);
 				neneKnife.antialiasing = ClientPrefs.data.antialiasing;
-				neneKnife.animation.finishCallback = function(_)
-				{
-					remove(neneKnife);
-					neneKnife.destroy();
-				}
+				neneKnife.animation.onFinish.addOnce(function(_) {
+					remove(neneKnife, true);
+					neneKnife.kill();
+				});
 				insert(0, neneKnife);
 				neneKnife.animation.play('anim', true);
 			}

@@ -41,11 +41,11 @@ class ExtraFunctions {
 		});
 		FunkinLua.registerFunction('getMouseX', function(camera:String = 'game') {
 			var cam:FlxCamera = LuaUtils.cameraFromString(camera);
-			return FlxG.mouse.getScreenPosition(cam).x;
+			return FlxG.mouse.getViewPosition(cam).x;
 		});
 		FunkinLua.registerFunction('getMouseY', function(camera:String = 'game') {
 			var cam:FlxCamera = LuaUtils.cameraFromString(camera);
-			return FlxG.mouse.getScreenPosition(cam).y;
+			return FlxG.mouse.getViewPosition(cam).y;
 		});
 
 		FunkinLua.registerFunction("gamepadAnalogX", function(id:Int, ?leftStick:Bool = true)

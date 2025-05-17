@@ -205,7 +205,7 @@ class NoteOffsetState extends ScriptedState
 			// changed to controller mid state
 			if(controls.controllerMode)
 			{
-				var mousePos = FlxG.mouse.getScreenPosition(camHUD);
+				var mousePos = FlxG.mouse.getViewPosition(camHUD);
 				controllerPointer.x = mousePos.x;
 				controllerPointer.y = mousePos.y;
 			}
@@ -305,7 +305,7 @@ class NoteOffsetState extends ScriptedState
 			{
 				holdingObjectType = null;
 				if(!controls.controllerMode)
-					FlxG.mouse.getScreenPosition(camHUD, startMousePos);
+					FlxG.mouse.getViewPosition(camHUD, startMousePos);
 				else
 					controllerPointer.getScreenPosition(startMousePos, camHUD);
 
@@ -337,7 +337,7 @@ class NoteOffsetState extends ScriptedState
 				{
 					var mousePos:FlxPoint = null;
 					if(!controls.controllerMode)
-						mousePos = FlxG.mouse.getScreenPosition(camHUD);
+						mousePos = FlxG.mouse.getViewPosition(camHUD);
 					else
 						mousePos = controllerPointer.getScreenPosition(camHUD);
 

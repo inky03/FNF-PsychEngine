@@ -438,7 +438,7 @@ class Paths
 			{
 				trace('SOUND NOT FOUND: $key, PATH: $path');
 				FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
-				return FlxAssets.getSound('flixel/sounds/beep');
+				return FlxAssets.getSoundAddExtension('flixel/sounds/beep');
 			}
 		}
 		localTrackedAssets.push(file);

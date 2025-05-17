@@ -509,7 +509,7 @@ class NotesColorSubState extends ScriptedSubState
 	}
 	function pointerFlxPoint():FlxPoint
 	{
-		if (!controls.controllerMode) return FlxG.mouse.getScreenPosition();
+		if (!controls.controllerMode) return FlxG.mouse.getViewPosition();
 		return controllerPointer.getScreenPosition();
 	}
 

@@ -81,7 +81,7 @@ class PsychUIBox extends FlxSpriteGroup
 		_lastClick += elapsed;
 		if(!FlxG.mouse.released && _draggingBox && canMove)
 		{
-			var newPoint:FlxPoint = FlxG.mouse.getPositionInCameraView(camera);
+			var newPoint:FlxPoint = FlxG.mouse.getViewPosition(camera);
 			setPosition(_draggingPos.x - (_draggingPoint.x - newPoint.x), _draggingPos.y - (_draggingPoint.y - newPoint.y));
 		}
 		else
@@ -122,7 +122,7 @@ class PsychUIBox extends FlxSpriteGroup
 					if(!_draggingBox && canMove && _pressedBox && FlxG.mouse.pressed && (Math.abs(FlxG.mouse.deltaViewX) > 1 || Math.abs(FlxG.mouse.deltaViewY) > 1))
 					{
 						_draggingPos = FlxPoint.weak(x, y);
-						_draggingPoint = FlxG.mouse.getPositionInCameraView(camera);
+						_draggingPoint = FlxG.mouse.getViewPosition(camera);
 						_draggingBox = true;
 						if(broadcastBoxEvents) PsychUIEventHandler.event(DRAG_EVENT, this);
 					}

@@ -32,8 +32,7 @@ class SchoolEvil extends BaseStage
 
 		FlxG.sound.playMusic(Paths.music('LunchboxScary'), 0);
 		FlxG.sound.music.fadeIn(1, 0, 0.8);
-		if(isStoryMode && !seenCutscene)
-		{
+		if (isStoryMode && !seenCutscene) {
 			initDoof();
 			setStartCallback(schoolIntro);
 		}
@@ -64,18 +63,18 @@ class SchoolEvil extends BaseStage
 		switch(event.event)
 		{
 			case "Trigger BG Ghouls":
-				if(!ClientPrefs.data.lowQuality)
-				{
+				if (!ClientPrefs.data.lowQuality) {
 					bgGhouls = new BGSprite('weeb/bgGhouls', -100, 190, 0.9, 0.9, ['BG freaks glitch instance'], false);
 					bgGhouls.setGraphicSize(Std.int(bgGhouls.width * PlayState.daPixelZoom));
-					bgGhouls.updateHitbox();
-					bgGhouls.visible = false;
 					bgGhouls.antialiasing = false;
-					bgGhouls.animation.finishCallback = function(name:String)
-					{
-						if(name == 'BG freaks glitch instance')
+					bgGhouls.visible = false;
+					bgGhouls.updateHitbox();
+					
+					bgGhouls.animation.onFinish.add(function(name:String) {
+						if (name == 'BG freaks glitch instance')
 							bgGhouls.visible = false;
-					}
+					});
+					
 					addBehindGF(bgGhouls);
 				}
 		}

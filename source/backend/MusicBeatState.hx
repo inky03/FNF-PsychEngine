@@ -62,12 +62,12 @@ class MusicBeatState extends MusicBeatSubstate {
 	}
 
 	public static function switchState(?nextState:FlxState):Void {
-		if (GlobalScriptHandler.call('onSwitchState', [nextState]) != psychlua.LuaUtils.Function_Stop) {
+		if (GlobalScriptHandler.call('onSwitchState', [Type.getClass(nextState)]) != psychlua.LuaUtils.Function_Stop) {
 			if (nextState == null)
 				return resetState();
 			
 			if (FlxTransitionableState.skipNextTransIn) {
-				FlxG.switchState(nextState);
+				FlxG.switchState(nextState); // actually just cant rid of this deprecated implementation or everything dies
 			} else {
 				startTransition(nextState);
 			}
@@ -94,7 +94,7 @@ class MusicBeatState extends MusicBeatSubstate {
 		
 		if (nextState is CustomState) {
 			var customState:CustomState = cast nextState;
-			CustomFadeTransition.finishCallback = () -> FlxG.switchState(new CustomState(customState.stateName));
+			CustomFadeTransition.finishCallback = () -> FlxG.switchState(() -> new CustomState(customState.stateName));
 		} else {
 			if (nextState == FlxG.state) {
 				CustomFadeTransition.finishCallback = () -> FlxG.resetState();

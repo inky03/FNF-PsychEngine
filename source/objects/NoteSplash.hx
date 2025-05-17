@@ -287,10 +287,10 @@ class NoteSplash extends FlxSprite
 			offset.y += offsets[1];
 		}
 
-		animation.finishCallback = function(name:String) {
+		animation.onFinish.add(function(name:String) {
 			kill();
 			spawned = false;
-		}
+		});
 
 		alpha = ClientPrefs.data.splashAlpha;
 		if (note != null) alpha = note.noteSplashData.a;

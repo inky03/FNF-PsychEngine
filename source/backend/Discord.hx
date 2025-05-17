@@ -195,8 +195,8 @@ private final class DiscordPresence
 			LabelValuePair.weak("smallImageKey", smallImageKey),
 			LabelValuePair.weak("largeImageKey", largeImageKey),
 			LabelValuePair.weak("largeImageText", largeImageText),
-			LabelValuePair.weak("startTimestamp", startTimestamp),
-			LabelValuePair.weak("endTimestamp", endTimestamp)
+			LabelValuePair.weak("startTimestamp", cast startTimestamp),
+			LabelValuePair.weak("endTimestamp", cast endTimestamp)
 		]);
 	}
 
@@ -252,22 +252,22 @@ private final class DiscordPresence
 
 	@:noCompletion inline function get_startTimestamp():Int
 	{
-		return __presence.startTimestamp;
+		return cast __presence.startTimestamp;
 	}
 
 	@:noCompletion inline function set_startTimestamp(value:Int):Int
 	{
-		return __presence.startTimestamp = value;
+		return cast (__presence.startTimestamp = value);
 	}
 
 	@:noCompletion inline function get_endTimestamp():Int
 	{
-		return __presence.endTimestamp;
+		return cast __presence.endTimestamp;
 	}
 
 	@:noCompletion inline function set_endTimestamp(value:Int):Int
 	{
-		return __presence.endTimestamp = value;
+		return cast (__presence.endTimestamp = value);
 	}
 }
 #end

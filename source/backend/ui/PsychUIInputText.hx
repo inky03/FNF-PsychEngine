@@ -403,7 +403,7 @@ class PsychUIInputText extends FlxSpriteGroup
 				caretIndex = 0;
 				var lastBound:Float = 0;
 				var textObjX:Float = textObj.getScreenPosition(camera).x;
-				var mousePosX:Float = FlxG.mouse.getScreenPosition(camera).x;
+				var mousePosX:Float = FlxG.mouse.getViewPosition(camera).x;
 				var txtX:Float = textObjX - textObj.textField.scrollH;
 
 				for (i => bound in _boundaries)

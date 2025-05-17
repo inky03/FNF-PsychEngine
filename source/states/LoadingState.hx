@@ -109,35 +109,19 @@ class LoadingState extends MusicBeatState
 		if(Mods.currentModDirectory != null && Mods.currentModDirectory.trim().length > 0)
 		{
 			var scriptPath:String = 'mods/${Mods.currentModDirectory}/data/LoadingScreen.hx'; //mods/My-Mod/data/LoadingScreen.hx
-			if(FileSystem.exists(scriptPath))
-			{
-				try
-				{
-					hscript = new HScript(null, scriptPath);
+			
+			hscript = HScript.initFromFile(scriptPath, this);
+			if (hscript != null) {
+				if (hscript.exists('onCreate')) {
 					hscript.set('getLoaded', function() return loaded);
 					hscript.set('getLoadMax', function() return loadMax);
 					hscript.set('barBack', barBack);
 					hscript.set('bar', bar);
-	
-					if(hscript.exists('onCreate'))
-					{
-						hscript.call('onCreate');
-						trace('initialized hscript interp successfully: $scriptPath');
-						return super.create();
-					}
-					else
-					{
-						ScriptedState.debugPrint('"$scriptPath" contains no \"onCreate" function, stopping script.', FlxColor.YELLOW);
-					}
+				} else {
+					ScriptedState.debugPrint('"$scriptPath" contains no \"onCreate" function, stopping script.', FlxColor.YELLOW);
+					hscript.destroy();
+					hscript = null;
 				}
-				catch(e:IrisError)
-				{
-					var pos:HScriptInfos = cast {fileName: scriptPath, showLine: false};
-					Iris.error(Printer.errorToString(e, false), pos);
-					var hscript:HScript = cast (Iris.instances.get(scriptPath), HScript);
-				}
-				if(hscript != null) hscript.destroy();
-				hscript = null;
 			}
 		}
 		#end
@@ -318,10 +302,10 @@ class LoadingState extends MusicBeatState
 	function onLoad()
 	{
 		_loaded();
-
+		
 		if (stopMusic && FlxG.sound.music != null)
 			FlxG.sound.music.stop();
-
+		
 		FlxG.camera.visible = false;
 		MusicBeatState.switchState(target);
 		transitioning = true;
@@ -784,7 +768,7 @@ class LoadingState extends MusicBeatState
 			{
 				trace('SOUND NOT FOUND: $key, PATH: $path');
 				FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
-				return FlxAssets.getSound('flixel/sounds/beep');
+				return FlxAssets.getSoundAddExtension('flixel/sounds/beep');
 			}
 		}
 		mutex.acquire();
