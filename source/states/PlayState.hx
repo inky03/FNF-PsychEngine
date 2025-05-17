@@ -1307,14 +1307,12 @@ class PlayState extends ScriptedState
 		var ghostNotesCaught:Int = 0;
 		var daBpm:Float = Conductor.bpm;
 	
-		for (section in sectionsData)
+		for (sectionI => section in sectionsData)
 		{
 			if (section.changeBPM != null && section.changeBPM && section.bpm != null && daBpm != section.bpm)
 				daBpm = section.bpm;
 
-			for (i in 0...section.sectionNotes.length)
-			{
-				final songNotes: Array<Dynamic> = section.sectionNotes[i];
+			for (i => songNotes in section.sectionNotes) {
 				var spawnTime: Float = songNotes[0];
 				var noteColumn: Int = Std.int(songNotes[1] % totalColumns);
 				var holdLength: Float = songNotes[2];
@@ -1350,6 +1348,7 @@ class PlayState extends ScriptedState
 				swagNote.sustainLength = holdLength;
 				swagNote.mustPress = gottaHitNote;
 				swagNote.noteType = noteType;
+				swagNote.section = sectionI;
 	
 				swagNote.scrollFactor.set();
 				unspawnNotes.push(swagNote);
@@ -1368,6 +1367,7 @@ class PlayState extends ScriptedState
 						sustainNote.noteType = swagNote.noteType;
 						sustainNote.gfNote = swagNote.gfNote;
 						sustainNote.scrollFactor.set();
+						sustainNote.section = sectionI;
 						sustainNote.parent = swagNote;
 						unspawnNotes.push(sustainNote);
 						swagNote.tail.push(sustainNote);
@@ -1778,8 +1778,7 @@ class PlayState extends ScriptedState
 									daNote.tooLate = true;
 								}
 								
-								if (Conductor.songPosition - daNote.strumTime - daNote.sustainLength > noteKillOffset)
-								{
+								if (daNote.tooLate && Conductor.songPosition - daNote.strumTime - daNote.sustainLength > noteKillOffset) {
 									daNote.active = daNote.visible = false;
 									invalidateNote(daNote);
 								}
@@ -3022,10 +3021,8 @@ class PlayState extends ScriptedState
 	public function getNoteCharacter(?note:Note, ?defaultCharacter:Character):Character {
 		if (note == null) return defaultCharacter;
 		
-		if (note.character == null) {
-			var isGFNote:Bool = (note.gfNote || (SONG.notes[curSection] != null && note.mustPress == SONG.notes[curSection].mustHitSection && SONG.notes[curSection].gfSection));
-			return (isGFNote ? gf : defaultCharacter);
-		}
+		if (note.character == null)
+			return (note.gfNote ? gf : defaultCharacter);
 		
 		return note.character;
 	}

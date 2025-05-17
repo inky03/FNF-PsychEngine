@@ -1,6 +1,6 @@
 # List of differences
 
-The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) are as follows:
+The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) are as follows:
 
 ## Engine changes
 
@@ -172,7 +172,7 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 
 ### General (Source Code)
 
-- Conductor class
+- Conductor
 	- BPM change map now has the initial song BPM set as the first BPM change (for consistency and stability)
 	- Most functions can now have a custom BPM change array passed to them (for use in Chart Editor)
 	- Most functions now have their step & beat equivalents
@@ -185,7 +185,7 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 	- `advanceDialog(finishText:Bool = false)` and `finishDialog()` to force the dialogue to advance and end, respectively
 - MusicBeatState
 	- Unified with MusicBeatSubstate (`MusicBeatState` extends `MusicBeatSubstate`)
-	- Now contains the runtime shaders map, rather than PlayState (useful for scripting purposes)
+	- Now contains the runtime shaders map, instead of only PlayState (useful for scripting purposes)
 	- Added `curDecSection`
 	- `stepHit`, `beatHit` and `sectionHit` functions
 		- Will now also trigger in 0 and negative time marks
@@ -198,10 +198,14 @@ The current list of differences from this fork (0.0.3) to Psych Engine (1.0.4) a
 		- `getVarInArray` and `setVarInArray` have been replaced by `getVariable` and `setVariable`
 	- HScript
 		- `callOnScriptsEx` (to provide diff. arguments for Lua and HScript function calls)
+- Character
+	- Combo and combo drop animations (from base game)
 - Notes
 	- Improvements to note scroll direction and sustain note scaling
 		- `correctionOffset` is no longer needed due to this and has been removed
 	- `onDestroyNote` script API function for note despawning
+	- `Note.section` ... I wonder what this is
+	- `Note.character` ... I wonder what this is, too
 	- `Note.hitPriority` to edit note priority beyond a boolean
 	- `Note.isSustainEnd` to check if a sustain marks the end of a note
 	- `Note.followStrumNote` second argument "fakeCrochet" has been removed (as it was useless)

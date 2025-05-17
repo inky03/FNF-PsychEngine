@@ -151,6 +151,8 @@ class Note extends FlxSprite
 		return hitsoundForce ? hitsoundVolume : 0.0;
 	}
 	public var hitsound:String = 'hitsound';
+	
+	public var section:Int = 0;
 
 	private function set_texture(value:String):String {
 		if(texture != value) {

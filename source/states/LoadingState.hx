@@ -110,17 +110,19 @@ class LoadingState extends MusicBeatState
 		{
 			var scriptPath:String = 'mods/${Mods.currentModDirectory}/data/LoadingScreen.hx'; //mods/My-Mod/data/LoadingScreen.hx
 			
-			hscript = HScript.initFromFile(scriptPath, this);
-			if (hscript != null) {
-				if (hscript.exists('onCreate')) {
-					hscript.set('getLoaded', function() return loaded);
-					hscript.set('getLoadMax', function() return loadMax);
-					hscript.set('barBack', barBack);
-					hscript.set('bar', bar);
-				} else {
-					ScriptedState.debugPrint('"$scriptPath" contains no \"onCreate" function, stopping script.', FlxColor.YELLOW);
-					hscript.destroy();
-					hscript = null;
+			if (FileSystem.exists(scriptPath)) {
+				hscript = HScript.initFromFile(scriptPath, this);
+				if (hscript != null) {
+					if (hscript.exists('onCreate')) {
+						hscript.set('getLoaded', function() return loaded);
+						hscript.set('getLoadMax', function() return loadMax);
+						hscript.set('barBack', barBack);
+						hscript.set('bar', bar);
+					} else {
+						ScriptedState.debugPrint('"$scriptPath" contains no "onCreate" function, stopping script.', FlxColor.YELLOW);
+						hscript.destroy();
+						hscript = null;
+					}
 				}
 			}
 		}

@@ -376,10 +376,11 @@ class EditorPlayState extends MusicBeatSubstate
 			}
 
 			var swagNote:Note = new Note(note.strumTime, note.noteData, oldNote, false, this);
-			swagNote.mustPress = note.mustPress;
 			swagNote.sustainLength = note.sustainLength;
-			swagNote.gfNote = note.gfNote;
+			swagNote.mustPress = note.mustPress;
 			swagNote.noteType = note.noteType;
+			swagNote.gfNote = note.gfNote;
+			swagNote.section = noteSec;
 
 			swagNote.scrollFactor.set();
 			unspawnNotes.push(swagNote);
@@ -398,6 +399,7 @@ class EditorPlayState extends MusicBeatSubstate
 					sustainNote.noteType = swagNote.noteType;
 					sustainNote.gfNote = swagNote.gfNote;
 					sustainNote.scrollFactor.set();
+					sustainNote.section = noteSec;
 					sustainNote.parent = swagNote;
 					unspawnNotes.push(sustainNote);
 					swagNote.tail.push(sustainNote);
