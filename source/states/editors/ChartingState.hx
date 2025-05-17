@@ -2847,15 +2847,15 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		function copyNotesOnSection(?secOff:Int = 0, ?showMessage:Bool = true) //Used on "Copy Section" and "Copy Last Section" buttons
 		{
 			var curSectionTime:Null<Float> = cachedSectionTimes[curSec - secOff];
-			if(curSectionTime == null)
-			{
+			if (curSectionTime == null) {
 				//showOutput('ERROR: Unknown section??', true);
 				return;
 			}
-
+			
 			var nextSectionTime:Null<Float> = cachedSectionTimes[curSec - secOff + 1];
-			if(nextSectionTime == null) Math.POSITIVE_INFINITY;
-
+			if (nextSectionTime == null) Math.POSITIVE_INFINITY;
+			
+			var sectionStep:Float = Conductor.getStep(curSectionTime);
 			var notesCopyNum:Int = 0;
 			if(affectNotes.checked)
 			{
@@ -2865,7 +2865,11 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					if(note.strumTime >= curSectionTime && note.strumTime < nextSectionTime)
 					{
 						var dataCopy:Array<Dynamic> = makeNoteDataCopy(note.songData, false);
-						dataCopy[0] = note.strumTime - curSectionTime;
+						
+						var noteStep:Float = Conductor.getStep(note.strumTime);
+						dataCopy[2] = Conductor.getStep(note.strumTime + note.sustainLength) - noteStep;
+						dataCopy[0] = noteStep - sectionStep;
+						
 						copiedNotes.push(dataCopy);
 						notesCopyNum++;
 					}
@@ -2881,7 +2885,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					if(event.strumTime >= curSectionTime && event.strumTime < nextSectionTime)
 					{
 						var dataCopy:Array<Dynamic> = makeNoteDataCopy(event.songData, true);
-						dataCopy[0] = event.strumTime - curSectionTime;
+						dataCopy[0] = Conductor.getStep(event.strumTime) - sectionStep;
 						copiedEvents.push(dataCopy);
 						eventsCopyNum++;
 					}
@@ -3193,7 +3197,12 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			showOutput('ERROR: Unknown section??', true);
 			return [];
 		}
-
+		
+		var nextSectionTime:Null<Float> = cachedSectionTimes[curSec + 1];
+		if (nextSectionTime == null) nextSectionTime = Math.POSITIVE_INFINITY;
+		
+		var sectionStep:Float = Conductor.getStep(curSectionTime);
+		
 		var pushedNotes:Array<MetaNote> = [];
 		var nts:Array<MetaNote> = [];
 		var evs:Array<EventMetaNote> = [];
@@ -3203,12 +3212,19 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			{
 				if(note == null) continue;
 				var dataCopy:Array<Dynamic> = makeNoteDataCopy(note, false);
-				dataCopy[0] += curSectionTime;
-
-				var createdNote = createNote(dataCopy, curSec);
-				notes.push(createdNote);
-				pushedNotes.push(createdNote);
-				nts.push(createdNote);
+				
+				var noteStep:Float = dataCopy[0] + sectionStep;
+				var strumTime:Float = Conductor.stepToSeconds(noteStep);
+				
+				if (strumTime < nextSectionTime) {
+					dataCopy[0] = strumTime;
+					dataCopy[2] = Conductor.stepToSeconds(noteStep + dataCopy[2]) - strumTime;
+					
+					var createdNote = createNote(dataCopy, curSec);
+					notes.push(createdNote);
+					pushedNotes.push(createdNote);
+					nts.push(createdNote);
+				}
 			}
 			notes.sort(PlayState.sortByTime);
 		}
@@ -3219,12 +3235,18 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			{
 				if(event == null) continue;
 				var dataCopy:Array<Dynamic> = makeNoteDataCopy(event, true);
-				dataCopy[0] += curSectionTime;
+				dataCopy[0] += sectionStep;
+				
+				var strumTime:Float = Conductor.stepToSeconds(dataCopy[0]);
 
-				var createdEvent = createEvent(dataCopy);
-				events.push(createdEvent);
-				pushedNotes.push(createdEvent);
-				evs.push(createdEvent);
+				if (strumTime < nextSectionTime) {
+					dataCopy[0] = strumTime;
+					
+					var createdEvent = createEvent(dataCopy);
+					events.push(createdEvent);
+					pushedNotes.push(createdEvent);
+					evs.push(createdEvent);
+				}
 			}
 			events.sort(PlayState.sortByTime);
 		}
