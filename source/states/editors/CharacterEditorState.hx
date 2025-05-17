@@ -61,7 +61,8 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 	{
 		this._char = char;
 		this._goToPlayState = goToPlayState;
-		if(this._char == null) this._char = Character.DEFAULT_CHARACTER;
+		if (PlayState.SONG == null) goToPlayState = false;
+		if (this._char == null) this._char = Character.DEFAULT_CHARACTER;
 
 		super();
 	}

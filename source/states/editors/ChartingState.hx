@@ -1021,9 +1021,24 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 							if(note == null) continue;
 
 							var copied:Array<Dynamic> = makeNoteDataCopy(note.songData, note.isEvent);
+							
 							pushedNotes.push(copied);
-							if(note.isEvent) copiedEvents.push(copied);
-							else copiedNotes.push(copied);
+							if (note.isEvent) { copiedEvents.push(copied); }
+							else { copiedNotes.push(copied); }
+							
+							/*
+							TODO: FIX COPY & PASTE :SOB:
+							var noteStep:Float = Conductor.getStep(note.strumTime);
+							copied[0] = noteStep - sectionStep;
+							
+							pushedNotes.push(copied);
+							if (note.isEvent) {
+								copiedEvents.push(copied);
+							} else {
+								copied[2] = Conductor.getStep(note.strumTime + note.sustainLength) - noteStep;
+								copiedNotes.push(copied);
+							}
+							*/
 						}
 						pushedNotes.sort((a:Array<Dynamic>, b:Array<Dynamic>) -> FlxSort.byValues(FlxSort.ASCENDING, a[0], b[0]));
 						
@@ -3077,7 +3092,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		for (button in [swapSectionButton, mirrorNotesButton, duetSectionButton])
 			button.normalStyle.bgColor = 0xff5cb1a9;
 		
-		var clearButton:PsychUIButton = new PsychUIButton(300 - 32 - 10, objY, 'Wipe', function() {
+		var clearButton:PsychUIButton = new PsychUIButton(300 - 34 - 10, objY, 'Wipe', function() {
 			for (note in curRenderedNotes) {
 				if(note == null) continue;
 
@@ -3089,7 +3104,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				selectedNotes.remove(note);
 			}
 			softReloadNotes(true);
-		}, 32);
+		}, 34);
 		clearButton.normalStyle.bgColor = FlxColor.RED;
 		clearButton.normalStyle.textColor = FlxColor.WHITE;
 
