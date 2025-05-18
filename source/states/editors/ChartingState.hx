@@ -1497,8 +1497,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	function hitNote(note:MetaNote) {
 		if (note.ignoreNote) return;
 		
-		var songPlaying:Bool = (vortexEnabled && FlxG.sound.music != null && FlxG.sound.music.playing);
-		var canPlayHitSound:Bool = (FlxG.sound.music != null && FlxG.sound.music.playing && note.hitsoundChartEditor);
+		var songPlaying:Bool = (FlxG.sound.music != null && FlxG.sound.music.playing);
+		var canPlayHitSound:Bool = (songPlaying && note.hitsoundChartEditor);
 		var hitSoundPlayer:Bool = (hitsoundPlayerStepper.value > 0);
 		var hitSoundOpp:Bool = (hitsoundOpponentStepper.value > 0);
 		var playToyAnim:Bool = false;
@@ -1514,10 +1514,12 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}
 
 		if (songPlaying) {
-			var strumNote:StrumNote = strumLineNotes.members[note.songData[1]];
-			if (strumNote != null) {
-				strumNote.playAnim('confirm', true);
-				strumNote.resetAnim = Math.max(Conductor.stepCrochet * 1.25, note.sustainLength) / 1000 / playbackRate;
+			if (vortexEnabled) {
+				var strumNote:StrumNote = strumLineNotes.members[note.songData[1]];
+				if (strumNote != null) {
+					strumNote.playAnim('confirm', true);
+					strumNote.resetAnim = Math.max(Conductor.stepCrochet * 1.25, note.sustainLength) / 1000 / playbackRate;
+				}
 			}
 			
 			if (!note.noAnimation) {
@@ -4945,10 +4947,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	function keyDown(event:KeyboardEvent) {
 		var eventKey:FlxKey = event.keyCode;
 		
-		if (!vortexInput) return;
-		
 		var num:Int = keysArray.indexOf(eventKey);
-		if (num != -1 && FlxG.keys.checkStatus(eventKey, JUST_PRESSED)) { // note placement
+		if (vortexInput && num != -1 && FlxG.keys.checkStatus(eventKey, JUST_PRESSED)) { // note placement
 			_keysPressedBuffer[num] = true;
 			
 			var typeSelected:String = noteTypes[noteTypeDropDown.selectedIndex];
@@ -5066,6 +5066,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		if (!FlxG.keys.pressed.CONTROL) {
 			switch (eventKey) {
 				case FlxKey.LEFT | FlxKey.RIGHT: // quant shift
+					if (!vortexInput) return;
 					if (eventKey == FlxKey.LEFT) {
 						curQuant = quantizations[Std.int(Math.max(quantizations.indexOf(curQuant) - 1, 0))];
 					} else {
@@ -5123,6 +5124,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					vortexShifted = true;
 					
 				case FlxKey.UP | FlxKey.PAGEUP | FlxKey.DOWN | FlxKey.PAGEDOWN: // quant scrolling
+					if (!vortexInput) return;
 					var page:Bool = (eventKey == FlxKey.PAGEUP || eventKey == FlxKey.PAGEDOWN);
 					var up:Bool = ((eventKey == FlxKey.UP || eventKey == FlxKey.PAGEUP) == !downScroll);
 					
