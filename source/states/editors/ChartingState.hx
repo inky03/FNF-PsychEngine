@@ -226,10 +226,10 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	var waveformTarget:WaveformTarget = INST;
 
 	//var lilStage:FlxSprite;
-	var lilbf:Character;
-	var lildad:Character;
-	var lilgf:Character;
-	var toyGroup:FlxTypedSpriteGroup<Character>;
+	var bfToy:Toy;
+	var gfToy:Toy;
+	var dadToy:Toy;
+	var toyGroup:FlxTypedSpriteGroup<Toy>;
 	
 	var singAnimations:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
 
@@ -276,6 +276,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		
 		changeTheme(chartEditorSave.data.theme != null ? chartEditorSave.data.theme : DEFAULT, false);
 		refreshSustains(chartEditorSave.data.texturedSustains ?? true);
+		
+		toyGroup = new FlxTypedSpriteGroup();
+		toyGroup.scrollFactor.set();
 		
 		preCreate();
 		createGrids();
@@ -565,16 +568,13 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	function createToys() {
 		var centerX:Float = gridBg.x * .5;
 		
-		toyGroup ??= new FlxTypedSpriteGroup();
-		toyGroup.scrollFactor.set();
+		bfToy = createToy('bf', centerX + 110, FlxG.height - 50);
+		gfToy = createToy('gf-nospeak', centerX, FlxG.height - 50);
+		dadToy = createToy('bf-pixel-opponent', centerX - 110, FlxG.height - 50);
 		
-		lilbf = createToy('bf', centerX + 110, FlxG.height - 50);
-		lilgf = createToy('gf-nospeak', centerX, FlxG.height - 50);
-		lildad = createToy('bf-pixel-opponent', centerX - 110, FlxG.height - 50);
+		bfToy.flipX = !bfToy.flipX;
 		
-		lilbf.flipX = !lilbf.flipX;
-		
-		for (toy in [lilgf, lilbf, lildad])
+		for (toy in [gfToy, bfToy, dadToy])
 			toyGroup.add(toy);
 	}
 	
@@ -587,7 +587,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	}
 
 	function createToy(?name:String, x:Float = 0, y:Float = 0) {
-		var toy:Character = new Character(x, y, name, false);
+		var toy:Toy = new Toy(x, y, name, false);
 		toy.scale.set(toy.scale.x * .35, toy.scale.y * .35);
 		toy.updateHitbox();
 		toy.origin.set();
@@ -746,8 +746,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	var autoSaveTime:Float = 0;
 	var autoSaveCap:Int = 2; //in minutes
 	var backupLimit:Int = 10;
-
-	var lastBeatHit:Int = 0;
+	
 	var lastSongTime:Float = 0;
 	var draggingToy:Character = null;
 	
@@ -1439,15 +1438,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					hitNote(note);
 			}
 			forceDataUpdate = false;
-			
-			// moved from beatHit()
-			if (lastBeatHit != curBeat) {
-				if (metronomeStepper.value > 0 && lastBeatHit != curBeat)
-					FlxG.sound.play(Paths.sound('Metronome_Tick'), metronomeStepper.value);
-				callBeatHit(curBeat);
-			}
-
-			lastBeatHit = curBeat;
 		}
 		
 		lastSongTime = Conductor.songPosition;
@@ -1526,17 +1516,30 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				var section:SwagSection = PlayState.SONG.notes[curSec];
 				note.gfNote = (note.gfNote || (section != null && section.gfSection && note.mustPress == section.mustHitSection));
 				
-				var lilchar:Character = (note.gfNote ? lilgf : (!note.mustPress ? lildad : lilbf));
-				lilchar.playAnim(singAnimations[note.noteData % 4], true);
-				lilchar.holdTimer = Math.min(lilchar.holdTimer, -Math.max(Conductor.stepCrochet * 1.25, note.sustainLength) / 1000 / playbackRate);
+				var toy:Toy = (note.gfNote ? gfToy : (!note.mustPress ? dadToy : bfToy));
+				toy.holdSing(singAnimations[note.noteData % 4], note.sustainLength / 1000);
 			}
 		}
 	}
 
-	function callBeatHit(curBeat) {
+	public override function beatHit(beat:Int):Void {
+		super.beatHit(beat);
+		
+		if (metronomeStepper.value > 0 && FlxG.sound.music != null && FlxG.sound.music.playing)
+			FlxG.sound.play(Paths.sound('Metronome_Tick'), metronomeStepper.value);
+		
 		for (toy in toyGroup) {
-			if (curBeat % toy.danceEveryNumBeats == 0 && !toy.getAnimationName().startsWith('sing'))
+			if (beat % toy.danceEveryNumBeats == 0 && !toy.getAnimationName().startsWith('sing'))
 				toy.dance();
+		}
+	}
+	
+	public override function stepHit(step:Int):Void {
+		super.stepHit(step);
+		
+		for (toy in toyGroup) {
+			if (toy.holdSingTimer > 0)
+				toy.playAnim(toy.animation.name, true);
 		}
 	}
 
@@ -1929,6 +1932,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}
 		else
 		{
+			for (toy in toyGroup) toy.holdSingTimer = 0;
 			FlxG.sound.music.pause();
 			vocals.pause();
 			opponentVocals.pause();
