@@ -93,9 +93,9 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 				}
 				```
 				```lua
-				function onCreate() {
+				function onCreate()
 					testFunction() -- will print "hi!!"
-				}
+				end
 				```
 	- Custom States
 		- Switch to a custom state in HScript with `MusicBeatState.switchState(new CustomState('stateName'))`
