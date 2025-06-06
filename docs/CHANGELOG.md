@@ -123,8 +123,8 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 		- LoadingState
 			- Now admits Lua scripts
 			- Behavior more consistent with other scriptable states
-			- Alternate search path
-				- Can load script from `data/LoadingScreen` or `scripts/states/LoadingState` (.hx or .lua)
+			- Loading screen scripts can now be loaded from global mods too (and the base mods folder)
+			- Can load script from `data/LoadingScreen` or now also `scripts/states/LoadingState` (.hx or .lua)
 		- Options Sub-states
 			- Functions
 				```haxe

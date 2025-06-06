@@ -112,6 +112,7 @@ class LoadingState extends ScriptedState
 		bg.setGraphicSize(Std.int(FlxG.width));
 		bg.color = 0xFFD16FFF;
 		bg.updateHitbox();
+		addBehindBar(bg);
 	
 		loadingText = new FlxText(520, 600, 400, Language.getPhrase('now_loading', 'Now Loading', ['...']), 32);
 		loadingText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, LEFT, OUTLINE_FAST, FlxColor.BLACK);
@@ -170,10 +171,12 @@ class LoadingState extends ScriptedState
 		scriptFolder = 'data';
 		startStateScripts(); // try data/LoadingScreen.hx
 		
-		scriptFolder = 'scripts';
-		folderNameLol = 'states';
-		stateNameLol = 'LoadingState';
-		if (!loadedScripts) startStateScripts(); // try scripts/states/LoadingState.hx
+		if (!loadedScripts) {
+			scriptFolder = 'scripts';
+			folderNameLol = 'states';
+			stateNameLol = 'LoadingState';
+			startStateScripts(); // try scripts/states/LoadingState.hx
+		}
 		#end
 		
 		GlobalScriptHandler.call('onCreateState', [this, Type.getClass(this)]);
