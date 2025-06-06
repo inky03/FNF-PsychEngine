@@ -287,6 +287,11 @@ class FunkinLua {
 		ReflectionFunctions.implementLocal(this);
 		#if HSCRIPT_ALLOWED HScript.implementLocal(this) #else HScript.implement() #end; // haha
 		
+		if (parentState is ScriptedSubState) {
+			var scripted:ScriptedSubState = cast parentState;
+			scripted.implementLua(this);
+		}
+		
 		for (name => func in customFunctions) {
 			if (func != null)
 				Lua_helper.add_callback(lua, name, func);
@@ -1094,8 +1099,11 @@ class FunkinLua {
 			luaTrace('setScrollFactor: Couldnt find object: ' + obj, false, false, FlxColor.RED);
 		});
 		registerFunction('addLuaSprite', function(tag:String, inFront:Bool = false) {
-			var mySprite:FlxSprite = MusicBeatState.getVariables().get(tag);
-			if (mySprite == null) return;
+			var mySprite:FlxBasic = LuaUtils.getObjectDirectly(tag);
+			if (mySprite == null) {
+				luaTrace('addLuaSprite: Couldnt find object: $tag', false, false, FlxColor.RED);
+				return;
+			}
 
 			var instance = LuaUtils.getTargetInstance();
 			if (inFront) {
@@ -1295,7 +1303,7 @@ class FunkinLua {
 		});
 	}
 	public static function implementGame(game:PlayState):Void {
-		trace('implement game functions');
+		// trace('implement game functions');
 		
 		#if UNHOLYWANDERER04
 		var unholyed:Bool = false;
