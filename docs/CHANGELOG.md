@@ -11,7 +11,7 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 	- Press the up and down arrow keys to scroll with the beat snap constraint
 	- Press the keypad digits 1-7 to place notes (also with the beat snap constraint)
 - Sustain notes can now be textured instead of using white lines
-	- This can be toggled off (classic sustains) in the View > Theme menu
+	- This can be toggled off (Textured Hold Notes checkbox) in the View > Theme menu
 - View Menu
 	- Down-Scroll editor can be toggled in this menu
 	- "Toys" (based on MoonlightCatalyst's pull request) can be toggled in this menu
@@ -20,6 +20,7 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 - Fixed some bugs
 	- Inconsistencies / inaccuracies related to note and hold note timing (related to BPM changes)
 	- Ignore notetypes will not play hitsounds and will not make the strums glow
+	- Copied - pasted sections are now adapted to the correct BPM
 	- Playback rate not behaving correctly on playtesting
 	- Chart Editor info desync when adding BPM changes
 	- Playtest info not updating correctly
@@ -119,6 +120,11 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 				function onSelectItem(item, index) {}
 				function onAccept(item, index) {}
 				```
+		- LoadingState
+			- Now admits Lua scripts
+			- Behavior more consistent with other scriptable states
+			- Alternate search path
+				- Can load script from `data/LoadingScreen` or `scripts/states/LoadingState` (.hx or .lua)
 		- Options Sub-states
 			- Functions
 				```haxe
