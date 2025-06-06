@@ -47,10 +47,10 @@ class MusicBeatState extends MusicBeatSubstate {
 		super.preCreate();
 	}
 	override function _preCreate():Void {
-		GlobalScriptHandler.call('onCreateState', [this]);
+		GlobalScriptHandler.call('onCreateState', [this, Type.getClass(this)]);
 	}
 	override function _postCreate():Void {
-		GlobalScriptHandler.call('onCreateStatePost', [this]);
+		GlobalScriptHandler.call('onCreateStatePost', [this, Type.getClass(this)]);
 	}
 	
 	public function initPsychCamera():PsychCamera {
@@ -62,7 +62,7 @@ class MusicBeatState extends MusicBeatSubstate {
 	}
 
 	public static function switchState(?nextState:FlxState):Void {
-		if (GlobalScriptHandler.call('onSwitchState', [Type.getClass(nextState)]) != psychlua.LuaUtils.Function_Stop) {
+		if (GlobalScriptHandler.call('onSwitchState', [nextState, Type.getClass(nextState)]) != psychlua.LuaUtils.Function_Stop) {
 			if (nextState == null)
 				return resetState();
 			

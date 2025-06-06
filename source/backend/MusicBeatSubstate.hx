@@ -46,10 +46,10 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		_postCreate();
 	}
 	function _preCreate():Void {
-		GlobalScriptHandler.call('onCreateSubState', [this]);
+		GlobalScriptHandler.call('onCreateSubState', [this, Type.getClass(this)]);
 	}
 	function _postCreate():Void {
-		GlobalScriptHandler.call('onCreateSubStatePost', [this]);
+		GlobalScriptHandler.call('onCreateSubStatePost', [this, Type.getClass(this)]);
 	}
 	
 	public function updatePresence():Void {
@@ -223,7 +223,7 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	}
 	
 	public override function openSubState(subState:flixel.FlxSubState):Void {
-		if (GlobalScriptHandler.call('onOpenSubState', [this]) != psychlua.LuaUtils.Function_Stop)
+		if (GlobalScriptHandler.call('onOpenSubState', [subState, Type.getClass(subState)]) != psychlua.LuaUtils.Function_Stop)
 			super.openSubState(subState);
 	}
 	

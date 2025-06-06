@@ -44,12 +44,12 @@ class ScriptedState extends ScriptedSubState {
 	override function _preCreate():Void {
 		#if SCRIPTS_ALLOWED startStateScripts(); #end
 		
-		GlobalScriptHandler.call('onCreateState', [this]);
+		GlobalScriptHandler.call('onCreateState', [this, Type.getClass(this)]);
 	}
 	override function _postCreate():Void {
 		callOnScripts('onCreatePost');
 		
-		GlobalScriptHandler.call('onCreateStatePost', [this]);
+		GlobalScriptHandler.call('onCreateStatePost', [this, Type.getClass(this)]);
 	}
 	#if SCRIPTS_ALLOWED
 	public override function startStateScripts():Bool {
