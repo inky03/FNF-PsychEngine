@@ -18,6 +18,8 @@ class Toy extends objects.Character {
 	
 	public function holdSing(anim:String, time:Float = 0):Void {
 		holdSingTimer = Math.max(holdSingTimer, time);
+		holdTimer = 0;
+		
 		playAnim(anim, true);
 	}
 }
