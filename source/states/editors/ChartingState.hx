@@ -786,7 +786,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			}
 		}
 		
-		var charterFocus:Bool = PsychUIInputText.focusOn == null && lastFocus == null;
+		var charterFocus:Bool = focusedOnEditor();
 		if(autoSaveCap > 0)
 		{
 			autoSaveTime += elapsed / 60.0;
@@ -4949,6 +4949,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	}
 	
 	function keyDown(event:KeyboardEvent) {
+		if (!focusedOnEditor()) return;
+		
 		var eventKey:FlxKey = event.keyCode;
 		
 		var num:Int = keysArray.indexOf(eventKey);
@@ -5175,6 +5177,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	}
 	
 	function keyUp(event:KeyboardEvent) {
+		if (!focusedOnEditor()) return;
+		
 		var eventKey:FlxKey = event.keyCode;
 		
 		var num:Int = keysArray.indexOf(eventKey);
@@ -5182,6 +5186,10 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			_keysPressedBuffer[num] = false;
 			_heldNotes[num] = null;
 		}
+	}
+	
+	inline function focusedOnEditor():Bool {
+		return (PsychUIInputText.focusOn == null && lastFocus == null);
 	}
 	
 	function updateVortexHolds() {
