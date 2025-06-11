@@ -188,7 +188,7 @@ class LoadingState extends ScriptedState
 		lua.addLocalCallback('addBehindBar', function(tag:String) {
 			var sprite:FlxBasic = LuaUtils.getObjectDirectly(tag);
 			if (sprite == null) {
-				FunkinLua.luaTrace('addBehindBar: Couldnt find object: $tag', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('addBehindBar: Couldnt find object: $tag', false, false, ERROR);
 				return;
 			}
 			

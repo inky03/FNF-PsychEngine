@@ -15,7 +15,7 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			return funk.initLuaShader(name);
 			#else
-			FunkinLua.luaTrace("initLuaShader: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("initLuaShader: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			#end
 			return false;
 		});
@@ -25,7 +25,7 @@ class ShaderFunctions
 
 			#if (!flash && sys)
 			if(!funk.runtimeShaders.exists(shader) && !funk.initLuaShader(shader)) {
-				FunkinLua.luaTrace('setSpriteShader: Shader $shader is missing!', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('setSpriteShader: Shader $shader is missing!', false, false, ERROR);
 				return false;
 			}
 			
@@ -37,7 +37,7 @@ class ShaderFunctions
 				return true;
 			}
 			#else
-			FunkinLua.luaTrace("setSpriteShader: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("setSpriteShader: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			#end
 			return false;
 		});
@@ -56,12 +56,12 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if (shader == null) {
-				FunkinLua.luaTrace("getShaderBool: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("getShaderBool: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return null;
 			}
 			return shader.getBool(prop);
 			#else
-			FunkinLua.luaTrace("getShaderBool: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("getShaderBool: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return null;
 			#end
 		});
@@ -69,12 +69,12 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if (shader == null) {
-				FunkinLua.luaTrace("getShaderBoolArray: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("getShaderBoolArray: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return null;
 			}
 			return shader.getBoolArray(prop);
 			#else
-			FunkinLua.luaTrace("getShaderBoolArray: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("getShaderBoolArray: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return null;
 			#end
 		});
@@ -82,12 +82,12 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if (shader == null) {
-				FunkinLua.luaTrace("getShaderInt: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("getShaderInt: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return null;
 			}
 			return shader.getInt(prop);
 			#else
-			FunkinLua.luaTrace("getShaderInt: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("getShaderInt: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return null;
 			#end
 		});
@@ -95,12 +95,12 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if (shader == null) {
-				FunkinLua.luaTrace("getShaderIntArray: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("getShaderIntArray: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return null;
 			}
 			return shader.getIntArray(prop);
 			#else
-			FunkinLua.luaTrace("getShaderIntArray: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("getShaderIntArray: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return null;
 			#end
 		});
@@ -108,12 +108,12 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if (shader == null) {
-				FunkinLua.luaTrace("getShaderFloat: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("getShaderFloat: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return null;
 			}
 			return shader.getFloat(prop);
 			#else
-			FunkinLua.luaTrace("getShaderFloat: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("getShaderFloat: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return null;
 			#end
 		});
@@ -121,12 +121,12 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if (shader == null) {
-				FunkinLua.luaTrace("getShaderFloatArray: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("getShaderFloatArray: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return null;
 			}
 			return shader.getFloatArray(prop);
 			#else
-			FunkinLua.luaTrace("getShaderFloatArray: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("getShaderFloatArray: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return null;
 			#end
 		});
@@ -136,13 +136,13 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if(shader == null) {
-				FunkinLua.luaTrace("setShaderBool: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("setShaderBool: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return false;
 			}
 			shader.setBool(prop, value);
 			return true;
 			#else
-			FunkinLua.luaTrace("setShaderBool: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("setShaderBool: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return false;
 			#end
 		});
@@ -150,13 +150,13 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if(shader == null) {
-				FunkinLua.luaTrace("setShaderBoolArray: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("setShaderBoolArray: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return false;
 			}
 			shader.setBoolArray(prop, values);
 			return true;
 			#else
-			FunkinLua.luaTrace("setShaderBoolArray: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("setShaderBoolArray: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return false;
 			#end
 		});
@@ -164,13 +164,13 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if(shader == null) {
-				FunkinLua.luaTrace("setShaderInt: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("setShaderInt: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return false;
 			}
 			shader.setInt(prop, value);
 			return true;
 			#else
-			FunkinLua.luaTrace("setShaderInt: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("setShaderInt: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return false;
 			#end
 		});
@@ -178,13 +178,13 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if(shader == null) {
-				FunkinLua.luaTrace("setShaderIntArray: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("setShaderIntArray: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return false;
 			}
 			shader.setIntArray(prop, values);
 			return true;
 			#else
-			FunkinLua.luaTrace("setShaderIntArray: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("setShaderIntArray: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return false;
 			#end
 		});
@@ -192,13 +192,13 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if(shader == null) {
-				FunkinLua.luaTrace("setShaderFloat: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("setShaderFloat: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return false;
 			}
 			shader.setFloat(prop, value);
 			return true;
 			#else
-			FunkinLua.luaTrace("setShaderFloat: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("setShaderFloat: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return false;
 			#end
 		});
@@ -206,14 +206,14 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if(shader == null) {
-				FunkinLua.luaTrace("setShaderFloatArray: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("setShaderFloatArray: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return false;
 			}
 
 			shader.setFloatArray(prop, values);
 			return true;
 			#else
-			FunkinLua.luaTrace("setShaderFloatArray: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("setShaderFloatArray: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return true;
 			#end
 		});
@@ -222,7 +222,7 @@ class ShaderFunctions
 			#if (!flash && MODS_ALLOWED && sys)
 			var shader:FlxRuntimeShader = getShader(obj);
 			if(shader == null) {
-				FunkinLua.luaTrace("setShaderSampler2D: Shader is not FlxRuntimeShader!", false, false, FlxColor.RED);
+				FunkinLua.luaTrace("setShaderSampler2D: Shader is not FlxRuntimeShader!", false, false, ERROR);
 				return false;
 			}
 
@@ -236,7 +236,7 @@ class ShaderFunctions
 			}
 			return false;
 			#else
-			FunkinLua.luaTrace("setShaderSampler2D: Platform unsupported for Runtime Shaders!", false, false, FlxColor.RED);
+			FunkinLua.luaTrace("setShaderSampler2D: Platform unsupported for Runtime Shaders!", false, false, ERROR);
 			return false;
 			#end
 		});
@@ -247,7 +247,7 @@ class ShaderFunctions
 		var target:FlxSprite = LuaUtils.getObjectDirectly(obj);
 
 		if (target == null) {
-			FunkinLua.luaTrace('Error on getting shader: Object $obj not found', false, false, FlxColor.RED);
+			FunkinLua.luaTrace('Error on getting shader: Object $obj not found', false, false, ERROR);
 			return null;
 		}
 		return cast (target.shader, FlxRuntimeShader);

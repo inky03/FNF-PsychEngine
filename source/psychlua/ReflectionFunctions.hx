@@ -18,7 +18,7 @@ class ReflectionFunctions
 		FunkinLua.registerFunction("getPropertyFromClass", function(classVar:String, variable:String, allowMaps:Bool = false) {
 			var cls:Dynamic = Type.resolveClass(classVar);
 			if (cls == null) {
-				FunkinLua.luaTrace('getPropertyFromClass: Class $classVar not found', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('getPropertyFromClass: Class $classVar not found', false, false, ERROR);
 				return null;
 			}
 			
@@ -27,7 +27,7 @@ class ReflectionFunctions
 		FunkinLua.registerFunction("setPropertyFromClass", function(classVar:String, variable:String, value:Dynamic, allowMaps:Bool = false, allowInstances:Bool = false) {
 			var cls:Dynamic = Type.resolveClass(classVar);
 			if (cls == null) {
-				FunkinLua.luaTrace('getPropertyFromClass: Class $classVar not found', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('getPropertyFromClass: Class $classVar not found', false, false, ERROR);
 				return null;
 			}
 			
@@ -40,16 +40,16 @@ class ReflectionFunctions
 
 		FunkinLua.registerFunction("createInstance", function(variableToSave:String, className:String, ?args:Array<Dynamic>) {
 			if (variableToSave.indexOf('.') > -1 || variableToSave.indexOf('[') > -1) {
-				FunkinLua.luaTrace('createInstance: Variable name cannot contain dots or brackets, for "$variableToSave"', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('createInstance: Variable name cannot contain dots or brackets, for "$variableToSave"', false, false, ERROR);
 				return false;
 			} else if (MusicBeatState.getVariables().get(variableToSave) != null) {
-				FunkinLua.luaTrace('createInstance: Variable $variableToSave is already being used and cannot be replaced!', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('createInstance: Variable $variableToSave is already being used and cannot be replaced!', false, false, ERROR);
 				return false;
 			} else {
 				var myType:Class<Dynamic> = Type.resolveClass(className);
 				
 				if (myType == null) {
-					FunkinLua.luaTrace('createInstance: Couldn\'t resolve class $className', false, false, FlxColor.RED);
+					FunkinLua.luaTrace('createInstance: Couldn\'t resolve class $className', false, false, ERROR);
 					return false;
 				}
 				
@@ -58,7 +58,7 @@ class ReflectionFunctions
 					MusicBeatState.getVariables().set(variableToSave, obj);
 					return true;
 				} else {
-					FunkinLua.luaTrace('createInstance: Failed to create $variableToSave - arguments are possibly wrong!', false, false, FlxColor.RED);
+					FunkinLua.luaTrace('createInstance: Failed to create $variableToSave - arguments are possibly wrong!', false, false, ERROR);
 					return false;
 				}
 			}
@@ -79,7 +79,7 @@ class ReflectionFunctions
 		});
 		funk.addLocalCallback("getPropertyFromGroup", function(group:String, index:Int, variable:String, allowMaps:Bool = false) {
 			if (index < 0) {
-				FunkinLua.luaTrace('getPropertyFromGroup: Index can\'t be negative!', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('getPropertyFromGroup: Index can\'t be negative!', false, false, ERROR);
 				return null;
 			}
 			
@@ -88,7 +88,7 @@ class ReflectionFunctions
 			if (groupOrArray != null) {
 				if (groupOrArray.length != null) {
 					if (index >= groupOrArray.length) {
-						FunkinLua.luaTrace('getPropertyFromGroup: Index ($index) exceeds length of object $group!', false, false, FlxColor.RED);
+						FunkinLua.luaTrace('getPropertyFromGroup: Index ($index) exceeds length of object $group!', false, false, ERROR);
 						return null;
 					}
 				}
@@ -98,13 +98,13 @@ class ReflectionFunctions
 					return LuaUtils.getPropertyLoop(variable, allowMaps, Reflect.getProperty(groupOrArray, 'members')[index]);
 				}
 			} else {
-				FunkinLua.luaTrace('getPropertyFromGroup: Object $group doesn\'t exist!', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('getPropertyFromGroup: Object $group doesn\'t exist!', false, false, ERROR);
 			}
 			return null;
 		});
 		funk.addLocalCallback("setPropertyFromGroup", function(group:String, index:Int, variable:String, value:Dynamic, allowMaps:Bool = false, allowInstances:Bool = false) {
 			if (index < 0) {
-				FunkinLua.luaTrace('setPropertyFromGroup: Index can\'t be negative!', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('setPropertyFromGroup: Index can\'t be negative!', false, false, ERROR);
 				return value;
 			}
 			
@@ -114,7 +114,7 @@ class ReflectionFunctions
 			if (groupOrArray != null) {
 				if (groupOrArray.length != null) {
 					if (index >= groupOrArray.length) {
-						FunkinLua.luaTrace('setPropertyFromGroup: Index ($index) exceeds length of object $group!', false, false, FlxColor.RED);
+						FunkinLua.luaTrace('setPropertyFromGroup: Index ($index) exceeds length of object $group!', false, false, ERROR);
 						return;
 					}
 				}
@@ -124,19 +124,19 @@ class ReflectionFunctions
 					LuaUtils.setPropertyLoop(variable, value, allowMaps, Reflect.getProperty(groupOrArray, 'members')[index]);
 				}
 			} else {
-				FunkinLua.luaTrace('setPropertyFromGroup: Object $group doesn\'t exist!', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('setPropertyFromGroup: Object $group doesn\'t exist!', false, false, ERROR);
 			}
 		});
 		funk.addLocalCallback("addToGroup", function(group:String, tag:String, index:Int = -1) {
 			var obj:FlxSprite = LuaUtils.getPropertyLoop(tag, false, funk.parentState);
 			if (obj == null || obj.destroy == null) {
-				FunkinLua.luaTrace('addToGroup: Object $tag is not valid!', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('addToGroup: Object $tag is not valid!', false, false, ERROR);
 				return;
 			}
 			
 			var groupOrArray:Dynamic = LuaUtils.getPropertyLoop(group, false, funk.parentState);
 			if (groupOrArray == null) {
-				FunkinLua.luaTrace('addToGroup: Group/Array $group is not valid!', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('addToGroup: Group/Array $group is not valid!', false, false, ERROR);
 				return;
 			}
 			
@@ -157,14 +157,14 @@ class ReflectionFunctions
 			if (tag != null) {
 				obj = LuaUtils.getPropertyLoop(tag, false, funk.parentState);
 				if (obj == null || obj.destroy == null) {
-					FunkinLua.luaTrace('removeFromGroup: Object $tag is not valid!', false, false, FlxColor.RED);
+					FunkinLua.luaTrace('removeFromGroup: Object $tag is not valid!', false, false, ERROR);
 					return;
 				}
 			}
 			
 			var groupOrArray:Dynamic = LuaUtils.getPropertyLoop(group, false, funk.parentState);
 			if (groupOrArray == null) {
-				FunkinLua.luaTrace('removeFromGroup: Group/Array $group is not valid!', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('removeFromGroup: Group/Array $group is not valid!', false, false, ERROR);
 				return;
 			}
 			
@@ -208,7 +208,7 @@ class ReflectionFunctions
 					}
 				}
 			}
-			else FunkinLua.luaTrace('addInstance: Can\'t add what doesn\'t exist~ ($objectName)', false, false, FlxColor.RED);
+			else FunkinLua.luaTrace('addInstance: Can\'t add what doesn\'t exist~ ($objectName)', false, false, ERROR);
 		});
 	}
 

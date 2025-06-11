@@ -66,7 +66,7 @@ class FunkinLua {
 			
 			trace('lua file loaded succesfully:' + file);
 		} catch(e:Dynamic) {
-			ScriptedState.debugPrint('FATAL: $e', 0xffbb0000, 18);
+			Log.print(e, FATAL);
 			newScript = null;
 		}
 		
@@ -264,14 +264,14 @@ class FunkinLua {
 			{
 				if(this.modFolder == null)
 				{
-					FunkinLua.luaTrace('getModSetting: Argument #2 is null and script is not inside a packed Mod folder!', false, false, FlxColor.RED);
+					FunkinLua.luaTrace('getModSetting: Argument #2 is null and script is not inside a packed Mod folder!', false, false, ERROR);
 					return null;
 				}
 				modName = this.modFolder;
 			}
 			return LuaUtils.getModSetting(saveTag, modName);
 			#else
-			luaTrace("getModSetting: Mods are disabled in this build!", false, false, FlxColor.RED);
+			luaTrace("getModSetting: Mods are disabled in this build!", false, false, ERROR);
 			#end
 		});
 		//
@@ -338,7 +338,7 @@ class FunkinLua {
 
 			if (type != Lua.LUA_TFUNCTION) {
 				if (type > Lua.LUA_TNIL)
-					luaTrace("ERROR (" + func + "): attempt to call a " + LuaUtils.typeToString(type) + " value", false, false, FlxColor.RED);
+					luaTrace("ERROR (" + func + "): attempt to call a " + LuaUtils.typeToString(type) + " value", false, false, ERROR);
 
 				Lua.pop(lua, 1);
 				return LuaUtils.Function_Continue;
@@ -350,7 +350,7 @@ class FunkinLua {
 			// Checks if it's not successful, then show a error.
 			if (status != Lua.LUA_OK) {
 				var error:String = getErrorMessage(status);
-				luaTrace("ERROR (" + func + "): " + error, false, false, FlxColor.RED);
+				luaTrace("ERROR (" + func + "): " + error, false, false, ERROR);
 				return LuaUtils.Function_Continue;
 			}
 
@@ -428,7 +428,7 @@ class FunkinLua {
 			else FlxTween.tween(target, tweenValue, duration, {ease: LuaUtils.getTweenEaseByString(ease)});
 			return tag;
 		}
-		else luaTrace('$funcName: Couldnt find object: $vars', false, false, FlxColor.RED);
+		else luaTrace('$funcName: Couldnt find object: $vars', false, false, ERROR);
 		return null;
 	}
 	static function noteTweenFunction(tag:String, note:Int, data:Dynamic, duration:Float, ease:String) {
@@ -457,18 +457,15 @@ class FunkinLua {
 		return null;
 	}
 
-	public static function luaTrace(text:String, ignoreCheck:Bool = false, deprecated:Bool = false, color:FlxColor = FlxColor.WHITE) {
+	public static function luaTrace(text:String, ignoreCheck:Bool = false, deprecated:Bool = false, ?color:FlxColor, ?level:LogType) {
 		if (ignoreCheck || getBool('luaDebugMode')) {
 			if (deprecated && !getBool('luaDeprecatedWarnings'))
 				return;
 			
-			var severity:crowplexus.iris.ErrorSeverity = switch(color) {
-				case YELLOW: WARN;
-				case RED: ERROR;
-				default: NONE;
-			}
+			if (level == null)
+				level = (color == null ? NONE : CUSTOM(color));
 			
-			HScript.printError(text, severity, color);
+			Log.print(text, level);
 		}
 	}
 
@@ -549,7 +546,7 @@ class FunkinLua {
 			var shaderData:Array<String> = runtimeShaders.get(name);
 			if(shaderData != null && (shaderData[0] != null || shaderData[1] != null))
 			{
-				luaTrace('Shader $name was already initialized!');
+				luaTrace('Shader already initialized: $name', WARN);
 				return true;
 			}
 		}
@@ -593,9 +590,9 @@ class FunkinLua {
 				}
 			}
 		}
-		luaTrace('Missing shader $name .frag AND .vert files!', false, false, FlxColor.RED);
+		luaTrace('Missing shader $name .frag AND .vert files!', false, false, ERROR);
 		#else
-		luaTrace('This platform doesn\'t support Runtime Shaders!', false, false, FlxColor.RED);
+		luaTrace('This platform doesn\'t support Runtime Shaders!', false, false, ERROR);
 		#end
 		return false;
 	}
@@ -676,7 +673,7 @@ class FunkinLua {
 					if (!ignoreAlreadyRunning) {
 						for (luaInstance in st.luaArray) {
 							if(luaInstance.scriptName == luaPath) {
-								luaTrace('addLuaScript: The script "' + luaPath + '" is already running!');
+								luaTrace('addLuaScript: The script "' + luaPath + '" is already running!', WARN);
 								return;
 							}
 						}
@@ -685,7 +682,7 @@ class FunkinLua {
 					st.initLuaScript(luaPath);
 					return;
 				}
-				luaTrace("addLuaScript: Script doesn't exist!", false, false, FlxColor.RED);
+				luaTrace("addLuaScript: Script doesn't exist!", false, false, ERROR);
 			});
 			registerFunction('addHScript', function(scriptFile:String, ?ignoreAlreadyRunning:Bool = false) {
 				#if HSCRIPT_ALLOWED
@@ -694,7 +691,7 @@ class FunkinLua {
 					if (!ignoreAlreadyRunning) {
 						for (script in st.hscriptArray) {
 							if(script.origin == scriptPath) {
-								luaTrace('addHScript: The script "' + scriptPath + '" is already running!');
+								luaTrace('addHScript: The script "' + scriptPath + '" is already running!', WARN);
 								return;
 							}
 						}
@@ -703,9 +700,9 @@ class FunkinLua {
 					st.initHScript(scriptPath);
 					return;
 				}
-				luaTrace("addHScript: Script doesn't exist!", false, false, FlxColor.RED);
+				luaTrace("addHScript: Script doesn't exist!", false, false, ERROR);
 				#else
-				luaTrace("addHScript: HScript is not supported on this platform!", false, false, FlxColor.RED);
+				luaTrace("addHScript: HScript is not supported on this platform!", false, false, ERROR);
 				#end
 			});
 			registerFunction('removeLuaScript', function(luaFile:String) {
@@ -722,7 +719,7 @@ class FunkinLua {
 					if (foundAny) return true;
 				}
 				
-				luaTrace('removeLuaScript: Script $luaFile isn\'t running!', false, false, FlxColor.YELLOW);
+				luaTrace('removeLuaScript: Script $luaFile isn\'t running!', false, false, WARN);
 				return false;
 			});
 			registerFunction('removeHScript', function(scriptFile:String) {
@@ -740,10 +737,10 @@ class FunkinLua {
 					if (foundAny) return true;
 				}
 				
-				luaTrace('removeHScript: Script $scriptFile isn\'t running!', false, false, FlxColor.YELLOW);
+				luaTrace('removeHScript: Script $scriptFile isn\'t running!', false, false, WARN);
 				return false;
 				#else
-				luaTrace("removeHScript: HScript is not supported on this platform!", false, false, FlxColor.RED);
+				luaTrace("removeHScript: HScript is not supported on this platform!", false, false, ERROR);
 				#end
 			});
 		}
@@ -768,7 +765,7 @@ class FunkinLua {
 		registerFunction('loadWeek', (?name:String, difficultyNum:Int = -1) -> {
 			var week:WeekData = (name == null ? PlayState.storyWeekData : StoryMenuState.getWeek(name));
 			if (week == null) {
-				luaTrace('loadWeek: Week ${name == null ? 'is null!' : '$name not found!'}', false, false, FlxColor.RED);
+				luaTrace('loadWeek: Week ${name == null ? 'is null!' : '$name not found!'}', false, false, ERROR);
 			} else {
 				StoryMenuState.loadWeek(week, difficultyNum);
 			}
@@ -777,7 +774,7 @@ class FunkinLua {
 		registerFunction('loadGraphic', function(variable:String, image:String, ?gridX:Int = 0, ?gridY:Int = 0) {
 			var object:Dynamic = LuaUtils.getObjectDirectly(variable);
 			if (object == null) {
-				luaTrace('loadGraphic: Object $object doesn\'t exist!', false, false, FlxColor.RED);
+				luaTrace('loadGraphic: Object $object doesn\'t exist!', false, false, ERROR);
 			} else {
 				var animated:Bool = (gridX != 0 || gridY != 0);
 				if (image != null && image.length > 0)
@@ -812,7 +809,7 @@ class FunkinLua {
 								return Reflect.getProperty(groupOrArray, 'members').indexOf(leObj); //Has to use a Reflect here because of FlxTypedSpriteGroup
 						}
 					} else {
-						luaTrace('getObjectOrder: Group $group doesn\'t exist!', false, false, FlxColor.RED);
+						luaTrace('getObjectOrder: Group $group doesn\'t exist!', false, false, ERROR);
 						return -1;
 					}
 				}
@@ -820,7 +817,7 @@ class FunkinLua {
 				return groupOrArray.members.indexOf(leObj);
 			}
 			
-			luaTrace('getObjectOrder: Object $obj doesn\'t exist!', false, false, FlxColor.RED);
+			luaTrace('getObjectOrder: Object $obj doesn\'t exist!', false, false, ERROR);
 			return -1;
 		});
 		registerFunction('setObjectOrder', function(obj:String, position:Int, ?group:String = null) {
@@ -839,7 +836,7 @@ class FunkinLua {
 								groupOrArray.insert(position, leObj);
 						}
 					}
-					else luaTrace('setObjectOrder: Group $group doesn\'t exist!', false, false, FlxColor.RED);
+					else luaTrace('setObjectOrder: Group $group doesn\'t exist!', false, false, ERROR);
 				}
 				else {
 					var groupOrArray:Dynamic = (CustomSubstate.instance != null ? CustomSubstate.instance : LuaUtils.getTargetInstance());
@@ -849,7 +846,7 @@ class FunkinLua {
 				return;
 			}
 			
-			luaTrace('setObjectOrder: Object $obj doesn\'t exist!', false, false, FlxColor.RED);
+			luaTrace('setObjectOrder: Object $obj doesn\'t exist!', false, false, ERROR);
 		});
 
 		// gay ass tweens
@@ -889,10 +886,10 @@ class FunkinLua {
 						} : null);
 					}
 				} else {
-					luaTrace('startTween: No values provided on 2nd argument!', false, false, FlxColor.RED);
+					luaTrace('startTween: No values provided on 2nd argument!', false, false, ERROR);
 				}
 			}
-			else luaTrace('startTween: Couldnt find object: ' + vars, false, false, FlxColor.RED);
+			else luaTrace('startTween: Couldnt find object: ' + vars, false, false, ERROR);
 			return null;
 		});
 
@@ -922,7 +919,7 @@ class FunkinLua {
 					FlxTween.color(penisExam, duration, curColor, CoolUtil.colorFromString(targetColor), {ease: LuaUtils.getTweenEaseByString(ease)});
 				}
 			}
-			else luaTrace('doTweenColor: Couldnt find object: ' + vars, false, false, FlxColor.RED);
+			else luaTrace('doTweenColor: Couldnt find object: ' + vars, false, false, ERROR);
 			return null;
 		});
 
@@ -1096,12 +1093,12 @@ class FunkinLua {
 				obj.scrollFactor.set(scrollX, scrollY);
 				return;
 			}
-			luaTrace('setScrollFactor: Couldnt find object: ' + obj, false, false, FlxColor.RED);
+			luaTrace('setScrollFactor: Couldnt find object: ' + obj, false, false, ERROR);
 		});
 		registerFunction('addLuaSprite', function(tag:String, inFront:Bool = false) {
 			var mySprite:FlxBasic = LuaUtils.getObjectDirectly(tag);
 			if (mySprite == null) {
-				luaTrace('addLuaSprite: Couldnt find object: $tag', false, false, FlxColor.RED);
+				luaTrace('addLuaSprite: Couldnt find object: $tag', false, false, ERROR);
 				return;
 			}
 
@@ -1131,7 +1128,7 @@ class FunkinLua {
 				if (updateHitbox) obj.updateHitbox();
 				return;
 			}
-			luaTrace('setGraphicSize: Couldnt find object: ' + obj, false, false, FlxColor.RED);
+			luaTrace('setGraphicSize: Couldnt find object: ' + obj, false, false, ERROR);
 		});
 		registerFunction('scaleObject', function(obj:String, x:Float, y:Float, updateHitbox:Bool = true) {
 			var obj:Dynamic = LuaUtils.getObjectDirectly(obj);
@@ -1140,7 +1137,7 @@ class FunkinLua {
 				if (updateHitbox) obj.updateHitbox();
 				return;
 			}
-			luaTrace('scaleObject: Couldnt find object: ' + obj, false, false, FlxColor.RED);
+			luaTrace('scaleObject: Couldnt find object: ' + obj, false, false, ERROR);
 		});
 		registerFunction('updateHitbox', function(obj:String) {
 			var obj:Dynamic = LuaUtils.getObjectDirectly(obj);
@@ -1148,7 +1145,7 @@ class FunkinLua {
 				obj.updateHitbox();
 				return;
 			}
-			luaTrace('updateHitbox: Couldnt find object: ' + obj, false, false, FlxColor.RED);
+			luaTrace('updateHitbox: Couldnt find object: ' + obj, false, false, ERROR);
 		});
 
 		registerFunction('removeLuaSprite', function(tag:String, destroy:Bool = true, ?group:String = null) {
@@ -1185,7 +1182,7 @@ class FunkinLua {
 				return true;
 			}
 			
-			luaTrace("setObjectCamera: Object " + obj + " doesn't exist!", false, false, FlxColor.RED);
+			luaTrace("setObjectCamera: Object " + obj + " doesn't exist!", false, false, ERROR);
 			return false;
 		});
 		registerFunction('setBlendMode', function(obj:String, blend:String = '') {
@@ -1195,7 +1192,7 @@ class FunkinLua {
 				return true;
 			}
 			
-			luaTrace("setBlendMode: Object " + obj + " doesn't exist!", false, false, FlxColor.RED);
+			luaTrace("setBlendMode: Object " + obj + " doesn't exist!", false, false, ERROR);
 			return false;
 		});
 		registerFunction('screenCenter', function(obj:String, pos:String = 'xy') {
@@ -1210,7 +1207,7 @@ class FunkinLua {
 				});
 				return;
 			}
-			luaTrace("screenCenter: Object " + obj + " doesn't exist!", false, false, FlxColor.RED);
+			luaTrace("screenCenter: Object " + obj + " doesn't exist!", false, false, ERROR);
 		});
 		registerFunction('objectsOverlap', function(obj1:String, obj2:String) {
 			var objectsArray:Array<FlxBasic> = [LuaUtils.getObjectDirectly(obj1), LuaUtils.getObjectDirectly(obj2)];
@@ -1284,7 +1281,7 @@ class FunkinLua {
 			#if FLX_PITCH
 			return (getSound(tag)?.pitch ?? 1);
 			#else
-			luaTrace("getSoundPitch: Sound Pitch is not supported on this platform!", false, false, FlxColor.RED);
+			luaTrace("getSoundPitch: Sound Pitch is not supported on this platform!", false, false, ERROR);
 			return 1;
 			#end
 		});
@@ -1298,7 +1295,7 @@ class FunkinLua {
 				if (doPause && wasResumed) snd.play();
 			}
 			#else
-			luaTrace("setSoundPitch: Sound Pitch is not supported on this platform!", false, false, FlxColor.RED);
+			luaTrace("setSoundPitch: Sound Pitch is not supported on this platform!", false, false, ERROR);
 			#end
 		});
 	}
@@ -1431,7 +1428,7 @@ class FunkinLua {
 			#end
 				path = Paths.getPath('data/$songPath/$dialogueFile.json', TEXT);
 
-			luaTrace('startDialogue: Trying to load dialogue: ' + path);
+			// luaTrace('startDialogue: Trying to load dialogue: ' + path);
 
 			#if MODS_ALLOWED
 			if(FileSystem.exists(path))
@@ -1442,13 +1439,13 @@ class FunkinLua {
 				var shit:DialogueFile = DialogueBoxPsych.parseDialogue(path);
 				if (shit.dialogue.length > 0) {
 					game.startDialogue(shit, music);
-					luaTrace('startDialogue: Successfully loaded dialogue', false, false, FlxColor.GREEN);
+					// luaTrace('startDialogue: Successfully loaded dialogue', false, false, FlxColor.GREEN);
 					return true;
 				} else {
-					luaTrace('startDialogue: Your dialogue file is badly formatted!', false, false, FlxColor.RED);
+					luaTrace('startDialogue: Dialogue file is badly formatted', false, false, ERROR);
 				}
 			} else {
-				luaTrace('startDialogue: Dialogue file not found', false, false, FlxColor.RED);
+				luaTrace('startDialogue: Dialogue file not found', false, false, ERROR);
 				if (game.endingSong) {
 					game.endSong();
 				} else {
@@ -1467,7 +1464,7 @@ class FunkinLua {
 				game.videoCutscene = game.startVideo(videoFile, forMidSong, canSkip, shouldLoop, playOnLoad);
 				return true;
 			} else {
-				luaTrace('startVideo: Video file not found: ' + videoFile, false, false, FlxColor.RED);
+				luaTrace('startVideo: Video file not found: ' + videoFile, false, false, ERROR);
 			}
 			return false;
 

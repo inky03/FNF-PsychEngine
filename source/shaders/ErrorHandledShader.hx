@@ -5,6 +5,8 @@ import flixel.addons.display.FlxRuntimeShader;
 import lime.graphics.opengl.GLProgram;
 import lime.app.Application;
 
+import psychlua.LuaUtils;
+
 class ErrorHandledShader extends FlxShader implements IErrorHandler
 {
 	public var shaderName:String = '';
@@ -34,8 +36,6 @@ class ErrorHandledShader extends FlxShader implements IErrorHandler
 		if(shaderName == null) shaderName = 'unnamed';
 		var alertTitle:String = 'Error on Shader: "$shaderName"';
 
-		trace(error);
-
 		#if !debug
 		// Save a crash log on Release builds
 		var errMsg:String = "";
@@ -46,10 +46,12 @@ class ErrorHandledShader extends FlxShader implements IErrorHandler
 
 		var crashLogPath:String = './crash/shader_${shaderName}_${dateNow}.txt';
 		File.saveContent(crashLogPath, error);
-		Application.current.window.alert('Error log saved at: $crashLogPath', alertTitle);
+		Log.print('$alertTitle\nError log saved at: $crashLogPath', FATAL);
 		#else
-		Application.current.window.alert('Error logs aren\'t created on debug builds, check the trace log instead.', alertTitle);
+		Log.print('$alertTitle\nError logs aren\'t created on debug builds, check the trace log instead!', FATAL);
 		#end
+
+		// Sys.println(error);
 
 		onError(error);
 	}

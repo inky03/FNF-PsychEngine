@@ -286,35 +286,35 @@ class Achievements {
 	public static function implement():Void {
 		FunkinLua.registerFunction("getAchievementScore", function(name:String):Float {
 			if (!achievements.exists(name)) {
-				FunkinLua.luaTrace('getAchievementScore: Couldnt find achievement: $name', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('getAchievementScore: Couldnt find achievement: $name', false, false, ERROR);
 				return -1;
 			}
 			return getScore(name);
 		});
 		FunkinLua.registerFunction("setAchievementScore", function(name:String, ?value:Float = 0, ?saveIfNotUnlocked:Bool = true):Float {
 			if (!achievements.exists(name)) {
-				FunkinLua.luaTrace('setAchievementScore: Couldnt find achievement: $name', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('setAchievementScore: Couldnt find achievement: $name', false, false, ERROR);
 				return -1;
 			}
 			return setScore(name, value, saveIfNotUnlocked);
 		});
 		FunkinLua.registerFunction("addAchievementScore", function(name:String, ?value:Float = 1, ?saveIfNotUnlocked:Bool = true):Float {
 			if (!achievements.exists(name)) {
-				FunkinLua.luaTrace('addAchievementScore: Couldnt find achievement: $name', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('addAchievementScore: Couldnt find achievement: $name', false, false, ERROR);
 				return -1;
 			}
 			return addScore(name, value, saveIfNotUnlocked);
 		});
 		FunkinLua.registerFunction("unlockAchievement", function(name:String):Dynamic {
 			if (!achievements.exists(name)) {
-				FunkinLua.luaTrace('unlockAchievement: Couldnt find achievement: $name', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('unlockAchievement: Couldnt find achievement: $name', false, false, ERROR);
 				return null;
 			}
 			return unlock(name);
 		});
 		FunkinLua.registerFunction("isAchievementUnlocked", function(name:String):Dynamic {
 			if (!achievements.exists(name)) {
-				FunkinLua.luaTrace('isAchievementUnlocked: Couldnt find achievement: $name', false, false, FlxColor.RED);
+				FunkinLua.luaTrace('isAchievementUnlocked: Couldnt find achievement: $name', false, false, ERROR);
 				return null;
 			}
 			return isUnlocked(name);

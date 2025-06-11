@@ -1,6 +1,5 @@
 package backend;
 
-import debug.ScriptTraceDisplay;
 import psychlua.GlobalScriptHandler;
 
 #if LUA_ALLOWED
@@ -10,10 +9,8 @@ import psychlua.FunkinLua;
 class ScriptedState extends ScriptedSubState {
 	public var camOther:FlxCamera = null;
 	
-	public static function debugPrint(text:String, ?color:FlxColor, ?size:Int):TracePopUp {
-		Sys.println(text);
-		
-		return Main.traces.print(text, color, size);
+	public static function debugPrint(text:String, ?color:FlxColor, ?size:Int):Void {
+		Log.print(text, (color == null ? NONE : CUSTOM(color)), size);
 	}
 	
 	public override function create():Void {

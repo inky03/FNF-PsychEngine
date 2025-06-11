@@ -34,13 +34,12 @@ class ScriptTraceDisplay extends Sprite {
 		}
 		popUp ??= new TracePopUp();
 		
-		popUp.alphaMult = popUp.alpha = color.alphaFloat;
+		popUp.alphaMult = popUp.alpha = 1;
 		popUp.format.color = color.rgb;
 		popUp.format.size = size;
 		popUp.visible = true;
 		popUp.aliveTime = 0;
 		popUp.text = text;
-		popUp.alpha = 1;
 		
 		popUp.updateWidth();
 		popUp.defaultTextFormat = popUp.format;

@@ -29,13 +29,13 @@ import psychlua.FunkinLua;
 #end
 
 #if HSCRIPT_ALLOWED
+import psychlua.LuaUtils;
+
 import crowplexus.iris.Iris;
 import crowplexus.iris.IrisConfig;
 import crowplexus.iris.ErrorSeverity;
 import crowplexus.hscript.Expr.Error as IrisError;
 import crowplexus.hscript.Printer;
-
-using crowplexus.iris.utils.Ansi;
 
 typedef HScriptInfos = {
 	> haxe.PosInfos,
@@ -106,42 +106,16 @@ class HScript extends Iris {
 				msgInfo += '${newPos.lineNumber}:';
 			}
 			
-			var header:String = getErrorHeader(level);
-			var message:String = '$header$msgInfo $x';
-			
-			printError(message, level);
+			Log.print('$msgInfo $x', errorSeverityToLog(level));
 		}
 	}
 	
-	public static function printError(message:String, level:ErrorSeverity = ERROR, ?customColor:FlxColor) {
-		var errorColor:AnsiColor = switch(level) { // TODO: move this (and somehow remove the dependency on hscript iris)
-			case NONE: CYAN;
-			case WARN: YELLOW;
-			case ERROR | FATAL: RED;
-		}
-		
-		var printMessage:String = message.fg(errorColor).reset();
-		if (level == FATAL)
-			printMessage = printMessage.attr(INTENSITY_BOLD);
-		
-		Sys.println(printMessage);
-		Main.traces?.print(message, customColor ?? getErrorColor(level), level == FATAL ? 17 : 15);
-	}
-	
-	static function getErrorHeader(level:ErrorSeverity):String {
+	static function errorSeverityToLog(level:ErrorSeverity):LogType {
 		return switch (level) {
-			case NONE: 'TRACE: ';
-			case WARN: 'WARNING: ';
-			case ERROR: 'ERROR: ';
-			case FATAL: 'FATAL: ';
-		}
-	}
-	static function getErrorColor(level:ErrorSeverity):FlxColor {
-		return switch (level) {
-			case NONE: FlxColor.CYAN;
-			case WARN: FlxColor.YELLOW;
-			case ERROR: FlxColor.RED;
-			case FATAL: 0xffbb0000;
+			case NONE: INFO;
+			case WARN: WARN;
+			case ERROR: ERROR;
+			case FATAL: FATAL;
 		}
 	}
 	
@@ -314,7 +288,7 @@ class HScript extends Iris {
 			return false;
 		});
 		set('debugPrint', function(text:String, color:FlxColor = FlxColor.WHITE) {
-			ScriptedState.debugPrint(text, color);
+			return ScriptedState.debugPrint(text, color);
 		});
 		set('getModSetting', function(saveTag:String, ?modName:String = null) {
 			if(modName == null)
@@ -753,15 +727,15 @@ class HScript
 	#if LUA_ALLOWED
 	public static function implement() {
 		FunkinLua.registerFunction("runHaxeCode", function(codeToRun:String, ?varsToBring:Any = null, ?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):Dynamic {
-			PlayState.instance.addTextToDebug('HScript is not supported on this platform!', FlxColor.RED);
+			Log.print('HScript is not supported on this platform!', ERROR);
 			return null;
 		});
 		FunkinLua.registerFunction("runHaxeFunction", function(funcToRun:String, ?funcArgs:Array<Dynamic> = null) {
-			PlayState.instance.addTextToDebug('HScript is not supported on this platform!', FlxColor.RED);
+			Log.print('HScript is not supported on this platform!', ERROR);
 			return null;
 		});
 		FunkinLua.registerFunction("addHaxeLibrary", function(libName:String, ?libPackage:String = '') {
-			PlayState.instance.addTextToDebug('HScript is not supported on this platform!', FlxColor.RED);
+			Log.print('HScript is not supported on this platform!', ERROR);
 			return null;
 		});
 	}

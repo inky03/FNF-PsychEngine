@@ -1,6 +1,5 @@
 package backend;
 
-import debug.ScriptTraceDisplay;
 import shaders.ErrorHandledShader;
 import psychlua.GlobalScriptHandler;
 
@@ -218,8 +217,8 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 				func(stage);
 	}
 	
-	public function addTextToDebug(text:String, ?color:FlxColor, ?size:Int):TracePopUp {
-		return ScriptedState.debugPrint(text, color, size);
+	public function addTextToDebug(text:String, ?color:FlxColor, ?size:Int) {
+		ScriptedState.debugPrint(text, color, size);
 	}
 	
 	public override function openSubState(subState:flixel.FlxSubState):Void {
@@ -275,7 +274,7 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 			}
 		}
 		#if (SCRIPTS_ALLOWED)
-		addTextToDebug('No .frag or .vert code found for shader "$name"!', FlxColor.RED);
+		Log.print('No .frag or .vert code found for shader "$name"!', ERROR);
 		#else
 		FlxG.log.warn('No .frag or .vert code found for shader "$name"!');
 		#end

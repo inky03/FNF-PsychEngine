@@ -173,8 +173,13 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 	- `onDraw`, `onDrawPost` - the former can be stopped to use custom state / substate drawing behavior (very smart, but also very dangerous)
 - FATAL script errors only print at the top left of the screen instead of making a new window alert
 	- These errors are highlighted in dark red, and are bigger than the other printed text
-- Script trace messages are now rendered in OpenFL instead of HaxeFlixel, so they will remain on top of the screen at any time
-	- "luaDebugGroup" has been removed in PlayState
+- Logging
+	- `debugPrint` is now colorful in the console (because its funny)
+	- Shader errors, and Lua fatal errors are now logged as a debug message instead of showing window alerts
+	- Script trace messages are now rendered in OpenFL instead of HaxeFlixel
+		- The messages will remain on top of the screen at any time
+		- The messages will also persist between states
+		- "luaDebugGroup" has been removed in PlayState
 
 ### General (Source Code)
 

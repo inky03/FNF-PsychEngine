@@ -2234,12 +2234,15 @@ class PlayState extends ScriptedState
 					
 					LuaUtils.setPropertyLoop(value1, set, false, this);
 				} catch(e:haxe.Exception) {
-					var len:Int = e.message.indexOf('\n') + 1;
-					if (len <= 0) len = e.message.length;
+					var mes:String = e.message;
+					if (mes.indexOf('\n') >= 0) mes = mes.substr(0, mes.indexOf('\n'));
+					
+					var message:String = 'Set Property Event: $mes';
+					
 					#if (SCRIPTS_ALLOWED)
-					addTextToDebug('ERROR ("Set Property" Event) - ' + e.message.substr(0, len), FlxColor.RED);
+					Log.print(message, ERROR);
 					#else
-					FlxG.log.warn('ERROR ("Set Property" Event) - ' + e.message.substr(0, len));
+					FlxG.log.warn(message);
 					#end
 				}
 
