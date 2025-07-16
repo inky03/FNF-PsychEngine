@@ -156,6 +156,7 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 		```
 - More default imports
 	- `FunkinLua`, `MusicBeatState`, `MusicBeatSubstate` and variants, for convenience
+- `luaDebugMode` and `luaDeprecatedWarnings` (although that one is useless here) can now be set in HScript, true by default
 - Fixed crashes on specific circumstances (errors that previously weren't correctly caught, ex. Null Function Pointer)
 - Setting game variables without using `game.` is now allowed (it was previously only allowed for getting)
 - `createGlobalCallback` now also makes the callback globally available in HScript scripts
@@ -207,6 +208,8 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 		- Most functions are now registered only once (per state creation), to speed up function loading times (`registeredFunctions` map)
 	- LuaUtils
 		- `getVarInArray` and `setVarInArray` have been replaced by `getVariable` and `setVariable`
+		- Functions `initSaveData`, `flushSaveData`, `getDataFromSave`, `setDataFromSave` and `eraseSaveData` have been moved to this class
+			- They can now be accessed with HScript due to this, if you're into that
 	- HScript
 		- `callOnScriptsEx` (to provide diff. arguments for Lua and HScript function calls)
 - Character

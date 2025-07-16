@@ -302,6 +302,8 @@ class HScript extends Iris {
 			}
 			return LuaUtils.getModSetting(saveTag, modName);
 		});
+		set('luaDeprecatedWarnings', true);
+		set('luaDebugMode', true);
 
 		// Keyboard & Gamepads
 		set('keyboardJustPressed', function(name:String) return Reflect.getProperty(FlxG.keys.justPressed, name));
@@ -521,14 +523,19 @@ class HScript extends Iris {
 			return null;
 		}
 		
+		FunkinLua.lastCalledHScript = this;
+		
 		try {
 			var func:Dynamic = interp.variables.get(funcToRun); // function signature
 			final ret = Reflect.callMethod(null, func, args ?? []);
 			
+			FunkinLua.lastCalledHScript = null;
 			return {funName: funcToRun, signature: func, returnValue: ret};
 		} catch(e:Dynamic) {
 			catchError(this, e, funcToRun);
 		}
+		
+		FunkinLua.lastCalledHScript = null;
 		return null;
 	}
 	

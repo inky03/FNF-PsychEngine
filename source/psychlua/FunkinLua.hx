@@ -324,6 +324,8 @@ class FunkinLua {
 	//main
 	public var lastCalledFunction:String = '';
 	public static var lastCalledScript:FunkinLua = null;
+	#if HSCRIPT_ALLOWED public static var lastCalledHScript:HScript = null; #end
+	
 	public function call(func:String, ?args:Array<Dynamic>):Dynamic {
 		if(closed) return LuaUtils.Function_Continue;
 
@@ -470,19 +472,28 @@ class FunkinLua {
 	}
 
 	public static function getBool(variable:String) {
-		if(lastCalledScript == null) return false;
-
-		var lua:State = lastCalledScript.lua;
+		var luaScript:FunkinLua = lastCalledScript;
+		
+		#if HSCRIPT_ALLOWED
+		if (lastCalledHScript != null) {
+			if (lastCalledHScript.parentLua != null) {
+				luaScript = lastCalledHScript.parentLua;
+			} else {
+				return (lastCalledHScript.get(variable) == true);
+			}
+		}
+		#end
+		
+		if (luaScript == null) return false;
+		
+		var lua:State = luaScript.lua;
 		if(lua == null) return false;
-
+		
 		var result:String = null;
 		Lua.getglobal(lua, variable);
 		result = Convert.fromLua(lua, -1);
 		Lua.pop(lua, 1);
-
-		if(result == null) {
-			return false;
-		}
+		
 		return (result == 'true');
 	}
 

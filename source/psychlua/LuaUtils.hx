@@ -64,6 +64,7 @@ import objects.Character;
 import backend.StageData;
 
 import openfl.display.BlendMode;
+import flixel.util.FlxSave;
 import Type.ValueType;
 
 import substates.GameOverSubstate;
@@ -512,8 +513,58 @@ class LuaUtils
 		return 'unknown';
 		#end
 	}
-
-	//buncho string stuffs
+	
+	// savedata
+	public static function initSaveData(name:String, folder:String = 'psychenginemods'):Void {
+		var variables = MusicBeatState.getVariables();
+		if (!variables.exists('save_$name')) {
+			var save:FlxSave = new FlxSave();
+			// folder goes unused for flixel 5 users. @BeastlyGhost
+			save.bind(name, CoolUtil.getSavePath() + '/' + folder);
+			variables.set('save_$name', save);
+			return;
+		}
+		FunkinLua.luaTrace('initSaveData: Save file already initialized: ' + name, WARN);
+	}
+	public static function flushSaveData(name:String):Void {
+		var variables = MusicBeatState.getVariables();
+		if (variables.exists('save_$name')) {
+			variables.get('save_$name').flush();
+			return;
+		}
+		FunkinLua.luaTrace('flushSaveData: Save file not initialized: ' + name, false, false, ERROR);
+	}
+	public static function getDataFromSave(name:String, field:String, ?defaultValue:Dynamic):Dynamic {
+		var variables = MusicBeatState.getVariables();
+		if (variables.exists('save_$name')) {
+			var saveData = variables.get('save_$name').data;
+			if (Reflect.hasField(saveData, field)) {
+				return Reflect.field(saveData, field);
+			} else {
+				return defaultValue;
+			}
+		}
+		FunkinLua.luaTrace('getDataFromSave: Save file not initialized: ' + name, false, false, ERROR);
+		return defaultValue;
+	}
+	public static function setDataFromSave(name:String, field:String, value:Dynamic):Void {
+		var variables = MusicBeatState.getVariables();
+		if (variables.exists('save_$name')) {
+			Reflect.setField(variables.get('save_$name').data, field, value);
+			return;
+		}
+		FunkinLua.luaTrace('setDataFromSave: Save file not initialized: ' + name, false, false, ERROR);
+	}
+	public static function eraseSaveData(name:String):Void {
+		var variables = MusicBeatState.getVariables();
+		if (variables.exists('save_$name')) {
+			variables.get('save_$name').erase();
+			return;
+		}
+		FunkinLua.luaTrace('eraseSaveData: Save file not initialized: ' + name, false, false, ERROR);
+	}
+	
+	// buncho string stuffs
 	public static function getTweenTypeByString(?type:String = '') {
 		switch(type.toLowerCase().trim())
 		{

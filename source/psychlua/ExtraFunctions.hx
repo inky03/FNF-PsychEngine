@@ -1,6 +1,5 @@
 package psychlua;
 
-import flixel.util.FlxSave;
 import openfl.utils.Assets;
 
 //
@@ -119,62 +118,14 @@ class ExtraFunctions {
 		});
 
 		// Save data management
-		FunkinLua.registerFunction("initSaveData", function(name:String, ?folder:String = 'psychenginemods') {
-			var variables = MusicBeatState.getVariables();
-			if(!variables.exists('save_$name'))
-			{
-				var save:FlxSave = new FlxSave();
-				// folder goes unused for flixel 5 users. @BeastlyGhost
-				save.bind(name, CoolUtil.getSavePath() + '/' + folder);
-				variables.set('save_$name', save);
-				return;
-			}
-			FunkinLua.luaTrace('initSaveData: Save file already initialized: ' + name, WARN);
-		});
-		FunkinLua.registerFunction("flushSaveData", function(name:String) {
-			var variables = MusicBeatState.getVariables();
-			if(variables.exists('save_$name'))
-			{
-				variables.get('save_$name').flush();
-				return;
-			}
-			FunkinLua.luaTrace('flushSaveData: Save file not initialized: ' + name, false, false, ERROR);
-		});
-		FunkinLua.registerFunction("getDataFromSave", function(name:String, field:String, ?defaultValue:Dynamic = null) {
-			var variables = MusicBeatState.getVariables();
-			if(variables.exists('save_$name'))
-			{
-				var saveData = variables.get('save_$name').data;
-				if(Reflect.hasField(saveData, field))
-					return Reflect.field(saveData, field);
-				else
-					return defaultValue;
-			}
-			FunkinLua.luaTrace('getDataFromSave: Save file not initialized: ' + name, false, false, ERROR);
-			return defaultValue;
-		});
-		FunkinLua.registerFunction("setDataFromSave", function(name:String, field:String, value:Dynamic) {
-			var variables = MusicBeatState.getVariables();
-			if(variables.exists('save_$name'))
-			{
-				Reflect.setField(variables.get('save_$name').data, field, value);
-				return;
-			}
-			FunkinLua.luaTrace('setDataFromSave: Save file not initialized: ' + name, false, false, ERROR);
-		});
-		FunkinLua.registerFunction("eraseSaveData", function(name:String)
-		{
-			var variables = MusicBeatState.getVariables();
-			if (variables.exists('save_$name'))
-			{
-				variables.get('save_$name').erase();
-				return;
-			}
-			FunkinLua.luaTrace('eraseSaveData: Save file not initialized: ' + name, false, false, ERROR);
-		});
+		FunkinLua.registerFunction("initSaveData", LuaUtils.initSaveData);
+		FunkinLua.registerFunction("flushSaveData", LuaUtils.flushSaveData);
+		FunkinLua.registerFunction("getDataFromSave", LuaUtils.getDataFromSave);
+		FunkinLua.registerFunction("setDataFromSave", LuaUtils.setDataFromSave);
+		FunkinLua.registerFunction("eraseSaveData", LuaUtils.eraseSaveData);
 
 		// File management
-		FunkinLua.registerFunction("checkFileExists", function(filename:String, ?absolute:Bool = false) {
+		FunkinLua.registerFunction("checkFileExists", function(filename:String, absolute:Bool = false) {
 			#if MODS_ALLOWED
 			if(absolute) return FileSystem.exists(filename);
 
@@ -186,7 +137,7 @@ class ExtraFunctions {
 			return Assets.exists(Paths.getPath(filename, TEXT));
 			#end
 		});
-		FunkinLua.registerFunction("saveFile", function(path:String, content:String, ?absolute:Bool = false)
+		FunkinLua.registerFunction("saveFile", function(path:String, content:String, absolute:Bool = false)
 		{
 			try {
 				#if MODS_ALLOWED
@@ -202,7 +153,7 @@ class ExtraFunctions {
 			}
 			return false;
 		});
-		FunkinLua.registerFunction("deleteFile", function(path:String, ?ignoreModFolders:Bool = false, ?absolute:Bool = false)
+		FunkinLua.registerFunction("deleteFile", function(path:String, ignoreModFolders:Bool = false, absolute:Bool = false)
 		{
 			try {
 				var lePath:String = path;
@@ -217,13 +168,20 @@ class ExtraFunctions {
 			}
 			return false;
 		});
-		FunkinLua.registerFunction("getTextFromFile", function(path:String, ?ignoreModFolders:Bool = false) {
-			return Paths.getTextFromFile(path, ignoreModFolders);
+		FunkinLua.registerFunction("getTextFromFile", function(path:String, ignoreModFolders:Bool = false, absolute:Bool = false) {
+			if (!absolute)
+				return Paths.getTextFromFile(path, ignoreModFolders);
+			
+			if (FileSystem.exists(path))
+				return File.getContent(path);
+			
+			return null;
 		});
-		FunkinLua.registerFunction("directoryFileList", function(folder:String) {
+		FunkinLua.registerFunction("directoryFileList", function(folder:String, ignoreModFolders:Bool = false, absolute:Bool = true) {
 			var list:Array<String> = [];
 			#if sys
-			if(FileSystem.exists(folder)) {
+			if (!absolute) folder = Paths.getPath(folder, TEXT, !ignoreModFolders);
+			if (FileSystem.exists(folder)) {
 				for (folder in FileSystem.readDirectory(folder)) {
 					if (!list.contains(folder)) {
 						list.push(folder);
@@ -233,19 +191,21 @@ class ExtraFunctions {
 			#end
 			return list;
 		});
+		FunkinLua.registerFunction('getPath', function(path:String, ignoreModFolders:Bool = false, neverNull:Bool = false) {
+			var path:String = Paths.getPath(path, TEXT, !ignoreModFolders);
+			
+			if (FileSystem.exists(path) || neverNull)
+				return path;
+			
+			return null;
+		});
 
 		// String tools
-		FunkinLua.registerFunction("stringStartsWith", function(str:String, start:String) {
-			return str.startsWith(start);
-		});
-		FunkinLua.registerFunction("stringEndsWith", function(str:String, end:String) {
-			return str.endsWith(end);
-		});
+		FunkinLua.registerFunction("stringStartsWith", StringTools.startsWith);
+		FunkinLua.registerFunction("stringEndsWith", StringTools.endsWith);
+		FunkinLua.registerFunction("stringTrim", StringTools.trim);
 		FunkinLua.registerFunction("stringSplit", function(str:String, split:String) {
 			return str.split(split);
-		});
-		FunkinLua.registerFunction("stringTrim", function(str:String) {
-			return str.trim();
 		});
 
 		// Randomization
@@ -277,8 +237,6 @@ class ExtraFunctions {
 			
 			return FlxG.random.float(min, max, toExclude);
 		});
-		FunkinLua.registerFunction("getRandomBool", function(chance:Float = 50) {
-			return FlxG.random.bool(chance);
-		});
+		FunkinLua.registerFunction("getRandomBool", FlxG.random.bool);
 	}
 }
