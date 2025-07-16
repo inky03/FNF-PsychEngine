@@ -213,7 +213,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			note.centerOrigin();
 			
 			note.playAnim('confirm', true);
-			note.resetAnim = note.animation.curAnim.numFrames * note.animation.curAnim.frameDuration;
+			if (note.animation.curAnim != null) note.resetAnim = note.animation.curAnim.numFrames * note.animation.curAnim.frameDuration;
 		});
 	}
 

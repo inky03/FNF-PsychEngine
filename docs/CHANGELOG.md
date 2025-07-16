@@ -169,7 +169,11 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 - `onStepHit`, `onBeatHit` and `onSectionHit` callbacks
 	- Will now also trigger in 0 and negative time marks
 	- Now have the respective step, beat or section passed as the first function argument
+- PlayState callbacks
+	- `onStartSong` now has start position as the first function argument
+	- (some of them) Available in playtest via sub-state script
 - New callbacks
+	- `noteMissPre` and `onDestroyNote`
 	- `onGameOverLoop`, when the game over loop starts
 	- `onDraw`, `onDrawPost` - the former can be stopped to use custom state / substate drawing behavior (very smart, but also very dangerous)
 - FATAL script errors only print at the top left of the screen instead of making a new window alert

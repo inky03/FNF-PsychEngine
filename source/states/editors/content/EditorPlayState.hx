@@ -13,7 +13,9 @@ import flixel.animation.FlxAnimationController;
 import flixel.input.keyboard.FlxKey;
 import openfl.events.KeyboardEvent;
 
-class EditorPlayState extends MusicBeatSubstate
+import psychlua.LuaUtils;
+
+class EditorPlayState extends ScriptedSubState
 {
 	// Borrowed from original PlayState
 	var finishTimer:FlxTimer = null;
@@ -37,9 +39,6 @@ class EditorPlayState extends MusicBeatSubstate
 	var grpNoteSplashes:FlxTypedGroup<NoteSplash>;
 	
 	var combo:Int = 0;
-	var lastRating:FlxSprite;
-	var lastCombo:FlxSprite;
-	var lastScore:Array<FlxSprite> = [];
 	var keysArray:Array<String> = [
 		'note_left',
 		'note_down',
@@ -62,6 +61,7 @@ class EditorPlayState extends MusicBeatSubstate
 	var timerToStart:Float = 0;
 	var downScroll:Bool = false;
 
+	var bg:FlxSprite;
 	var scoreTxt:FlxText;
 	var dataTxt:FlxText;
 	var guitarHeroSustains:Bool = false;
@@ -97,12 +97,14 @@ class EditorPlayState extends MusicBeatSubstate
 		if(ClientPrefs.data.hitsoundVolume > 0) Paths.sound('hitsound');
 
 		/* setting up Editor PlayState stuff */
-		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.scrollFactor.set();
 		bg.color = 0xFF101010;
 		bg.alpha = 0.9;
 		add(bg);
+		
+		preCreate();
 		
 		/**** NOTES ****/
 		comboGroup = new FlxSpriteGroup();
@@ -156,19 +158,23 @@ class EditorPlayState extends MusicBeatSubstate
 		updateScore();
 		cachePopUpScore();
 
-		super.create();
-
 		cameras = [FlxG.cameras.list[FlxG.cameras.list.length - 1]];
+
+		super.create();
 	}
 
 	override function update(elapsed:Float)
 	{
 		if(controls.BACK || FlxG.keys.justPressed.ESCAPE || FlxG.keys.justPressed.F12)
 		{
-			endSong();
-			super.update(elapsed);
-			return;
+			if (callOnScripts('onExit', null, true) != LuaUtils.Function_Stop) {
+				endSong();
+				super.update(elapsed);
+				return;
+			}
 		}
+		
+		preUpdate(elapsed);
 		
 		if (startingSong)
 		{
@@ -247,6 +253,8 @@ class EditorPlayState extends MusicBeatSubstate
 						'\nBeat: $curBeat' +
 						'\nStep: $curStep';
 		super.update(elapsed);
+		
+		postUpdate(elapsed);
 	}
 
 	var lastBeatHit:Int = -1;
@@ -298,6 +306,8 @@ class EditorPlayState extends MusicBeatSubstate
 
 		// Song duration in a float, useful for the time left feature
 		songLength = inst.length;
+		
+		callOnScripts('onSongStart', [startPos]);
 	}
 
 	// Borrowed from PlayState
@@ -496,16 +506,11 @@ class EditorPlayState extends MusicBeatSubstate
 		close();
 	}
 	
-	private function cachePopUpScore()
-	{
-		var uiFolder:String = "";
-		if (PlayState.stageUI != "normal")
-			uiFolder = PlayState.uiPrefix + "UI/";
-
+	private function cachePopUpScore() {
 		for (rating in ratingsData)
-			Paths.image(uiFolder + rating.image + PlayState.uiPostfix);
+			Paths.image(PlayState.formatUI(rating.image));
 		for (i in 0...10)
-			Paths.image(uiFolder + 'num' + i + PlayState.uiPostfix);
+			Paths.image(PlayState.formatUI('num$i'));
 	}
 
 	private function popUpScore(note:Note = null):Void
@@ -543,16 +548,10 @@ class EditorPlayState extends MusicBeatSubstate
 			songHits++;
 			updateScore();
 		}
+		
+		var antialias:Bool = (ClientPrefs.data.antialiasing && !PlayState.isPixelStage);
 
-		var uiFolder:String = "";
-		var antialias:Bool = ClientPrefs.data.antialiasing;
-		if (PlayState.stageUI != "normal")
-		{
-			uiFolder = PlayState.uiPrefix + "UI/";
-			antialias = !PlayState.isPixelStage;
-		}
-
-		rating.loadGraphic(Paths.image(uiFolder + daRating.image + PlayState.uiPostfix));
+		rating.loadGraphic(Paths.image(PlayState.formatUI(daRating.image)));
 		rating.screenCenter();
 		rating.x = placement - 40;
 		rating.y -= 60;
@@ -564,7 +563,7 @@ class EditorPlayState extends MusicBeatSubstate
 		rating.y -= ClientPrefs.data.comboOffset[1];
 		rating.antialiasing = antialias;
 
-		var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiFolder + 'combo' + PlayState.uiPostfix));
+		var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(PlayState.formatUI('combo')));
 		comboSpr.screenCenter();
 		comboSpr.x = placement;
 		comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
@@ -599,7 +598,7 @@ class EditorPlayState extends MusicBeatSubstate
 		var separatedScore:String = Std.string(combo).lpad('0', 3);
 		for (i in 0...separatedScore.length)
 		{
-			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiFolder + 'num' + Std.parseInt(separatedScore.charAt(i)) + PlayState.uiPostfix));
+			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(PlayState.formatUI('num${separatedScore.charAt(i)}')));
 			numScore.screenCenter();
 			numScore.x = placement + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
 			numScore.y += 80 - ClientPrefs.data.comboOffset[3];
@@ -664,6 +663,8 @@ class EditorPlayState extends MusicBeatSubstate
 	private function keyPressed(key:Int)
 	{
 		if(key < 0) return;
+		
+		if (callOnScripts('onKeyPressPre', [key]) == LuaUtils.Function_Stop) return;
 
 		// more accurate hit time for the ratings?
 		var lastTime:Float = Conductor.songPosition;
@@ -690,6 +691,8 @@ class EditorPlayState extends MusicBeatSubstate
 
 		//more accurate hit time for the ratings? part 2 (Now that the calculations are done, go back to the time it was before for not causing a note stutter)
 		Conductor.songPosition = lastTime;
+		
+		callOnScripts('onKeyPress', [key]);
 	}
 
 	private function onKeyRelease(event:KeyboardEvent):Void
@@ -703,12 +706,16 @@ class EditorPlayState extends MusicBeatSubstate
 
 	private function keyReleased(key:Int)
 	{
+		if (callOnScripts('onKeyReleasePre', [key]) == LuaUtils.Function_Stop) return;
+		
 		var spr:StrumNote = playerStrums.members[key];
 		if(spr != null)
 		{
 			spr.playAnim('static');
 			spr.resetAnim = 0;
 		}
+		
+		callOnScripts('onKeyRelease', [key]);
 	}
 	
 	// Hold notes
@@ -759,6 +766,10 @@ class EditorPlayState extends MusicBeatSubstate
 	
 	function opponentNoteHit(note:Note):Void
 	{
+		var result:Dynamic = callOnLuas('opponentNoteHitPre', [notes.members.indexOf(note), Math.abs(note.noteData), note.noteType, note.isSustainNote]);
+		if(result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) result = callOnHScript('opponentNoteHitPre', [note]);
+		if(result == LuaUtils.Function_Stop) return;
+		
 		if (PlayState.SONG.needsVoices && opponentVocals.length <= 0)
 			vocals.volume = 1;
 
@@ -771,11 +782,18 @@ class EditorPlayState extends MusicBeatSubstate
 
 		if (!note.isSustainNote)
 			invalidateNote(note);
+		
+		var result:Dynamic = callOnLuas('opponentNoteHit', [notes.members.indexOf(note), Math.abs(note.noteData), note.noteType, note.isSustainNote]);
+		if (result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) callOnHScript('opponentNoteHit', [note]);
 	}
 
 	function goodNoteHit(note:Note):Void
 	{
 		if(note.wasGoodHit) return;
+		
+		var result:Dynamic = callOnLuas('goodNoteHitPre', [notes.members.indexOf(note),  Math.abs(note.noteData), note.noteType, note.isSustainNote]);
+		if (result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) result = callOnHScript('goodNoteHitPre', [note]);
+		if (result == LuaUtils.Function_Stop) return;
 
 		note.wasGoodHit = true;
 		if (note.hitsoundVolume > 0 && !note.hitsoundDisabled)
@@ -804,9 +822,16 @@ class EditorPlayState extends MusicBeatSubstate
 
 		if (!note.isSustainNote)
 			invalidateNote(note);
+		
+		var result:Dynamic = callOnLuas('goodNoteHit', [notes.members.indexOf(note), Math.abs(note.noteData), note.noteType, note.isSustainNote]);
+		if (result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) callOnHScript('goodNoteHit', [note]);
 	}
 	
 	function noteMiss(daNote:Note):Void { //You didn't hit the key and let it go offscreen, also used by Hurt Notes
+		var result:Dynamic = callOnLuas('noteMissPre', [notes.members.indexOf(daNote), daNote.noteData, daNote.noteType, daNote.isSustainNote]);
+		if (result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) result = callOnHScript('noteMissPre', [daNote]);
+		if (result == LuaUtils.Function_Stop) return;
+		
 		//Dupe note remove
 		notes.forEachAlive(function(note:Note) {
 			if (daNote != note && daNote.mustPress && daNote.noteData == note.noteData && daNote.isSustainNote == note.isSustainNote && Math.abs(daNote.strumTime - note.strumTime) < 1)
@@ -851,9 +876,15 @@ class EditorPlayState extends MusicBeatSubstate
 		updateScore();
 		vocals.volume = 0;
 		combo = 0;
+		
+		var result:Dynamic = callOnLuas('noteMiss', [notes.members.indexOf(daNote), daNote.noteData, daNote.noteType, daNote.isSustainNote]);
+		if (result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) callOnHScript('noteMiss', [daNote]);
 	}
 
 	public function invalidateNote(note:Note):Void {
+		callOnLuas('onDestroyNote', [notes.members.indexOf(note), note.noteData, note.noteType, note.isSustainNote]);
+		callOnHScript('onDestroyNote', [note]);
+		
 		note.kill();
 		notes.remove(note, true);
 		note.destroy();

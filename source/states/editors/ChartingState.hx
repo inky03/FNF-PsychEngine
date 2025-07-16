@@ -5199,7 +5199,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	}
 	
 	inline function focusedOnEditor():Bool {
-		return (PsychUIInputText.focusOn == null && lastFocus == null);
+		return (PsychUIInputText.focusOn == null && lastFocus == null && (persistentUpdate || subState == null));
 	}
 	
 	function updateVortexHolds() {

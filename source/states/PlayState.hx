@@ -119,7 +119,7 @@ class PlayState extends ScriptedState
 		}
 		return stageUI = value;
 	}
-	static function formatUI(key:String):String {
+	public static function formatUI(key:String):String {
 		return '$uiPrefix$key$uiPostfix';
 	}
 
@@ -1211,8 +1211,9 @@ class PlayState extends ScriptedState
 		FlxG.sound.music.onComplete = finishSong.bind();
 		vocals.play();
 		opponentVocals.play();
-
-		setSongTime(Math.max(0, startOnTime - 500) + Conductor.offset);
+		
+		var startPos:Float = Math.max(0, startOnTime - 500);
+		setSongTime(startPos + Conductor.offset);
 		startOnTime = 0;
 
 		if(paused) {
@@ -1234,7 +1235,7 @@ class PlayState extends ScriptedState
 		if(autoUpdateRPC) DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter(), true, songLength);
 		#end
 		setOnScripts('songLength', songLength);
-		callOnScripts('onSongStart');
+		callOnScripts('onSongStart', [startPos]);
 	}
 
 	private var noteTypes:Array<String> = [];
@@ -2514,9 +2515,7 @@ class PlayState extends ScriptedState
 			}
 		}
 
-		var uiFolder:String = "";
-		var antialias:Bool = ClientPrefs.data.antialiasing;
-		antialias = !isPixelStage;
+		var antialias:Bool = (ClientPrefs.data.antialiasing && !isPixelStage);
 
 		rating.loadGraphic(Paths.image(formatUI(daRating.image)));
 		rating.screenCenter();
@@ -2565,8 +2564,7 @@ class PlayState extends ScriptedState
 		var separatedScore:String = Std.string(combo).lpad('0', 3);
 		for (i in 0...separatedScore.length)
 		{
-			var num:Int = Std.parseInt(separatedScore.charAt(i));
-			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(formatUI('num$num')));
+			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(formatUI('num${separatedScore.charAt(i)}')));
 			numScore.screenCenter();
 			numScore.x = placement + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
 			numScore.y += 80 - ClientPrefs.data.comboOffset[3];
@@ -2767,6 +2765,10 @@ class PlayState extends ScriptedState
 	}
 
 	function noteMiss(daNote:Note):Void { //You didn't hit the key and let it go offscreen, also used by Hurt Notes
+		var result:Dynamic = callOnLuas('noteMissPre', [notes.members.indexOf(daNote), daNote.noteData, daNote.noteType, daNote.isSustainNote]);
+		if (result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) result = callOnHScript('noteMissPre', [daNote]);
+		if (result == LuaUtils.Function_Stop) return;
+		
 		//Dupe note remove
 		notes.forEachAlive(function(note:Note) {
 			if (daNote != note && daNote.mustPress && daNote.noteData == note.noteData && daNote.isSustainNote == note.isSustainNote && Math.abs(daNote.strumTime - note.strumTime) < 1)
@@ -2775,8 +2777,9 @@ class PlayState extends ScriptedState
 
 		noteMissCommon(daNote.noteData, daNote);
 		stagesFunc(function(stage:BaseStage) stage.noteMiss(daNote));
+		
 		var result:Dynamic = callOnLuas('noteMiss', [notes.members.indexOf(daNote), daNote.noteData, daNote.noteType, daNote.isSustainNote]);
-		if(result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) callOnHScript('noteMiss', [daNote]);
+		if (result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) callOnHScript('noteMiss', [daNote]);
 	}
 
 	function noteMissPress(direction:Int = 1):Void //You pressed a key when there was no notes to press for this key
