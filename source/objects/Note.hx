@@ -261,7 +261,7 @@ class Note extends FlxSprite
 			rgbShader = new RGBShaderReference(this, initializeGlobalRGBShader(noteData));
 			if(PlayState.SONG != null && PlayState.SONG.disableNoteRGB) rgbShader.enabled = false;
 			texture = '';
-
+			
 			x += swagWidth * (noteData);
 			if(!isSustainNote && noteData < colArray.length) { //Doing this 'if' check to fix the warnings on Senpai songs
 				var animToPlay:String = '';
@@ -325,63 +325,71 @@ class Note extends FlxSprite
 	}
 
 	var _lastNoteOffX:Float = 0;
-	static var _lastValidChecked:String; //optimization
 	
 	public function reloadNote(texture:String = '', postfix:String = '') {
 		var skin:String = texture + postfix;
-		if(texture.length < 1)
-		{
+		
+		if (texture.length < 1) {
 			skin = PlayState.SONG != null ? PlayState.SONG.arrowSkin : null;
 			if (skin == null || skin.length < 1)
 				skin = defaultNoteSkin + postfix;
-			skin = PlayState.uiPrefix + skin;
-		}
-		else rgbShader.enabled = false;
-
-		var animName:String = null;
-		if(animation.curAnim != null) {
-			animName = animation.curAnim.name;
-		}
-		
-		var skinPostfix:String = getNoteSkinPostfix();
-		var customSkin:String = skin + skinPostfix;
-		if(customSkin == _lastValidChecked || Paths.fileExists('images/' + customSkin + '.png', IMAGE))
-		{
-			skin = customSkin;
-			_lastValidChecked = customSkin;
-		}
-		else skinPostfix = '';
-
-		if(PlayState.isPixelStage) {
-			if(isSustainNote) {
-				loadGraphic(Paths.image('${customSkin}ENDS$skinPostfix'));
-				width = width / 4;
-				height = height / 2;
-				loadGraphic(graphic, true, Math.floor(width), Math.floor(height));
-			} else {
-				loadGraphic(Paths.image('$customSkin$skinPostfix'));
-				width = width / 4;
-				height = height / 5;
-				loadGraphic(graphic, true, Math.floor(width), Math.floor(height));
-			}
-			loadPixelNoteAnims();
-			antialiasing = false;
-			
-			scale.set(PlayState.daPixelZoom, PlayState.daPixelZoom);
 		} else {
-			frames = Paths.getSparrowAtlas(skin);
-			loadNoteAnims();
-			if(!isSustainNote)
-			{
-				centerOffsets();
-				centerOrigin();
+			rgbShader.enabled = false;
+		}
+
+		var animName:String = animation.curAnim?.name;
+		
+		var skinPostfix:String = '';
+		var checkSkin:String = '';
+		var validSkin:String = null;
+		
+		for (path in [PlayState.uiPrefix + skin, skin]) {
+			skinPostfix = getNoteSkinPostfix();
+			checkSkin = path + skinPostfix;
+			
+			if (!Paths.fileExists('images/$checkSkin.png', IMAGE)) {
+				skinPostfix = '';
+				checkSkin = path;
+			}
+			
+			if (Paths.fileExists('images/$checkSkin.png', IMAGE)) {
+				validSkin = path;
+				break;
 			}
 		}
 		
-		updateHitbox();
+		if (validSkin != null) {
+			if (PlayState.isPixelStage) {
+				if(isSustainNote) {
+					loadGraphic(Paths.image('${validSkin}ENDS$skinPostfix'));
+					width = width / 4;
+					height = height / 2;
+					loadGraphic(graphic, true, Math.floor(width), Math.floor(height));
+				} else {
+					loadGraphic(Paths.image('$validSkin$skinPostfix'));
+					width = width / 4;
+					height = height / 5;
+					loadGraphic(graphic, true, Math.floor(width), Math.floor(height));
+				}
+				loadPixelNoteAnims();
+				antialiasing = false;
+				
+				scale.set(PlayState.daPixelZoom, PlayState.daPixelZoom);
+			} else {
+				frames = Paths.getSparrowAtlas('$validSkin$skinPostfix');
+				loadNoteAnims();
+				if(!isSustainNote)
+				{
+					centerOffsets();
+					centerOrigin();
+				}
+			}
+			
+			updateHitbox();
 
-		if(animName != null)
-			animation.play(animName, true);
+			if (animName != null)
+				animation.play(animName, true);
+		}
 	}
 
 	public static function getNoteSkinPostfix()
@@ -454,12 +462,6 @@ class Note extends FlxSprite
 			if (alpha > 0.3)
 				alpha = 0.3;
 		}
-	}
-
-	override public function destroy()
-	{
-		super.destroy();
-		_lastValidChecked = '';
 	}
 
 	public function followStrumNote(myStrum:StrumNote, songSpeed:Float = 1)

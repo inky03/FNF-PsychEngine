@@ -553,27 +553,29 @@ class Character extends FlxSprite
 			{
 				copyAtlasValues();
 				atlas.draw();
-				alpha = lastAlpha;
-				color = lastColor;
 				if(missingCharacter && visible)
 				{
+					missingText.alpha = alpha;
 					missingText.x = getMidpoint().x - 150;
 					missingText.y = getMidpoint().y - 10;
 					missingText.cameras = cameras;
 					missingText.draw();
 				}
+				alpha = lastAlpha;
+				color = lastColor;
 			}
 			return;
 		}
 		super.draw();
 		if(missingCharacter && visible)
 		{
-			alpha = lastAlpha;
-			color = lastColor;
+			missingText.alpha = alpha;
 			missingText.x = getMidpoint().x - 150;
 			missingText.y = getMidpoint().y - 10;
 			missingText.cameras = cameras;
 			missingText.draw();
+			alpha = lastAlpha;
+			color = lastColor;
 		}
 	}
 

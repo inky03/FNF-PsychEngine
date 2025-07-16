@@ -19,7 +19,7 @@ class StrumNote extends FlxSprite
 	private function set_texture(value:String):String {
 		if(texture != value) {
 			texture = value;
-			reloadNote();
+			reloadNote(value);
 		}
 		return value;
 	}
@@ -51,95 +51,110 @@ class StrumNote extends FlxSprite
 		this.ID = noteData;
 		super(x, y);
 
-		var skin:String = null;
-		if(PlayState.SONG != null && PlayState.SONG.arrowSkin != null && PlayState.SONG.arrowSkin.length > 1) skin = PlayState.SONG.arrowSkin;
-		else skin = Note.defaultNoteSkin;
-		
-		var customSkin:String = PlayState.uiPrefix + skin + Note.getNoteSkinPostfix();
-		if(Paths.fileExists('images/$customSkin.png', IMAGE))
-			skin = customSkin;
-
-		texture = skin; //Load texture and anims
+		texture = '';
 		scrollFactor.set();
 		playAnim('static');
 	}
 
-	public function reloadNote()
-	{
-		var lastAnim:String = null;
-		if(animation.curAnim != null) lastAnim = animation.curAnim.name;
+	public function reloadNote(texture:String = '', postfix:String = '') {
+		var skin:String = texture + postfix;
 		
-		var skinTexture:String = texture; // i thought i was gonna do more with this, oh well
+		if (texture.length < 1) {
+			skin = PlayState.SONG != null ? PlayState.SONG.arrowSkin : null;
+			if (skin == null || skin.length < 1)
+				skin = Note.defaultNoteSkin + postfix;
+		} else {
+			rgbShader.enabled = false;
+		}
 		
-		if(PlayState.isPixelStage) {
-			loadGraphic(Paths.image(skinTexture));
-			width = width / 4;
-			height = height / 5;
-			loadGraphic(Paths.image(skinTexture), true, Math.floor(width), Math.floor(height));
-
-			antialiasing = false;
-			setGraphicSize(Std.int(width * PlayState.daPixelZoom));
-
-			animation.add('green', [6]);
-			animation.add('red', [7]);
-			animation.add('blue', [5]);
-			animation.add('purple', [4]);
-			switch (Math.abs(noteData) % 4)
-			{
-				case 0:
-					animation.add('static', [0]);
-					animation.add('pressed', [4, 8], 12, false);
-					animation.add('confirm', [12, 16], 24, false);
-				case 1:
-					animation.add('static', [1]);
-					animation.add('pressed', [5, 9], 12, false);
-					animation.add('confirm', [13, 17], 24, false);
-				case 2:
-					animation.add('static', [2]);
-					animation.add('pressed', [6, 10], 12, false);
-					animation.add('confirm', [14, 18], 12, false);
-				case 3:
-					animation.add('static', [3]);
-					animation.add('pressed', [7, 11], 12, false);
-					animation.add('confirm', [15, 19], 24, false);
+		var lastAnim:String = animation.curAnim?.name;
+		
+		var skinPostfix:String = '';
+		var checkSkin:String = '';
+		var validSkin:String = null;
+		
+		for (path in [PlayState.uiPrefix + skin, skin]) {
+			skinPostfix = Note.getNoteSkinPostfix();
+			checkSkin = path + skinPostfix;
+			
+			if (!Paths.fileExists('images/$checkSkin.png', IMAGE)) {
+				skinPostfix = '';
+				checkSkin = path;
+			}
+			
+			if (Paths.fileExists('images/$checkSkin.png', IMAGE)) {
+				validSkin = path;
+				break;
 			}
 		}
-		else
-		{
-			frames = Paths.getSparrowAtlas(skinTexture);
-			animation.addByPrefix('green', 'arrowUP');
-			animation.addByPrefix('blue', 'arrowDOWN');
-			animation.addByPrefix('purple', 'arrowLEFT');
-			animation.addByPrefix('red', 'arrowRIGHT');
+		
+		if (validSkin != null) {
+			if (PlayState.isPixelStage) {
+				loadGraphic(Paths.image('$validSkin$skinPostfix'));
+				width = (width / 4);
+				height = (height / 5);
+				loadGraphic(graphic, true, Math.floor(width), Math.floor(height));
+				
+				antialiasing = false;
+				setGraphicSize(Std.int(width * PlayState.daPixelZoom));
+				
+				animation.add('green', [6]);
+				animation.add('red', [7]);
+				animation.add('blue', [5]);
+				animation.add('purple', [4]);
+				switch (Math.abs(noteData) % 4)
+				{
+					case 0:
+						animation.add('static', [0]);
+						animation.add('pressed', [4, 8], 12, false);
+						animation.add('confirm', [12, 16], 24, false);
+					case 1:
+						animation.add('static', [1]);
+						animation.add('pressed', [5, 9], 12, false);
+						animation.add('confirm', [13, 17], 24, false);
+					case 2:
+						animation.add('static', [2]);
+						animation.add('pressed', [6, 10], 12, false);
+						animation.add('confirm', [14, 18], 12, false);
+					case 3:
+						animation.add('static', [3]);
+						animation.add('pressed', [7, 11], 12, false);
+						animation.add('confirm', [15, 19], 24, false);
+				}
+			} else {
+				frames = Paths.getSparrowAtlas('$validSkin$skinPostfix');
+				animation.addByPrefix('green', 'arrowUP');
+				animation.addByPrefix('blue', 'arrowDOWN');
+				animation.addByPrefix('purple', 'arrowLEFT');
+				animation.addByPrefix('red', 'arrowRIGHT');
 
-			antialiasing = ClientPrefs.data.antialiasing;
-			setGraphicSize(Std.int(width * 0.7));
+				antialiasing = ClientPrefs.data.antialiasing;
+				setGraphicSize(Std.int(width * 0.7));
 
-			switch (Math.abs(noteData) % 4)
-			{
-				case 0:
-					animation.addByPrefix('static', 'arrowLEFT');
-					animation.addByPrefix('pressed', 'left press', 24, false);
-					animation.addByPrefix('confirm', 'left confirm', 24, false);
-				case 1:
-					animation.addByPrefix('static', 'arrowDOWN');
-					animation.addByPrefix('pressed', 'down press', 24, false);
-					animation.addByPrefix('confirm', 'down confirm', 24, false);
-				case 2:
-					animation.addByPrefix('static', 'arrowUP');
-					animation.addByPrefix('pressed', 'up press', 24, false);
-					animation.addByPrefix('confirm', 'up confirm', 24, false);
-				case 3:
-					animation.addByPrefix('static', 'arrowRIGHT');
-					animation.addByPrefix('pressed', 'right press', 24, false);
-					animation.addByPrefix('confirm', 'right confirm', 24, false);
+				switch (Math.abs(noteData) % 4)
+				{
+					case 0:
+						animation.addByPrefix('static', 'arrowLEFT');
+						animation.addByPrefix('pressed', 'left press', 24, false);
+						animation.addByPrefix('confirm', 'left confirm', 24, false);
+					case 1:
+						animation.addByPrefix('static', 'arrowDOWN');
+						animation.addByPrefix('pressed', 'down press', 24, false);
+						animation.addByPrefix('confirm', 'down confirm', 24, false);
+					case 2:
+						animation.addByPrefix('static', 'arrowUP');
+						animation.addByPrefix('pressed', 'up press', 24, false);
+						animation.addByPrefix('confirm', 'up confirm', 24, false);
+					case 3:
+						animation.addByPrefix('static', 'arrowRIGHT');
+						animation.addByPrefix('pressed', 'right press', 24, false);
+						animation.addByPrefix('confirm', 'right confirm', 24, false);
+				}
 			}
-		}
-		updateHitbox();
+			updateHitbox();
 
-		if(lastAnim != null)
-		{
-			playAnim(lastAnim, true);
+			if (lastAnim != null)
+				playAnim(lastAnim, true);
 		}
 	}
 
@@ -168,6 +183,6 @@ class StrumNote extends FlxSprite
 			centerOffsets();
 			centerOrigin();
 		}
-		if(useRGBShader) rgbShader.enabled = (animation.curAnim != null && animation.curAnim.name != 'static');
+		if (useRGBShader) rgbShader.enabled = (animation.curAnim != null && animation.curAnim.name != 'static');
 	}
 }
