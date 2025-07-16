@@ -1715,6 +1715,8 @@ class PlayState extends ScriptedState
 			trace("RESET = True");
 		}
 		doDeathCheck();
+		
+		super.update(elapsed);
 
 		if (unspawnNotes[0] != null)
 		{
@@ -1788,10 +1790,8 @@ class PlayState extends ScriptedState
 					}
 					else
 					{
-						notes.forEachAlive(function(daNote:Note) {
-							daNote.canBeHit = false;
-							// daNote.wasGoodHit = false;
-						});
+						for (note in notes)
+							note.canBeHit = false;
 					}
 				}
 			}
@@ -1811,7 +1811,6 @@ class PlayState extends ScriptedState
 		}
 		#end
 		
-		super.update(elapsed);
 		setOnScripts('botPlay', cpuControlled);
 
 		updateIconsScale(elapsed);
