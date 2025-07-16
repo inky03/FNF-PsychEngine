@@ -129,7 +129,8 @@ class Note extends FlxSprite
 	public var ratingMod:Float = 0; //9 = unknown, 0.25 = shit, 0.5 = bad, 0.75 = good, 1 = sick
 	public var ratingDisabled:Bool = false;
 	public var noteSplash:NoteSplash = null;
-
+	
+	public var loadedTexture:String = null;
 	public var texture(default, set):String = null;
 
 	public var noAnimation:Bool = false;
@@ -359,6 +360,8 @@ class Note extends FlxSprite
 		}
 		
 		if (validSkin != null) {
+			loadedTexture = validSkin;
+			
 			if (PlayState.isPixelStage) {
 				if(isSustainNote) {
 					loadGraphic(Paths.image('${validSkin}ENDS$skinPostfix'));

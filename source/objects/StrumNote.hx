@@ -15,6 +15,7 @@ class StrumNote extends FlxSprite
 	public var sustainReduce:Bool = true;
 	private var player:Int;
 	
+	public var loadedTexture:String = null;
 	public var texture(default, set):String = null;
 	private function set_texture(value:String):String {
 		if(texture != value) {
@@ -50,8 +51,19 @@ class StrumNote extends FlxSprite
 		this.noteData = leData;
 		this.ID = noteData;
 		super(x, y);
+		
+		var skin:String = null;
+		if (PlayState.SONG != null && PlayState.SONG.arrowSkin != null && PlayState.SONG.arrowSkin.length > 1) skin = PlayState.SONG.arrowSkin;
+		else skin = Note.defaultNoteSkin;
 
-		texture = '';
+		var customSkin:String = skin + Note.getNoteSkinPostfix();
+		if (Paths.fileExists('images/$customSkin.png', IMAGE)) {
+			skin = customSkin;
+		} else {
+			skin = '';
+		}
+		
+		texture = skin;
 		scrollFactor.set();
 		playAnim('static');
 	}
@@ -89,6 +101,8 @@ class StrumNote extends FlxSprite
 		}
 		
 		if (validSkin != null) {
+			loadedTexture = validSkin;
+			
 			if (PlayState.isPixelStage) {
 				loadGraphic(Paths.image('$validSkin$skinPostfix'));
 				width = (width / 4);
