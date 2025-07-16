@@ -2155,9 +2155,12 @@ class PlayState extends ScriptedState
 							}
 
 							var lastAlpha:Float = boyfriend.alpha;
+							var lastShader = boyfriend.shader;
 							boyfriend.alpha = 0.00001;
+							boyfriend.shader = null;
 							boyfriend = boyfriendMap.get(value2);
 							boyfriend.alpha = lastAlpha;
+							boyfriend.shader = lastShader;
 							iconP1.changeIcon(boyfriend.healthIcon);
 						}
 						setOnScripts('boyfriendName', boyfriend.curCharacter);
@@ -2170,7 +2173,9 @@ class PlayState extends ScriptedState
 
 							var wasGf:Bool = dad.curCharacter.startsWith('gf-') || dad.curCharacter == 'gf';
 							var lastAlpha:Float = dad.alpha;
+							var lastShader = dad.shader;
 							dad.alpha = 0.00001;
+							dad.shader = null;
 							dad = dadMap.get(value2);
 							if(!dad.curCharacter.startsWith('gf-') && dad.curCharacter != 'gf') {
 								if(wasGf && gf != null) {
@@ -2180,6 +2185,7 @@ class PlayState extends ScriptedState
 								gf.visible = false;
 							}
 							dad.alpha = lastAlpha;
+							dad.shader = lastShader;
 							iconP2.changeIcon(dad.healthIcon);
 						}
 						setOnScripts('dadName', dad.curCharacter);
@@ -2194,9 +2200,12 @@ class PlayState extends ScriptedState
 								}
 
 								var lastAlpha:Float = gf.alpha;
+								var lastShader = gf.shader;
 								gf.alpha = 0.00001;
+								gf.shader = null;
 								gf = gfMap.get(value2);
 								gf.alpha = lastAlpha;
+								gf.shader = lastShader;
 							}
 							setOnScripts('gfName', gf.curCharacter);
 						}
