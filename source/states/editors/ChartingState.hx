@@ -1184,7 +1184,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			updateSelectionBox();
 		}
 		
-		if(FlxG.mouse.justPressed && (draggingToy != null || FlxG.mouse.overlaps(mainBox.bg) || FlxG.mouse.overlaps(infoBox.bg)))
+		if(FlxG.mouse.justPressed && (draggingToy != null || FlxG.mouse.overlaps(mainBox.bg, camUI) || FlxG.mouse.overlaps(infoBox.bg, camUI)))
 			ignoreClickForThisFrame = true;
 
 		var minX:Float = gridBg.x;
@@ -1677,7 +1677,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 	function resetSelectedNotes()
 	{
-		trace('deselected');
 		for (note in selectedNotes)
 		{
 			if(note == null || !note.exists) continue;
