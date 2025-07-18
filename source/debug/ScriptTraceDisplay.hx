@@ -125,10 +125,13 @@ class DebugTextShader extends openfl.display.GraphicsShader {
 		#pragma header
 		
 		uniform float alphaMult;
+		uniform float outlineMult;
 		
 		void main() {
-			vec2 step = .75 / openfl_TextureSize;
-			vec4 outline = texture2D(bitmap, openfl_TextureCoordv);
+			vec4 tex = texture2D(bitmap, openfl_TextureCoordv);
+			
+			vec4 outline = vec4(0.);
+			vec2 step = (.75 / openfl_TextureSize);
 			outline.a += texture2D(bitmap, openfl_TextureCoordv + vec2(step.x, 0.)).a;
 			outline.a += texture2D(bitmap, openfl_TextureCoordv + vec2(-step.x, 0.)).a;
 			outline.a += texture2D(bitmap, openfl_TextureCoordv + vec2(0., step.y)).a;
@@ -137,15 +140,16 @@ class DebugTextShader extends openfl.display.GraphicsShader {
 			outline.a += texture2D(bitmap, openfl_TextureCoordv + vec2(-step.x, step.y)).a;
 			outline.a += texture2D(bitmap, openfl_TextureCoordv + vec2(step.x, -step.y)).a;
 			outline.a += texture2D(bitmap, openfl_TextureCoordv + vec2(-step.x, -step.y)).a;
-			outline.a = min(outline.a, 1.);
+			outline.a = min(outline.a, 1.) * outlineMult;
 			
-			gl_FragColor = outline * alphaMult * openfl_Alphav;
+			gl_FragColor = min(tex + outline, 1.) * alphaMult * openfl_Alphav;
 		}
 	')
 	
-	public function new(alpha:Float = 1) {
+	public function new(alpha:Float = 1, outline:Float = .5) {
 		super();
 		
 		data.alphaMult.value = [alpha];
+		data.outlineMult.value = [outline];
 	}
 }

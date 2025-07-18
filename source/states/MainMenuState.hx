@@ -108,11 +108,11 @@ class MainMenuState extends ScriptedState
 
 		emiVer = new FlxText(12, FlxG.height - 24, 0, 'Modded by emi3 $modVersion', 11);
 		emiVer.scrollFactor.set();
-		emiVer.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		emiVer.setFormat(Paths.font("vcr.ttf"), 15, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(emiVer);
-		psychVer = new FlxText(12, FlxG.height - 44, 0, 'Psych Engine $psychEngineVersion', 12);
+		psychVer = new FlxText(12, FlxG.height - 40, 0, 'Psych Engine $psychEngineVersion', 12);
 		psychVer.scrollFactor.set();
-		psychVer.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		psychVer.setFormat(Paths.font("vcr.ttf"), 15, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(psychVer);
 
 		#if ACHIEVEMENTS_ALLOWED
