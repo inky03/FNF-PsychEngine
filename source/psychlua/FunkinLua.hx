@@ -768,7 +768,7 @@ class FunkinLua {
 		var game:PlayState = PlayState.instance;
 		if (game != null) implementGame(game);
 		
-		registerFunction('debugPrint', function(?text:Dynamic, color:String = 'WHITE') ScriptedState.debugPrint(text, CoolUtil.colorFromString(color)));
+		registerFunction('debugPrint', function(?text:Dynamic, ?color:String) ScriptedState.debugPrint(text, color == null ? null : CoolUtil.colorFromString(color)));
 
 		registerFunction('setVar', (varName:String, value:Dynamic) -> {
 			MusicBeatState.getVariables().set(varName, ReflectionFunctions.parseInstances(value));

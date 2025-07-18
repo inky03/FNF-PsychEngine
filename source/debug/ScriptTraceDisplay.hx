@@ -76,7 +76,7 @@ class ScriptTraceDisplay extends Sprite {
 }
 
 class TracePopUp extends TextField {
-	static var defaultShader:SimpleOutlineShader;
+	static var defaultShader:DebugTextShader;
 	
 	public var format:TextFormat = new TextFormat(Paths.font('vcr.ttf'));
 	public var alphaMult:Float = 1;
@@ -93,7 +93,7 @@ class TracePopUp extends TextField {
 		multiline = true;
 		wordWrap = true;
 		
-		defaultShader ??= new SimpleOutlineShader();
+		defaultShader ??= new DebugTextShader();
 		shader = defaultShader;
 	}
 	
@@ -120,9 +120,11 @@ class TracePopUp extends TextField {
 	}
 }
 
-class SimpleOutlineShader extends openfl.display.GraphicsShader {
+class DebugTextShader extends openfl.display.GraphicsShader {
 	@:glFragmentSource('
 		#pragma header
+		
+		uniform float alphaMult;
 		
 		void main() {
 			vec2 step = .75 / openfl_TextureSize;
@@ -137,11 +139,13 @@ class SimpleOutlineShader extends openfl.display.GraphicsShader {
 			outline.a += texture2D(bitmap, openfl_TextureCoordv + vec2(-step.x, -step.y)).a;
 			outline.a = min(outline.a, 1.);
 			
-			gl_FragColor = outline * openfl_Alphav;
+			gl_FragColor = outline * alphaMult * openfl_Alphav;
 		}
 	')
 	
-	public function new() {
+	public function new(alpha:Float = 1) {
 		super();
+		
+		data.alphaMult.value = [alpha];
 	}
 }
