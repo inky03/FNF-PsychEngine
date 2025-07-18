@@ -83,7 +83,7 @@ class ModsMenuState extends MusicBeatState
 			if(modsList.disabled.contains(mod))
 			{
 				modItem.icon.color = 0xFFFF6666;
-				modItem.text.color = FlxColor.GRAY;
+				modItem.text.color = 0xFFFF6666;
 			}
 			modsGroup.add(modItem);
 		}
@@ -140,7 +140,7 @@ class ModsMenuState extends MusicBeatState
 					modsList.enabled.remove(mod.folder);
 					modsList.disabled.push(mod.folder);
 					mod.icon.color = 0xFFFF6666;
-					mod.text.color = FlxColor.GRAY;
+					mod.text.color = 0xFFFF6666;
 				}
 			}
 			updateModDisplayData();
@@ -264,7 +264,7 @@ class ModsMenuState extends MusicBeatState
 				modsList.enabled.push(mod);
 			}
 			curMod.icon.color = modsList.disabled.contains(mod) ? 0xFFFF6666 : FlxColor.WHITE;
-			curMod.text.color = modsList.disabled.contains(mod) ? FlxColor.GRAY : FlxColor.WHITE;
+			curMod.text.color = modsList.disabled.contains(mod) ? 0xFFFF6666 : FlxColor.WHITE;
 
 			if(curMod.mustRestart) waitingToRestart = true;
 			updateModDisplayData();
@@ -492,7 +492,9 @@ class ModsMenuState extends MusicBeatState
 							switch(curSelectedButton)
 							{
 								case -2:
-									curSelectedMod = 0;
+									curSelectedMod = (modsList.all.length - 1);
+									if (curSelectedMod < 0) curSelectedMod = 0;
+									
 									hoveringOnMods = true;
 									var button = getButton();
 									button.ignoreCheck = button.onFocus = false;
@@ -665,13 +667,8 @@ class ModsMenuState extends MusicBeatState
 
 		FlxTween.cancelTweensOf(bg);
 		FlxTween.color(bg, 1, bg.color, curMod.bgColor);
-
-		if(Math.abs(centerMod - curSelectedMod) > 2)
-		{
-			if(centerMod < curSelectedMod)
-				centerMod = curSelectedMod - 2;
-			else centerMod = curSelectedMod + 2;
-		}
+		
+		centerMod = Std.int(Math.max(2, Math.min(curSelectedMod, modsGroup.length - 1 - 2)));
 		updateItemPositions();
 
 		icon.loadGraphic(curMod.icon.graphic, true, 150, 150);
@@ -844,7 +841,7 @@ class ModItem extends FlxSpriteGroup
 
 		text = new FlxText(95, 38, 230, "", 16);
 		text.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		text.borderSize = 2;
+		text.borderSize = .5;
 		text.y -= Std.int(text.height / 2);
 		add(text);
 
