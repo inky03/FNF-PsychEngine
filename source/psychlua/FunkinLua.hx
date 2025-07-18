@@ -89,7 +89,10 @@ class FunkinLua {
 		if(myFolder[0] + '/' == Paths.mods() && (Mods.currentModDirectory == myFolder[1] || Mods.getGlobalMods().contains(myFolder[1]))) //is inside mods folder
 			this.modFolder = myFolder[1];
 		#end
-
+		
+		for (define => value in backend.macro.Scripting.Defines.list)
+			set('DEF_$define', value);
+		
 		// Lua shit
 		set('Function_StopLua', LuaUtils.Function_StopLua);
 		set('Function_StopHScript', LuaUtils.Function_StopHScript);
@@ -99,6 +102,7 @@ class FunkinLua {
 		set('luaDebugMode', false);
 		set('luaDeprecatedWarnings', true);
 		set('version', MainMenuState.psychEngineVersion.trim());
+		set('modVersion', MainMenuState.modVersion.trim());
 		set('modFolder', this.modFolder);
 
 		// Screen stuff

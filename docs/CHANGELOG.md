@@ -120,11 +120,6 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 				function onSelectItem(item, index) {}
 				function onAccept(item, index) {}
 				```
-		- LoadingState
-			- Now admits Lua scripts
-			- Behavior more consistent with other scriptable states
-			- Loading screen scripts can now be loaded from global mods too (and the base mods folder)
-			- Can load script from `data/LoadingScreen` or now also `scripts/states/LoadingState` (.hx or .lua)
 		- Options Sub-states
 			- Functions
 				```haxe
@@ -165,16 +160,44 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 ### General (Scripting)
 
 - DCE is disabled and [almost] all classes are included, to remove scripting limitations
-- Added `curDecSection`
-- `onStepHit`, `onBeatHit` and `onSectionHit` callbacks
-	- Will now also trigger in 0 and negative time marks
-	- Now have the respective step, beat or section passed as the first function argument
-- PlayState callbacks
-	- `onStartSong` now has start position as the first function argument
-	- (some of them) Available in playtest via sub-state script
-- New callbacks
-	- `noteMissPre` and `onDestroyNote`
-	- `onGameOverLoop`, when the game over loop starts
+- States
+	- PlayState
+		- Variables
+			- Added `curDecSection`
+			- `onStepHit`, `onBeatHit` and `onSectionHit` callbacks
+				- Will now also trigger in 0 and negative time marks
+				- Now have the respective step, beat or section passed as the first function argument
+		- Callbacks
+			- `onStartSong` now has start position as the first function argument
+			- `onGameOverLoop`, when the game over loop starts
+			- `noteMissPre` and `onDestroyNote`
+			- Some of these also available in chart editor playtesting via sub-state script
+	- LoadingState
+		- Now admits **Lua scripts**!!
+		- Behavior more consistent with other scriptable states
+		- Loading screen scripts can now be loaded from global mods too (and the base mods folder)
+		- Can load script from `data/LoadingScreen` or now also `scripts/states/LoadingState` (.hx or .lua)
+- Variables
+	- `modFolder` and `version` are also available in HScript as regular variables
+	- `modVersion` (for fork version)
+- Defines / Flags
+	- Now you can use all commandline / project defines in scripts!!
+		```hx
+		#if EMIMOD
+		trace('using this fork !!!');
+		#end
+		
+		#if officialBuild
+		trace('is official build !!!');
+		#end
+		```
+	- Check for `DEF_defineName` in Lua :
+		```lua
+		if DEF_EMIMOD then
+			debugPrint('using this fork !!!')
+		end
+		```
+- Callbacks
 	- `onDraw`, `onDrawPost` - the former can be stopped to use custom state / substate drawing behavior (very smart, but also very dangerous)
 - FATAL script errors only print at the top left of the screen instead of making a new window alert
 	- These errors are highlighted in dark red, and are bigger than the other printed text

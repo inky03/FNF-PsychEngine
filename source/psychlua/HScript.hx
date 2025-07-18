@@ -24,6 +24,8 @@ class HScriptMacro {
 import flixel.FlxState;
 import flixel.FlxSubState;
 
+import states.MainMenuState;
+
 #if LUA_ALLOWED
 import psychlua.FunkinLua;
 #end
@@ -214,6 +216,9 @@ class HScript extends Iris {
 	override function preset() {
 		super.preset();
 		
+		for (define => value in backend.macro.Scripting.Defines.list)
+			parser.preprocesorValues.set(define, value);
+		
 		// Some very commonly used classes
 		set('Type', Type);
 		#if sys
@@ -255,6 +260,7 @@ class HScript extends Iris {
 		#if flxanimate
 		set('FlxAnimate', FlxAnimate);
 		#end
+		set('controls', Controls.instance);
 
 		// Functions & Variables
 		var variableMap:Map<String, Dynamic> = getVariables();
@@ -426,7 +432,10 @@ class HScript extends Iris {
 		#end
 		
 		set('this', this);
-		set('controls', Controls.instance);
+		
+		set('version', MainMenuState.psychEngineVersion.trim());
+		set('modVersion', MainMenuState.modVersion.trim());
+		set('modFolder', this.modFolder);
 
 		set('buildTarget', LuaUtils.getBuildTarget());
 		set('customSubstate', CustomSubstate.instance);
