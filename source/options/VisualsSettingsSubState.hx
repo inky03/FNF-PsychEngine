@@ -39,11 +39,12 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 				ClientPrefs.data.noteSkin = ClientPrefs.defaultData.noteSkin; //Reset to default if saved noteskin couldnt be found
 
 			noteSkins.insert(0, ClientPrefs.defaultData.noteSkin); //Default skin always comes first
-			var option:Option = new Option('Note Skins:',
-				"Select your prefered Note skin.",
+			var option:Option = new Option('Note Skin:',
+				"Select your preferred Note skin.",
 				'noteSkin',
 				STRING,
-				noteSkins);
+				noteSkins,
+				'note_skins');
 			addOption(option);
 			option.onChange = onChangeNoteSkin;
 			noteOptionID = optionsArray.length - 1;
@@ -57,7 +58,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 
 			noteSplashes.insert(0, ClientPrefs.defaultData.splashSkin); //Default skin always comes first
 			var option:Option = new Option('Note Splashes:',
-				"Select your prefered Note Splash variation.",
+				"Select your preferred Note Splashes variation.",
 				'splashSkin',
 				STRING,
 				noteSplashes);
@@ -78,7 +79,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		option.onChange = playNoteSplashes;
 
 		var option:Option = new Option('Hide HUD',
-			'If checked, hides most HUD elements.',
+			'If checked, most HUD elements will be hidden.',
 			'hideHud',
 			BOOL);
 		addOption(option);
@@ -96,16 +97,18 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
-		var option:Option = new Option('Camera Zooms',
-			"If checked, the camera will pulse on beat hits.",
+		var option:Option = new Option('Camera Pulse',
+			"If checked, the camera will pulse to the rhythm of the song.",
 			'camZooms',
-			BOOL);
+			BOOL,
+			'camera_zooms');
 		addOption(option);
 
-		var option:Option = new Option('Score Text Grow on Hit',
-			"If checked, the score display will grow every time you hit a note.",
+		var option:Option = new Option('Score Text Pulse',
+			"If checked, the score display will pulse for every note hit.",
 			'scoreZoom',
-			BOOL);
+			BOOL,
+			'score_text_grow_on_hit');
 		addOption(option);
 
 		var option:Option = new Option('Health Bar Opacity',
@@ -121,7 +124,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		
 		#if !mobile
 		var option:Option = new Option('FPS Counter',
-			'If checked, an FPS counter shows at the top left corner of the screen.',
+			'If checked, an FPS counter will show on the top left corner of the screen.',
 			'showFPS',
 			BOOL);
 		addOption(option);
@@ -138,7 +141,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		
 		#if CHECK_FOR_UPDATES
 		var option:Option = new Option('Check for Updates',
-			'If checked, you will be notified of future updates for this engine.',
+			'If checked, notifications for future updates to this fork will show up in the main menu.',
 			'checkForUpdates',
 			BOOL);
 		addOption(option);
@@ -153,7 +156,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		#end
 
 		var option:Option = new Option('Combo Stacking',
-			"If unchecked, Ratings and the Combo Counter won't stack, making them easier to read.",
+			"If unchecked, the Ratings and Combo Counter won't stack, for increased readability.",
 			'comboStacking',
 			BOOL);
 		addOption(option);

@@ -18,13 +18,13 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 
 		//I'd suggest using "Low Quality" as an example for making your own option since it is the simplest here
 		var option:Option = new Option('Low Quality', //Name
-			'If checked, disables some background details,\ndecreasing loading times and improving performance.', //Description
+			'If checked, background details will be disabled,\ndecreasing loading times and improving performance.', //Description
 			'lowQuality', //Save data variable name
 			BOOL); //Variable type
 		addOption(option);
 
 		var option:Option = new Option('Anti-Aliasing',
-			'If unchecked, disables anti-aliasing, increases performance\nat the cost of sharper visuals.',
+			'If unchecked, disables anti-aliasing, improving performance\nat the cost of rougher visuals.',
 			'antialiasing',
 			BOOL);
 		option.onChange = onChangeAntiAliasing; //Changing onChange is only needed if you want to make a special interaction after it changes the value
@@ -38,14 +38,14 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('GPU Caching', //Name
-			"Allows caching textures to the GPU, decreasing RAM usage.\nDisable this if your Graphics Card isn't powerful.", //Description
+			"Allows caching textures to the GPU, decreasing RAM usage.\nDisable this if your Graphics Card is weak.", //Description
 			'cacheOnGPU',
 			BOOL);
 		addOption(option);
 
 		#if !html5 //Apparently other framerates isn't correctly supported on Browser? Probably it has some V-Sync shit enabled by default, idk
 		var option:Option = new Option('Framerate',
-			"Changes the frames per second the game runs at.",
+			"Changes how many frames the game can display per second.",
 			'framerate',
 			INT);
 		addOption(option);

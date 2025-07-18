@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="menu_options.png">
+	<!-- Created with Adobe Flash CS6 12.0.0.481 -->
+	<SubTexture name="options idle0000" x="560" y="1" width="424" height="132"/>
+	<SubTexture name="options idle0001" x="560" y="1" width="424" height="132"/>
+	<SubTexture name="options idle0002" x="560" y="1" width="424" height="132"/>
+	<SubTexture name="options idle0003" x="560" y="136" width="424" height="132"/>
+	<SubTexture name="options idle0004" x="560" y="136" width="424" height="132"/>
+	<SubTexture name="options idle0005" x="560" y="136" width="424" height="132"/>
+	<SubTexture name="options idle0006" x="557" y="271" width="424" height="132"/>
+	<SubTexture name="options idle0007" x="557" y="271" width="424" height="132"/>
+	<SubTexture name="options idle0008" x="557" y="271" width="424" height="132"/>
+	<SubTexture name="options selected0000" x="1" y="188" width="552" height="182" frameX="-2" frameY="-1" frameWidth="556" frameHeight="184"/>
+	<SubTexture name="options selected0001" x="1" y="373" width="553" height="180" frameX="-3" frameY="-3" frameWidth="556" frameHeight="184"/>
+	<SubTexture name="options selected0002" x="1" y="1" width="556" height="184"/>
+</TextureAtlas>

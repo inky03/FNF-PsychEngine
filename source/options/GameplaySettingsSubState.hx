@@ -25,13 +25,13 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Ghost Tapping',
-			"If checked, you won't get misses from pressing keys while there are no notes able to be hit.",
+			"If checked, pressing when there are no notes to hit won't be penalized.",
 			'ghostTapping',
 			BOOL);
 		addOption(option);
 		
 		var option:Option = new Option('Auto Pause',
-			"If checked, the game will automatically pause when focus is lost.",
+			"If checked, the game will automatically pause when the window is unfocused.",
 			'autoPause',
 			BOOL);
 		addOption(option);
@@ -62,7 +62,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.onChange = onChangeHitsoundVolume;
 
 		var option:Option = new Option('Rating Offset',
-			'Changes how late/early you have to hit for a "Sick!"\nHigher values mean you have to hit later.',
+			'Changes how late/early you have to hit for a "Sick!"\nHigher means you have to hit later.',
 			'ratingOffset',
 			INT);
 		option.displayFormat = '%vms';
@@ -105,7 +105,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Safe Frames',
-			'Changes how many frames you have for\nhitting a note earlier or late.',
+			'Changes the timeframe you have to\nhit a note earlier or late.',
 			'safeFrames',
 			FLOAT);
 		option.scrollSpeed = 5;
