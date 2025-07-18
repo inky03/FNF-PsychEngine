@@ -235,22 +235,15 @@ class BaseOptionsMenu extends ScriptedSubState
 								curOption.change();
 								FlxG.sound.play(Paths.sound('scrollMenu'));
 							} else if (curOption.type != STRING) {
-								holdValue += curOption.scrollSpeed * elapsed * (controls.UI_LEFT ? -1 : 1);
-								
-								if (holdValue < curOption.minValue) holdValue = curOption.minValue;
-								else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
+								holdValue += elapsed * curOption.scrollSpeed * (controls.UI_LEFT ? -1 : 1);
 								
 								switch(curOption.type) {
-									case INT:
-										var target:Int = Math.round(holdValue);
-										if (callOnScripts('onChangeItem', [curOption, target], true) != LuaUtils.Function_Stop && curOption.getValue() != target) {
-											curOption.setValue(target);
-											updateTextFrom(curOption);
-											curOption.change();
-										}
+									case INT | FLOAT | PERCENT:
+										var target:Float = holdValue;
 										
-									case FLOAT | PERCENT:
-										var target:Float = FlxMath.roundDecimal(holdValue, curOption.decimals);
+										target = Math.max(Math.min(FlxMath.roundDecimal(target, curOption.decimals), curOption.maxValue), curOption.minValue);
+										if (curOption.type == INT) target = Math.round(target);
+										
 										if (callOnScripts('onChangeItem', [curOption, target], true) != LuaUtils.Function_Stop && curOption.getValue() != target) {
 											curOption.setValue(target);
 											updateTextFrom(curOption);
