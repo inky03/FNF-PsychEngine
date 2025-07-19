@@ -131,7 +131,7 @@ class DebugTextShader extends openfl.display.GraphicsShader {
 			vec4 tex = texture2D(bitmap, openfl_TextureCoordv);
 			
 			vec4 outline = vec4(0.);
-			vec2 step = (.75 / openfl_TextureSize);
+			vec2 step = (1. / openfl_TextureSize);
 			outline.a += texture2D(bitmap, openfl_TextureCoordv + vec2(step.x, 0.)).a;
 			outline.a += texture2D(bitmap, openfl_TextureCoordv + vec2(-step.x, 0.)).a;
 			outline.a += texture2D(bitmap, openfl_TextureCoordv + vec2(0., step.y)).a;

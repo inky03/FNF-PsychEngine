@@ -555,7 +555,7 @@ class Character extends FlxSprite
 				atlas.draw();
 				if(missingCharacter && visible)
 				{
-					missingText.alpha = alpha;
+					missingText.alpha = lastAlpha;
 					missingText.x = getMidpoint().x - 150;
 					missingText.y = getMidpoint().y - 10;
 					missingText.cameras = cameras;
@@ -569,7 +569,7 @@ class Character extends FlxSprite
 		super.draw();
 		if(missingCharacter && visible)
 		{
-			missingText.alpha = alpha;
+			missingText.alpha = lastAlpha;
 			missingText.x = getMidpoint().x - 150;
 			missingText.y = getMidpoint().y - 10;
 			missingText.cameras = cameras;
