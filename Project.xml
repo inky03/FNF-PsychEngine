@@ -31,6 +31,7 @@
 	<define name="MULTITHREADED_LOADING" /> <!-- UNCOMMENTING THIS LINE WILL ENABLE MULTITHREADED LOADING, WHICH IMPROVES LOADING TIMES, BUT APPARENTLY CAN FREEZE THE GAME ON SONG LOAD IN OLDER PCs? -->
 	<define name="SHOW_LOADING_SCREEN" />
 	<define name="PSYCH_WATERMARKS"/> <!-- DELETE THIS TO REMOVE THE PSYCH LOGO FROM LOADING SCREEN -->
+	<define name="EMIMOD"/> <!-- for use in Scripts -->
 	
 	<!-- define name="UNHOLYWANDERER04" -->
 	<!-- compile with this define to add an excellent function -->
@@ -120,7 +121,7 @@
 	
 	<haxeflag name="-dce no" if="SCRIPTS_ALLOWED" />
 	
-	<haxeflag name="--macro" value="addMetadata('@:build(psychlua.LuaUtils.ExtraDataMacro.build())', 'flixel.FlxBasic')" if="SCRIPTS_ALLOWED" />
+	<haxeflag name="--macro" value="addMetadata('@:build(backend.macro.Scripting.ExtraDataMacro.build())', 'flixel.FlxBasic')" if="SCRIPTS_ALLOWED" />
 	<haxeflag name="--macro" value="addMetadata('@:build(psychlua.HScript.HScriptMacro.buildInterp())', 'crowplexus.hscript.Interp')" if="HSCRIPT_ALLOWED" />
 	<haxeflag name="--macro" value="include('flixel', true, ['flixel.addons.nape', 'flixel.addons.editors.spine', 'flixel.system.macros'])" if="SCRIPTS_ALLOWED" />
 	<haxeflag name="--macro" value="include('haxe', true, ['haxe.atomic', 'haxe.macro'])" if="SCRIPTS_ALLOWED" />
