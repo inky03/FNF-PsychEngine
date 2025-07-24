@@ -7,7 +7,7 @@ import backend.Song;
 import objects.HealthIcon;
 import objects.MusicPlayer;
 
-import options.GameplayChangersSubstate;
+import options.GameplayChangersSubState;
 import substates.ResetScoreSubState;
 
 import flixel.math.FlxMath;
@@ -326,7 +326,7 @@ class FreeplayState extends ScriptedState
 		if(FlxG.keys.justPressed.CONTROL && !player.playingMusic)
 		{
 			persistentUpdate = false;
-			openSubState(new GameplayChangersSubstate());
+			openSubState(new GameplayChangersSubState());
 		}
 		else if(FlxG.keys.justPressed.SPACE)
 		{

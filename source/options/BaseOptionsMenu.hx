@@ -124,6 +124,10 @@ class BaseOptionsMenu extends ScriptedSubState
 		
 		return option;
 	}
+	
+	public function findOption(key:String):Option {
+		return Lambda.find(optionsArray, (option:Option) -> (option.key == key));
+	}
 
 	var nextAccept:Int = 5;
 	var holdTime:Float = 0;
@@ -253,7 +257,7 @@ class BaseOptionsMenu extends ScriptedSubState
 									case INT | FLOAT | PERCENT:
 										var target:Float = holdValue;
 										
-										target = Math.max(Math.min(FlxMath.roundDecimal(target, curOption.decimals), curOption.maxValue), curOption.minValue);
+										target = Math.max(Math.min(FlxMath.roundDecimal(Math.round(target / curOption.changeValue) * curOption.changeValue, curOption.decimals), curOption.maxValue), curOption.minValue);
 										if (curOption.type == INT) target = Math.round(target);
 										
 										if (callOnScripts('onChangeItem', [curOption, target, change, true], true) != LuaUtils.Function_Stop && curOption.getValue() != target) {
@@ -275,29 +279,29 @@ class BaseOptionsMenu extends ScriptedSubState
 
 			if(controls.RESET)
 			{
-				var leOption:Option = optionsArray[curSelected];
-				if (leOption.type != KEYBIND) {
-					var args:Array<Dynamic> = [leOption, leOption.defaultValue, 0, false];
-					if (leOption.type != BOOL) {
-						if (leOption.type == STRING)
-							leOption.curOption = leOption.options.indexOf(leOption.defaultValue);
-						updateTextFrom(leOption);
+				var optionsToReset:Array<Option> = (FlxG.keys.pressed.SHIFT || FlxG.gamepads.anyPressed(LEFT_SHOULDER) ? optionsArray : [optionsArray[curSelected]]);
+				
+				for (leOption in optionsToReset) {
+					if (leOption.type != KEYBIND) {
+						if (callOnScripts('onResetItem', [leOption], true) != LuaUtils.Function_Stop &&
+							callOnScripts('onChangeItem', [leOption, leOption.getDefaultValue(), 0, false], true) != LuaUtils.Function_Stop) {
+							leOption.setValue(leOption.getDefaultValue());
+							updateTextFrom(leOption);
+						}
+					} else {
+						var target:String = (!Controls.instance.controllerMode ? leOption.getDefaultKeys().keyboard : leOption.getDefaultKeys().gamepad);
+						
+						if (callOnScripts('onResetItem', [leOption], true) != LuaUtils.Function_Stop &&
+							callOnScripts('onChangeItem', [leOption, target, 0, false], true) != LuaUtils.Function_Stop) {
+							leOption.setValue(target);
+							updateBind(leOption);
+						}
 					}
-					if (callOnScripts('onResetItem', [leOption], true) != LuaUtils.Function_Stop &&
-						callOnScripts('onChangeItem', args, true) != LuaUtils.Function_Stop)
-						leOption.setValue(leOption.defaultValue);
-				} else {
-					var target:String = (!Controls.instance.controllerMode ? leOption.defaultKeys.keyboard : leOption.defaultKeys.gamepad);
-					
-					if (callOnScripts('onResetItem', [leOption], true) != LuaUtils.Function_Stop &&
-						callOnScripts('onChangeItem', [leOption, target, 0, false], true) != LuaUtils.Function_Stop) {
-						leOption.setValue(target);
-						updateBind(leOption);
-					}
+					leOption.change();
+					reloadCheckboxes();
 				}
-				leOption.change();
+				
 				FlxG.sound.play(Paths.sound('cancelMenu'));
-				reloadCheckboxes();
 			}
 		}
 

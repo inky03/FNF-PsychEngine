@@ -3221,10 +3221,9 @@ class PlayState extends ScriptedState
 	#if ACHIEVEMENTS_ALLOWED
 	private function checkForAchievement(achievesToCheck:Array<String> = null)
 	{
-		if(chartingMode) return;
+		if(chartingMode || cpuControlled) return;
 
 		var usedPractice:Bool = (ClientPrefs.getGameplaySetting('practice') || ClientPrefs.getGameplaySetting('botplay'));
-		if(cpuControlled) return;
 
 		for (name in achievesToCheck) {
 			if(!Achievements.exists(name)) continue;
@@ -3235,7 +3234,7 @@ class PlayState extends ScriptedState
 				switch(name)
 				{
 					case 'ur_bad':
-						unlock = (ratingPercent < 0.2 && !practiceMode);
+						unlock = (ratingPercent < 0.2 && !usedPractice);
 
 					case 'ur_good':
 						unlock = (ratingPercent >= 1 && !usedPractice);

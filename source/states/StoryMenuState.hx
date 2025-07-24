@@ -10,7 +10,7 @@ import flixel.graphics.FlxGraphic;
 import objects.MenuItem;
 import objects.MenuCharacter;
 
-import options.GameplayChangersSubstate;
+import options.GameplayChangersSubState;
 import substates.ResetScoreSubState;
 
 import backend.StageData;
@@ -259,7 +259,7 @@ class StoryMenuState extends ScriptedState
 			
 			if(FlxG.keys.justPressed.CONTROL) {
 				persistentUpdate = false;
-				openSubState(new GameplayChangersSubstate());
+				openSubState(new GameplayChangersSubState());
 			} else if(controls.RESET) {
 				persistentUpdate = false;
 				openSubState(new ResetScoreSubState('', curDifficulty, '', curWeek));

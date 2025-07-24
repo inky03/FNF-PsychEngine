@@ -38,21 +38,22 @@ class Option
 	public var displayFormat:String = '%v'; //How String/Float/Percent/Int values are shown, %v = Current value, %d = Default value
 	public var description:String = '';
 	public var name:String = 'Unknown';
+	public var key:String = 'Unknown';
 
 	public var defaultKeys:Keybind = null; //Only used in keybind type
 	public var keys:Keybind = null; //Only used in keybind type
 
-	public function new(name:String, description:String = '', variable:String, type:OptionType = BOOL, ?options:Array<String> = null, ?translation:String = null)
+	public function new(name:String, description:String = '', variable:String, type:OptionType = BOOL, ?options:Array<String>, ?translation:String)
 	{
-		_name = name;
-		_translationKey = translation != null ? translation : _name;
+		this.key = name;
+		this._translationKey = (translation ?? key);
 		this.name = Language.getPhrase('setting_$_translationKey', name);
 		this.description = Language.getPhrase('description_$_translationKey', description);
 		this.variable = variable;
 		this.type = type;
 		this.options = options;
-
-		if(this.type != KEYBIND) this.defaultValue = Reflect.getProperty(ClientPrefs.defaultData, variable);
+		
+		if (this.type != KEYBIND) this.defaultValue = getDefaultValue;
 		switch(type)
 		{
 			case BOOL:
@@ -72,7 +73,7 @@ class Option
 
 			case KEYBIND:
 				defaultValue = '';
-				defaultKeys = {gamepad: 'NONE', keyboard: 'NONE'};
+				defaultKeys = getDefaultValue();
 				keys = {gamepad: 'NONE', keyboard: 'NONE'};
 		}
 
@@ -88,6 +89,16 @@ class Option
 		//nothing lol
 		if(onChange != null)
 			onChange(mod, hold);
+	}
+	
+	public function getDefaultValue():Dynamic {
+		if (!psychlua.LuaUtils.hasField(ClientPrefs.defaultData, variable)) return this.defaultValue;
+		return Reflect.getProperty(ClientPrefs.defaultData, variable);
+	}
+	
+	public function getDefaultKeys():Keybind {
+		if (!psychlua.LuaUtils.hasField(ClientPrefs.defaultData, variable)) return (this.defaultKeys ?? {gamepad: 'NONE', keyboard: 'NONE'});
+		return cast Reflect.getProperty(ClientPrefs.defaultData, variable);
 	}
 
 	dynamic public function getValue():Dynamic
@@ -108,11 +119,10 @@ class Option
 			case KEYBIND:
 				if (hasSave) {
 					var keys:Dynamic = Reflect.getProperty(ClientPrefs.data, variable);
-					if (!Controls.instance.controllerMode) keys.keyboard = value;
-					else keys.gamepad = value;
-					this.value = keys;
+					if (!Controls.instance.controllerMode) this.value.keyboard = keys.keyboard = value;
+					else this.value.gamepad = keys.gamepad = value;
 				} else {
-					this.value ??= {keyboard: null, gamepad: null};
+					this.value ??= getDefaultKeys();
 					if (!Controls.instance.controllerMode) this.value.keyboard = value;
 					else this.value.gamepad = value;
 				}
@@ -125,8 +135,7 @@ class Option
 		
 		return value;
 	}
-
-	var _name:String = null;
+	
 	var _text:String = null;
 	var _translationKey:String = null;
 	private function get_text()
