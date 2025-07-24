@@ -82,7 +82,7 @@ class ModsMenuState extends MusicBeatState
 			var modItem:ModItem = new ModItem(mod);
 			if(modsList.disabled.contains(mod))
 			{
-				modItem.icon.color = 0xFFFF6666;
+				modItem.icon.setColorTransform(1, 1, 1, 1, 0, -153, -153);
 				modItem.text.color = 0xFFFF6666;
 			}
 			modsGroup.add(modItem);
@@ -139,7 +139,7 @@ class ModsMenuState extends MusicBeatState
 				{
 					modsList.enabled.remove(mod.folder);
 					modsList.disabled.push(mod.folder);
-					mod.icon.color = 0xFFFF6666;
+					mod.icon.setColorTransform(1, 1, 1, 1, 0, -153, -153);
 					mod.text.color = 0xFFFF6666;
 				}
 			}
@@ -263,7 +263,11 @@ class ModsMenuState extends MusicBeatState
 				modsList.disabled.remove(mod);
 				modsList.enabled.push(mod);
 			}
-			curMod.icon.color = modsList.disabled.contains(mod) ? 0xFFFF6666 : FlxColor.WHITE;
+			if (modsList.disabled.contains(mod)) {
+				curMod.icon.setColorTransform(1, 1, 1, 1, 0, -153, -153);
+			} else {
+				curMod.icon.setColorTransform();
+			}
 			curMod.text.color = modsList.disabled.contains(mod) ? 0xFFFF6666 : FlxColor.WHITE;
 
 			if(curMod.mustRestart) waitingToRestart = true;

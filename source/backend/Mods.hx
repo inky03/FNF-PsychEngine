@@ -28,7 +28,9 @@ class Mods
 		'weeks',
 		'fonts',
 		'scripts',
-		'achievements'
+		'achievements',
+		'pack.json',
+		'pack.png'
 	];
 
 	private static var globalMods:Array<String> = [];
@@ -56,7 +58,7 @@ class Mods
 			for (folder in FileSystem.readDirectory(modsFolder))
 			{
 				var path = haxe.io.Path.join([modsFolder, folder]);
-				if (FileSystem.isDirectory(path) && !ignoreModFolders.contains(folder.toLowerCase()) && !list.contains(folder))
+				if (FileSystem.isDirectory(path) && !list.contains(folder) && directoryIsMod(Paths.mods(folder)))
 					list.push(folder);
 			}
 		}
@@ -190,7 +192,7 @@ class Mods
 			{
 				var dat:Array<String> = mod.split("|");
 				var folder:String = dat[0];
-				if(folder.trim().length > 0 && FileSystem.exists(Paths.mods(folder)) && FileSystem.isDirectory(Paths.mods(folder)) && !added.contains(folder))
+				if(folder.trim().length > 0 && FileSystem.exists(Paths.mods(folder)) && FileSystem.isDirectory(Paths.mods(folder)) && !added.contains(folder) && directoryIsMod(Paths.mods(folder)))
 				{
 					added.push(folder);
 					list.push([folder, (dat[1] == "1")]);
@@ -203,8 +205,7 @@ class Mods
 		// Scan for folders that aren't on modsList.txt yet
 		for (folder in getModDirectories())
 		{
-			if(folder.trim().length > 0 && FileSystem.exists(Paths.mods(folder)) && FileSystem.isDirectory(Paths.mods(folder)) &&
-			!ignoreModFolders.contains(folder.toLowerCase()) && !added.contains(folder))
+			if (folder.trim().length > 0 && FileSystem.exists(Paths.mods(folder)) && !added.contains(folder) && directoryIsMod(Paths.mods(folder)))
 			{
 				added.push(folder);
 				list.push([folder, true]); //i like it false by default. -bb //Well, i like it True! -Shadow Mario (2022)
@@ -224,6 +225,21 @@ class Mods
 		updatedOnState = true;
 		//trace('Saved modsList.txt');
 		#end
+	}
+	
+	private static function directoryIsMod(dir:String):Bool {
+		if (ignoreModFolders.contains(dir.toLowerCase())) return false;
+		
+		if (FileSystem.isDirectory(dir)) {
+			if (FileSystem.exists('$dir/.notamod'))
+				return false;
+			for (sub in ignoreModFolders) {
+				if (FileSystem.exists('$dir/$sub'))
+					return true;
+			}
+		}
+		
+		return false;
 	}
 
 	public static function loadTopMod()
