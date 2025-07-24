@@ -26,7 +26,7 @@ class BaseStage extends FlxBasic
 	public var paused(get, never):Bool;
 	public var songName(get, never):String;
 	public var isStoryMode(get, never):Bool;
-	public var seenCutscene(get, never):Bool;
+	public var seenCutscene(get, set):Bool;
 	public var inCutscene(get, set):Bool;
 	public var canPause(get, set):Bool;
 	public var members(get, never):Array<FlxBasic>;
@@ -137,14 +137,15 @@ class BaseStage extends FlxBasic
 	}
 
 	// overrides
-	function startCountdown() if(onPlayState) return PlayState.instance.startCountdown(); else return false;
-	function endSong() if(onPlayState)return PlayState.instance.endSong(); else return false;
-	function moveCameraSection() if(onPlayState) PlayState.instance.moveCameraSection();
-	function moveCamera(isDad:Bool) if(onPlayState) PlayState.instance.moveCamera(isDad);
+	public function startCountdown() if(onPlayState) return PlayState.instance.startCountdown(); else return false;
+	public function endSong() if(onPlayState)return PlayState.instance.endSong(); else return false;
+	public function moveCameraSection() if(onPlayState) PlayState.instance.moveCameraSection();
+	public function moveCamera(isDad:Bool) if(onPlayState) PlayState.instance.moveCamera(isDad);
 	inline private function get_paused() return game.paused;
 	inline private function get_songName() return game.songName;
 	inline private function get_isStoryMode() return PlayState.isStoryMode;
 	inline private function get_seenCutscene() return PlayState.seenCutscene;
+	inline private function set_seenCutscene(value:Bool):Bool return PlayState.seenCutscene = value;
 	inline private function get_inCutscene() return game.inCutscene;
 	inline private function set_inCutscene(value:Bool)
 	{
@@ -180,10 +181,6 @@ class BaseStage extends FlxBasic
 	inline private function get_camOther():FlxCamera return game.camOther;
 
 	inline private function get_defaultCamZoom():Float return game.defaultCamZoom;
-	inline private function set_defaultCamZoom(value:Float):Float
-	{
-		game.defaultCamZoom = value;
-		return game.defaultCamZoom;
-	}
+	inline private function set_defaultCamZoom(value:Float):Float return game.defaultCamZoom = value;
 	inline private function get_camFollow():FlxObject return game.camFollow;
 }

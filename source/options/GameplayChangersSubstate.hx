@@ -34,7 +34,7 @@ class GameplayChangersSubState extends BaseOptionsMenu
 		addOption(scrollSpeed);
 
 		#if FLX_PITCH
-		var option:GameplayOption = new GameplayOption('Playback Rate', 'Multiplier for song playback speed; this also changes the pitch.', 'songspeed', FLOAT);
+		var option:GameplayOption = new GameplayOption('Playback Rate', 'Multiplier for the song playback speed.\nAlso affects the song\'s pitch.', 'songspeed', FLOAT);
 		option.scrollSpeed = 1;
 		option.minValue = 0.5;
 		option.maxValue = 3.0;

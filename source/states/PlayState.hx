@@ -267,8 +267,8 @@ class PlayState extends ScriptedState
 		}
 		nextReloadAll = false;
 
-		startCallback = startCountdown;
-		endCallback = endSong;
+		startCallback = () -> stagesFunc(function(stage:BaseStage) stage.startCountdown());
+		endCallback = () -> stagesFunc(function(stage:BaseStage) stage.endSong());
 
 		// for lua
 		instance = this;
