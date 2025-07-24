@@ -230,7 +230,7 @@ class BaseOptionsMenu extends ScriptedSubState
 										}
 		
 									case STRING:
-										var mod:Int = (controls.UI_LEFT ? -1 : 1);
+										var mod:Int = (controls.UI_LEFT_P ? -1 : 1);
 										var num:Int = FlxMath.wrap(curOption.curOption + mod, 0, curOption.options.length - 1);
 										
 										if (callOnScripts('onChangeItem', [curOption, curOption.options[num], mod, false], true) != LuaUtils.Function_Stop) {
