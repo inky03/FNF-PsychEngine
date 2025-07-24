@@ -68,10 +68,7 @@ class Option
 				scrollSpeed = 0.5;
 				decimals = 2;
 			case STRING:
-				if(options.length > 0)
-					defaultValue = options[0];
-				if(defaultValue == null)
-					defaultValue = '';
+				defaultValue = (options[0] ?? '');
 
 			case KEYBIND:
 				defaultValue = '';
@@ -81,8 +78,7 @@ class Option
 
 		try
 		{
-			if (getValue() == null)
-				setValue(defaultValue);
+			setValue(getValue() ?? defaultValue);
 		}
 		catch(e) {}
 	}
