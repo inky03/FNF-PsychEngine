@@ -112,8 +112,15 @@ class BaseOptionsMenu extends ScriptedSubState
 	}
 
 	public function addOption(option:Option) {
-		if (optionsArray == null || optionsArray.length < 1) optionsArray = [];
+		optionsArray ??= [];
 		optionsArray.push(option);
+		
+		return option;
+	}
+
+	public function insertOption(pos:Int, option:Option) {
+		optionsArray ??= [];
+		optionsArray.insert(pos, option);
 		
 		return option;
 	}
@@ -155,7 +162,7 @@ class BaseOptionsMenu extends ScriptedSubState
 					if(controls.ACCEPT) {
 						var nextValue:Bool = (curOption.getValue() == true ? false : true);
 						if (callOnScripts('onAccept', [curOption], true) != LuaUtils.Function_Stop &&
-							callOnScripts('onChangeItem', [curOption, nextValue], true) != LuaUtils.Function_Stop) {
+							callOnScripts('onChangeItem', [curOption, nextValue, 0, false], true) != LuaUtils.Function_Stop) {
 							FlxG.sound.play(Paths.sound('scrollMenu'));
 							curOption.setValue(nextValue);
 							curOption.change();
@@ -199,34 +206,37 @@ class BaseOptionsMenu extends ScriptedSubState
 						
 						if (holdTime > 0.5 || pressed) {
 							if (pressed) {
-								var add:Dynamic = null;
-								if (curOption.type != STRING)
-									add = (pressed ? controls.UI_LEFT_P : controls.UI_LEFT) ? -curOption.changeValue : curOption.changeValue;
-		
 								switch(curOption.type) {
 									case INT, FLOAT, PERCENT:
-										holdValue = curOption.getValue() + add;
+										var change:Float = ((pressed ? controls.UI_LEFT_P : controls.UI_LEFT) ? -curOption.changeValue : curOption.changeValue);
+										
+										holdValue = (curOption.getValue() + change);
 										if (holdValue < curOption.minValue) holdValue = curOption.minValue;
 										else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
 		
 										if(curOption.type == INT) {
 											holdValue = Math.round(holdValue);
-											if (callOnScripts('onChangeItem', [curOption, holdValue], true) != LuaUtils.Function_Stop)
+											if (callOnScripts('onChangeItem', [curOption, holdValue, change, false], true) != LuaUtils.Function_Stop) {
 												curOption.setValue(holdValue);
+												curOption.change(change);
+											}
 										}
 										else {
 											holdValue = FlxMath.roundDecimal(holdValue, curOption.decimals);
-											if (callOnScripts('onChangeItem', [curOption, holdValue], true) != LuaUtils.Function_Stop)
+											if (callOnScripts('onChangeItem', [curOption, holdValue, change, false], true) != LuaUtils.Function_Stop) {
 												curOption.setValue(holdValue);
+												curOption.change(change);
+											}
 										}
 		
 									case STRING:
-										var num:Int = curOption.curOption; //lol
-										num = FlxMath.wrap(num + (controls.UI_LEFT_P ? -1 : 1), 0, curOption.options.length - 1);
+										var mod:Int = (controls.UI_LEFT ? -1 : 1);
+										var num:Int = FlxMath.wrap(curOption.curOption + mod, 0, curOption.options.length - 1);
 										
-										if (callOnScripts('onChangeItem', [curOption, curOption.options[num], num], true) != LuaUtils.Function_Stop) {
+										if (callOnScripts('onChangeItem', [curOption, curOption.options[num], mod, false], true) != LuaUtils.Function_Stop) {
 											curOption.curOption = num;
 											curOption.setValue(curOption.options[num]);
+											curOption.change(mod);
 										}
 
 									default:
@@ -235,7 +245,9 @@ class BaseOptionsMenu extends ScriptedSubState
 								curOption.change();
 								FlxG.sound.play(Paths.sound('scrollMenu'));
 							} else if (curOption.type != STRING) {
-								holdValue += elapsed * curOption.scrollSpeed * (controls.UI_LEFT ? -1 : 1);
+								var mod:Int = (controls.UI_LEFT ? -1 : 1);
+								var change:Float = (elapsed * curOption.scrollSpeed * mod);
+								holdValue += change;
 								
 								switch(curOption.type) {
 									case INT | FLOAT | PERCENT:
@@ -244,10 +256,10 @@ class BaseOptionsMenu extends ScriptedSubState
 										target = Math.max(Math.min(FlxMath.roundDecimal(target, curOption.decimals), curOption.maxValue), curOption.minValue);
 										if (curOption.type == INT) target = Math.round(target);
 										
-										if (callOnScripts('onChangeItem', [curOption, target], true) != LuaUtils.Function_Stop && curOption.getValue() != target) {
+										if (callOnScripts('onChangeItem', [curOption, target, change, true], true) != LuaUtils.Function_Stop && curOption.getValue() != target) {
 											curOption.setValue(target);
 											updateTextFrom(curOption);
-											curOption.change();
+											curOption.change(change, true);
 										}
 										
 									default:
@@ -265,12 +277,10 @@ class BaseOptionsMenu extends ScriptedSubState
 			{
 				var leOption:Option = optionsArray[curSelected];
 				if (leOption.type != KEYBIND) {
-					var args:Array<Dynamic> = [leOption, leOption.defaultValue];
+					var args:Array<Dynamic> = [leOption, leOption.defaultValue, 0, false];
 					if (leOption.type != BOOL) {
-						if (leOption.type == STRING) {
+						if (leOption.type == STRING)
 							leOption.curOption = leOption.options.indexOf(leOption.defaultValue);
-							args.push(leOption.curOption);
-						}
 						updateTextFrom(leOption);
 					}
 					if (callOnScripts('onResetItem', [leOption], true) != LuaUtils.Function_Stop &&
@@ -280,7 +290,7 @@ class BaseOptionsMenu extends ScriptedSubState
 					var target:String = (!Controls.instance.controllerMode ? leOption.defaultKeys.keyboard : leOption.defaultKeys.gamepad);
 					
 					if (callOnScripts('onResetItem', [leOption], true) != LuaUtils.Function_Stop &&
-						callOnScripts('onChangeItem', [leOption, target], true) != LuaUtils.Function_Stop) {
+						callOnScripts('onChangeItem', [leOption, target, 0, false], true) != LuaUtils.Function_Stop) {
 						leOption.setValue(target);
 						updateBind(leOption);
 					}
@@ -391,7 +401,7 @@ class BaseOptionsMenu extends ScriptedSubState
 					key = InputFormatter.getGamepadName(FlxGamepadInputID.fromString(target));
 				}
 				
-				if (callOnScripts('onChangeItem', [curOption, target], true) != LuaUtils.Function_Stop) {
+				if (callOnScripts('onChangeItem', [curOption, target, 0, false], true) != LuaUtils.Function_Stop) {
 					curOption.setValue(target);
 					updateBind(key);
 					FlxG.sound.play(Paths.sound('confirmMenu'));

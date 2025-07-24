@@ -456,9 +456,12 @@ class LuaUtils
 	}
 	
 	// savedata
+	public static function saveIsInitialized(name:String):Bool {
+		return (MusicBeatState.getVariables().exists('save_$name'));
+	}
 	public static function initSaveData(name:String, folder:String = 'psychenginemods'):Void {
 		var variables = MusicBeatState.getVariables();
-		if (!variables.exists('save_$name')) {
+		if (!saveIsInitialized(name)) {
 			var save:FlxSave = new FlxSave();
 			// folder goes unused for flixel 5 users. @BeastlyGhost
 			save.bind(name, CoolUtil.getSavePath() + '/' + folder);
@@ -469,7 +472,7 @@ class LuaUtils
 	}
 	public static function flushSaveData(name:String):Void {
 		var variables = MusicBeatState.getVariables();
-		if (variables.exists('save_$name')) {
+		if (saveIsInitialized(name)) {
 			variables.get('save_$name').flush();
 			return;
 		}
@@ -477,7 +480,7 @@ class LuaUtils
 	}
 	public static function getDataFromSave(name:String, field:String, ?defaultValue:Dynamic):Dynamic {
 		var variables = MusicBeatState.getVariables();
-		if (variables.exists('save_$name')) {
+		if (saveIsInitialized(name)) {
 			var saveData = variables.get('save_$name').data;
 			if (Reflect.hasField(saveData, field)) {
 				return Reflect.field(saveData, field);
@@ -490,7 +493,7 @@ class LuaUtils
 	}
 	public static function setDataFromSave(name:String, field:String, value:Dynamic):Void {
 		var variables = MusicBeatState.getVariables();
-		if (variables.exists('save_$name')) {
+		if (saveIsInitialized(name)) {
 			Reflect.setField(variables.get('save_$name').data, field, value);
 			return;
 		}
@@ -498,7 +501,7 @@ class LuaUtils
 	}
 	public static function eraseSaveData(name:String):Void {
 		var variables = MusicBeatState.getVariables();
-		if (variables.exists('save_$name')) {
+		if (saveIsInitialized(name)) {
 			variables.get('save_$name').erase();
 			return;
 		}

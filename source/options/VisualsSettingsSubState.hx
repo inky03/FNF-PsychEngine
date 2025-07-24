@@ -198,7 +198,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 	}
 
 	var changedMusic:Bool = false;
-	function onChangePauseMusic()
+	function onChangePauseMusic(?_, ?_)
 	{
 		if(ClientPrefs.data.pauseMusic == 'None')
 			FlxG.sound.music.volume = 0;
@@ -208,7 +208,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		changedMusic = true;
 	}
 
-	function onChangeNoteSkin()
+	function onChangeNoteSkin(?_, ?_)
 	{
 		notes.forEachAlive(function(note:StrumNote) {
 			changeNoteSkin(note);
@@ -231,7 +231,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		note.playAnim('static');
 	}
 
-	function onChangeSplashSkin()
+	function onChangeSplashSkin(?_, ?_)
 	{
 		var skin:String = NoteSplash.defaultNoteSplash + NoteSplash.getSplashSkinPostfix();
 		for (splash in splashes)
@@ -240,7 +240,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		playNoteSplashes();
 	}
 
-	function playNoteSplashes()
+	function playNoteSplashes(?_, ?_)
 	{
 		var rand:Int = 0;
 		if (splashes.members[0] != null && splashes.members[0].maxAnims > 1)
@@ -296,7 +296,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 	}
 
 	#if !mobile
-	function onChangeFPSCounter()
+	function onChangeFPSCounter(?_, ?_)
 	{
 		if(Main.fpsVar != null)
 			Main.fpsVar.visible = ClientPrefs.data.showFPS;

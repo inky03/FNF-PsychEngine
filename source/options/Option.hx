@@ -20,13 +20,14 @@ class Option
 {
 	public var child:Alphabet;
 	public var text(get, set):String;
-	public var onChange:Void->Void = null; //Pressed enter (on Bool type options) or pressed/held left/right (on other types)
+	public var onChange:Float -> Bool -> Void = null; //Pressed enter (on Bool type options) or pressed/held left/right (on other types)
 	public var type:OptionType = BOOL;
 
 	public var scrollSpeed:Float = 50; //Only works on int/float, defines how fast it scrolls per second while holding left/right
 	public var variable(default, null):String = null; //Variable from ClientPrefs.hx
 	public var defaultValue:Dynamic = null;
 
+	public var value:Dynamic = null;
 	public var curOption:Int = 0; //Don't change this
 	public var options:Array<String> = null; //Only used in string type
 	public var changeValue:Dynamic = 1; //Only used in int/float/percent type, how much is changed when you PRESS
@@ -80,30 +81,23 @@ class Option
 
 		try
 		{
-			if(getValue() == null)
+			if (getValue() == null)
 				setValue(defaultValue);
-	
-			switch(type)
-			{
-				case STRING:
-					var num:Int = options.indexOf(getValue());
-					if(num > -1) curOption = num;
-
-				default:
-			}
 		}
 		catch(e) {}
 	}
 
-	public function change()
+	public function change(mod:Float = 0, hold:Bool = false)
 	{
 		//nothing lol
 		if(onChange != null)
-			onChange();
+			onChange(mod, hold);
 	}
 
 	dynamic public function getValue():Dynamic
 	{
+		if (!psychlua.LuaUtils.hasField(ClientPrefs.data, variable))
+			return this.value;
 		var value = Reflect.getProperty(ClientPrefs.data, variable);
 		if (type == KEYBIND)
 			return (Controls.instance.controllerMode ? value.gamepad : value.keyboard);
@@ -112,15 +106,27 @@ class Option
 
 	dynamic public function setValue(value:Dynamic)
 	{
-		if (!psychlua.LuaUtils.hasField(ClientPrefs.data, variable))
-			return value;
-		if (type == KEYBIND) {
-			var keys = Reflect.getProperty(ClientPrefs.data, variable);
-			if (!Controls.instance.controllerMode) keys.keyboard = value;
-			else keys.gamepad = value;
-			return value;
+		var hasSave:Bool = (psychlua.LuaUtils.hasField(ClientPrefs.data, variable));
+		
+		switch (type) {
+			case KEYBIND:
+				if (hasSave) {
+					var keys:Dynamic = Reflect.getProperty(ClientPrefs.data, variable);
+					if (!Controls.instance.controllerMode) keys.keyboard = value;
+					else keys.gamepad = value;
+					this.value = keys;
+				} else {
+					this.value ??= {keyboard: null, gamepad: null};
+					if (!Controls.instance.controllerMode) this.value.keyboard = value;
+					else this.value.gamepad = value;
+				}
+				
+			default:
+				this.value = value;
+				if (hasSave) Reflect.setProperty(ClientPrefs.data, variable, value);
+				if (type == STRING && options.contains(value)) curOption = options.indexOf(value);
 		}
-		Reflect.setProperty(ClientPrefs.data, variable, value);
+		
 		return value;
 	}
 
