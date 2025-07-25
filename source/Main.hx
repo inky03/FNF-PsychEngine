@@ -94,8 +94,8 @@ class Main extends Sprite
 		Difficulty.resetList();
 		Highscore.load();
 		
-		HScript.init();
-		GlobalScriptHandler.init();
+		#if HSCRIPT_ALLOWED HScript.init(); #end
+		#if GLOBAL_SCRIPTS GlobalScriptHandler.init(); #end
 
 		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
 		Controls.instance = new Controls();

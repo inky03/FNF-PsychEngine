@@ -3,16 +3,18 @@ package backend;
 #if LUA_ALLOWED
 import psychlua.*;
 #else
-import psychlua.GlobalScriptHandler;
 import psychlua.LuaUtils;
-import psychlua.HScript;
 #end
 
 #if HSCRIPT_ALLOWED
-import psychlua.HScript.HScriptInfos;
+import psychlua.HScript;
 import crowplexus.iris.Iris;
 import crowplexus.hscript.Expr.Error as IrisError;
 import crowplexus.hscript.Printer;
+#end
+
+#if SCRIPTS_ALLOWED
+import psychlua.GlobalScriptHandler;
 #end
 
 class ScriptedSubState extends MusicBeatSubstate {
@@ -30,12 +32,12 @@ class ScriptedSubState extends MusicBeatSubstate {
 	override function _preCreate():Void {
 		#if SCRIPTS_ALLOWED startStateScripts(); #end
 		
-		GlobalScriptHandler.call('onCreateSubState', [this]);
+		#if GLOBAL_SCRIPTS GlobalScriptHandler.call('onCreateSubState', [this]); #end
 	}
 	override function _postCreate():Void {
 		callOnScripts('onCreatePost');
 		
-		GlobalScriptHandler.call('onCreateSubStatePost', [this]);
+		#if GLOBAL_SCRIPTS GlobalScriptHandler.call('onCreateSubStatePost', [this]); #end
 	}
 	
 	var _shouldUpdate:Bool = true;
@@ -71,7 +73,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 	}
 	
 	public override function close():Void {
-		if (callOnScripts('onClose', true) != LuaUtils.Function_Stop && GlobalScriptHandler.call('onCloseSubState', [this]) != LuaUtils.Function_Stop)
+		if (callOnScripts('onClose', true) != LuaUtils.Function_Stop #if GLOBAL_SCRIPTS && GlobalScriptHandler.call('onCloseSubState', [this]) != LuaUtils.Function_Stop #end)
 			super.close();
 	}
 	

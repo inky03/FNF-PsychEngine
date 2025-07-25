@@ -35,6 +35,7 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 - Some menus have been adjusted to look cleaner / less cluttered
 - Notes will now glow when cycling Note Skins in the Visual Settings menu
 - Some Options menus descriptions have been updated to fix mistakes and (hopefully) describe better
+- Cleaner master editor menu
 
 ### Gameplay
 
@@ -52,7 +53,7 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 - ~~Fixed a crash caused by an active video when exiting the state~~ *merged in 1.0.4*
 - Set Property event should work better (probably)
 - F5 key to reload the current state
-- Cleaner master editor menu
+	- Hold SHIFT to reload all active global scripts too !
 
 ## API changes
 
@@ -121,6 +122,7 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 				function onAccept(item, index) {}
 				```
 		- Options Sub-states
+			- Adapted for scripting flexibility (you can insert custom options)
 			- Functions
 				```haxe
 				function onSelectItem(item, index) {}
@@ -241,6 +243,7 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 		- `callOnScriptsEx` (to provide diff. arguments for Lua and HScript function calls)
 - Character
 	- Combo and combo drop animations (from base game)
+	- ERROR text on invalid characters considers alpha now
 - Notes
 	- Improvements to note scroll direction and sustain note scaling
 		- `correctionOffset` is no longer needed due to this and has been removed
@@ -252,6 +255,9 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 	- `Note.followStrumNote` second argument "fakeCrochet" has been removed (as it was useless)
 	- Strum **press** animation is now strictly only played on a ghost tap
 - States
+	- GameplayChangersSubState
+		- Renamed from GameplayChangersSubstate (not that different but, still)
+		- Unified behavior with the other options menus (now extends BaseOptionsMenu as well)
 	- PlayState
 		- Added variable `ghostTapping`, so it can be modified without having to change user preferences
 		- `stageUI`, `uiPrefix` and `uiPostfix` behavior has been adjusted (this also affects note textures)
@@ -260,9 +266,12 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 		- `storyWeekData` for well, the data for the current week.
 	- BaseStage
 		- Added `onMoveCamera` and `onGameOver [Loop / Start / Confirm]` functions
-- Changed all libraries to use their latest versions (that previously weren't)
-	- HScript Iris (1.1.3 used in release -> git used in fork)
-		- Fixed increment / decrement operator `var ++` `var --`
-		- String concatenation (from yours truly I guess!)
+- Other
+	- Engine can now compile to HashLink
+		- Videos and Lua scripts are not supported due to limitations (HScript is, though)
+	- Changed all libraries to use their latest versions (that previously weren't)
+		- HScript Iris (1.1.3 used in release -> git used in fork)
+			- Fixed increment / decrement operator `var ++` `var --`
+			- String concatenation (from yours truly I guess!)
 
 ...and more! i think...

@@ -179,7 +179,7 @@ class LoadingState extends ScriptedState
 		}
 		#end
 		
-		GlobalScriptHandler.call('onCreateState', [this, Type.getClass(this)]);
+		backend.MusicBeatSubstate.callGlobal('onCreateState', [this, Type.getClass(this)]);
 	}
 	#if LUA_ALLOWED
 	public override function implementLua(lua:FunkinLua):Void {

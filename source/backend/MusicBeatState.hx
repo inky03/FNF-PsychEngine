@@ -3,7 +3,10 @@ package backend;
 import flixel.FlxState;
 import backend.PsychCamera;
 import psychlua.CustomState;
+
+#if GLOBAL_SCRIPTS
 import psychlua.GlobalScriptHandler;
+#end
 
 class MusicBeatState extends MusicBeatSubstate {
 	public var camOther:FlxCamera = null;
@@ -33,7 +36,7 @@ class MusicBeatState extends MusicBeatSubstate {
 		timePassedOnState = 0;
 	}
 	public override function preCreate():Void {
-		GlobalScriptHandler.refreshScripts();
+		#if GLOBAL_SCRIPTS GlobalScriptHandler.refreshScripts(); #end
 		
 		if (camOther == null) {
 			camOther = new FlxCamera();
@@ -47,10 +50,10 @@ class MusicBeatState extends MusicBeatSubstate {
 		super.preCreate();
 	}
 	override function _preCreate():Void {
-		GlobalScriptHandler.call('onCreateState', [this, Type.getClass(this)]);
+		MusicBeatSubstate.callGlobal('onCreateState', [this, Type.getClass(this)]);
 	}
 	override function _postCreate():Void {
-		GlobalScriptHandler.call('onCreateStatePost', [this, Type.getClass(this)]);
+		MusicBeatSubstate.callGlobal('onCreateStatePost', [this, Type.getClass(this)]);
 	}
 	
 	public function initPsychCamera():PsychCamera {
@@ -62,7 +65,7 @@ class MusicBeatState extends MusicBeatSubstate {
 	}
 
 	public static function switchState(?nextState:FlxState):Void {
-		if (GlobalScriptHandler.call('onSwitchState', [nextState, Type.getClass(nextState)]) != psychlua.LuaUtils.Function_Stop) {
+		if (MusicBeatSubstate.callGlobal('onSwitchState', [nextState, Type.getClass(nextState)]) != psychlua.LuaUtils.Function_Stop) {
 			if (nextState == null)
 				return resetState();
 			

@@ -20,8 +20,8 @@
 	
 	<!-- ______________________ PSYCH ENGINE CUSTOMIZATION ______________________ -->
 
-	<define name="MODS_ALLOWED" if="desktop" />
-	<define name="HSCRIPT_ALLOWED" if="desktop" />
+	<define name="MODS_ALLOWED" />
+	<define name="HSCRIPT_ALLOWED" />
 	<define name="LUA_ALLOWED" if="cpp" />
 	<define name="ACHIEVEMENTS_ALLOWED" />
 	<define name="DISCORD_ALLOWED" if="cpp" />
@@ -70,7 +70,7 @@
 	<!-- __________________________ Game Assets & Etc. __________________________ -->
 	
 	<!-- Turn on Crash Handler -->
-	<define name="CRASH_HANDLER" if="desktop release" />
+	<define name="CRASH_HANDLER" if="release" />
 
 	<!-- Assets -->
 	<assets path="assets/fonts" />
@@ -100,7 +100,7 @@
 		<haxelib name="funkin.vis" if="BASE_GAME_FILES"/>
 	</section>
 
-	<define name="CHECK_FOR_UPDATES" if="desktop officialBuild"/>
+	<define name="CHECK_FOR_UPDATES" if="officialBuild"/>
 
 	<section if="MODS_ALLOWED">
 		<assets path='example_mods' rename='mods' embed='false' type='template' unless="mac"/>
@@ -121,7 +121,7 @@
 	
 	<haxeflag name="-dce no" if="SCRIPTS_ALLOWED" />
 	
-	<haxeflag name="--macro" value="addMetadata('@:build(backend.macro.Scripting.ExtraDataMacro.build())', 'flixel.FlxBasic')" if="SCRIPTS_ALLOWED" />
+	<haxeflag name="--macro" value="addMetadata('@:build(backend.macro.Scripting.ExtraDataMacro.build())', 'flixel.FlxBasic')" />
 	<haxeflag name="--macro" value="addMetadata('@:build(psychlua.HScript.HScriptMacro.buildInterp())', 'crowplexus.hscript.Interp')" if="HSCRIPT_ALLOWED" />
 	<haxeflag name="--macro" value="include('flixel', true, ['flixel.addons.nape', 'flixel.addons.editors.spine', 'flixel.system.macros'])" if="SCRIPTS_ALLOWED" />
 	<haxeflag name="--macro" value="include('haxe', true, ['haxe.atomic', 'haxe.macro'])" if="SCRIPTS_ALLOWED" />
@@ -179,6 +179,7 @@
 	
 	<!--HScript-->
 	<haxedef name="hscriptPos" if="HSCRIPT_ALLOWED" />
+	<define name="GLOBAL_SCRIPTS" if="HSCRIPT_ALLOWED" />
 	<define name="SCRIPTS_ALLOWED" if="HSCRIPT_ALLOWED || LUA_ALLOWED" />
 
 	<!-- _________________________________ Custom _______________________________ -->

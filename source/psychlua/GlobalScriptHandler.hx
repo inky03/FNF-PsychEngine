@@ -1,5 +1,6 @@
 package psychlua;
 
+#if GLOBAL_SCRIPTS
 import flixel.FlxState;
 
 class GlobalScriptHandler {
@@ -137,3 +138,4 @@ class HScriptGlobal extends HScript {
 		return HScript.globalStatic;
 	}
 }
+#end

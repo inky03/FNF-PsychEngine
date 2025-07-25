@@ -1,9 +1,11 @@
 package backend;
 
-import psychlua.GlobalScriptHandler;
-
 #if LUA_ALLOWED
 import psychlua.FunkinLua;
+#end
+
+#if GLOBAL_SCRIPTS
+import psychlua.GlobalScriptHandler;
 #end
 
 class ScriptedState extends ScriptedSubState {
@@ -25,7 +27,7 @@ class ScriptedState extends ScriptedSubState {
 		MusicBeatState.timePassedOnState = 0;
 	}
 	public override function preCreate():Void {
-		GlobalScriptHandler.refreshScripts();
+		#if GLOBAL_SCRIPTS GlobalScriptHandler.refreshScripts(); #end
 		
 		if (camOther == null) {
 			camOther = new FlxCamera();
@@ -41,12 +43,12 @@ class ScriptedState extends ScriptedSubState {
 	override function _preCreate():Void {
 		#if SCRIPTS_ALLOWED startStateScripts(); #end
 		
-		GlobalScriptHandler.call('onCreateState', [this, Type.getClass(this)]);
+		MusicBeatSubstate.callGlobal('onCreateState', [this, Type.getClass(this)]);
 	}
 	override function _postCreate():Void {
 		callOnScripts('onCreatePost');
 		
-		GlobalScriptHandler.call('onCreateStatePost', [this, Type.getClass(this)]);
+		MusicBeatSubstate.callGlobal('onCreateStatePost', [this, Type.getClass(this)]);
 	}
 	#if SCRIPTS_ALLOWED
 	public override function startStateScripts():Bool {
@@ -57,7 +59,7 @@ class ScriptedState extends ScriptedSubState {
 		#end
 		#if LUA_ALLOWED
 		FunkinLua.registerFunctions();
-		GlobalScriptHandler.call('onRegisterLuaAPI');
+		MusicBeatSubstate.callGlobal('onRegisterLuaAPI');
 		callOnHScript('onRegisterLuaAPI');
 		loaded = (startLuas() || loaded);
 		#end

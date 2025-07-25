@@ -740,8 +740,6 @@ class CustomInterp extends crowplexus.hscript.Interp {
 #else
 class HScript
 {
-	public static function init():Void {}
-	
 	#if LUA_ALLOWED
 	public static function implement() {
 		FunkinLua.registerFunction("runHaxeCode", function(codeToRun:String, ?varsToBring:Any = null, ?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):Dynamic {

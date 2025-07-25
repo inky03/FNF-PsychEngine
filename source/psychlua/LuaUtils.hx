@@ -469,7 +469,7 @@ class LuaUtils
 		}
 	}
 
-	public static function getBool(variable:String) {
+	public static function getBool(variable:String):Bool {
 		#if LUA_ALLOWED
 		var luaScript:FunkinLua = FunkinLua.lastCalledScript;
 		
@@ -494,8 +494,10 @@ class LuaUtils
 		Lua.pop(lua, 1);
 		
 		return (result == 'true');
-		#else
+		#elseif HSCRIPT_ALLOWED
 		return (lastCalledHScript?.get(variable) == true);
+		#else
+		return false;
 		#end
 	}
 	
