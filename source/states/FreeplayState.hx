@@ -243,7 +243,7 @@ class FreeplayState extends ScriptedState
 
 		if (!player.playingMusic)
 		{
-			scoreText.text = Language.getPhrase('personal_best', 'PERSONAL BEST: {1} ({2}%)', [lerpScore, ratingSplit.join('.')]);
+			scoreText.text = Language.getPhrase('personal_best', 'PERSONAL BEST: {1} ({2}%)', [Std.string(lerpScore), ratingSplit.join('.')]);
 			positionHighscore();
 			
 			if(songs.length > 1)

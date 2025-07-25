@@ -493,7 +493,7 @@ class BaseOptionsMenu extends ScriptedSubState
 		var val:Dynamic = option.getValue();
 		if(option.type == PERCENT) val *= 100;
 		var def:Dynamic = option.defaultValue;
-		option.text = text.replace('%v', val).replace('%d', def);
+		option.text = text.replace('%v', Std.string(val)).replace('%d', Std.string(def));
 	}
 	
 	function changeSelection(change:Int = 0) {

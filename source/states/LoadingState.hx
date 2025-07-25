@@ -826,7 +826,7 @@ class LoadingState extends ScriptedState
 		return null;
 	}
 	
-	#if cpp
+	#if (cpp || hl)
 	@:functionCode('
 		return std::thread::hardware_concurrency();
     	')

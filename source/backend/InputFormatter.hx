@@ -91,7 +91,9 @@ class InputFormatter {
 			case NONE | null:
 				return '---';
 			default:
-				var label:String = Std.string(key);
+				var label:String = (Std.string(key) ?? '---'); // umm, yea okay
+				if (label == '---') return label;
+				
 				var arr:Array<String> = label.split('_');
 				for (i in 0...arr.length) arr[i] = CoolUtil.capitalize(arr[i]);
 				return arr.join(' ');

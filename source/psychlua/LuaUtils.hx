@@ -28,6 +28,8 @@ class LuaUtils
 	public static final Function_StopHScript:String = "##PSYCHLUA_FUNCTIONSTOPHSCRIPT";
 	public static final Function_StopAll:String = "##PSYCHLUA_FUNCTIONSTOPALL";
 	
+	#if HSCRIPT_ALLOWED public static var lastCalledHScript:HScript = null; #end
+	
 	public static function getLuaTween(options:Dynamic) {
 		return (options != null) ? {
 			type: getTweenTypeByString(options.type),
@@ -455,6 +457,48 @@ class LuaUtils
 		#end
 	}
 	
+	public static function scriptTrace(text:String, ignoreCheck:Bool = false, deprecated:Bool = false, ?color:FlxColor, ?level:LogType) {
+		if (ignoreCheck || getBool('luaDebugMode')) {
+			if (deprecated && !getBool('luaDeprecatedWarnings'))
+				return;
+			
+			if (level == null)
+				level = (color == null ? NONE : CUSTOM(color));
+			
+			Log.print(text, level);
+		}
+	}
+
+	public static function getBool(variable:String) {
+		#if LUA_ALLOWED
+		var luaScript:FunkinLua = FunkinLua.lastCalledScript;
+		
+		#if HSCRIPT_ALLOWED
+		if (lastCalledHScript != null) {
+			if (lastCalledHScript.parentLua != null) {
+				luaScript = lastCalledHScript.parentLua;
+			} else {
+				return (lastCalledHScript.get(variable) == true);
+			}
+		}
+		#end
+		
+		if (luaScript == null) return false;
+		
+		var lua:State = luaScript.lua;
+		if(lua == null) return false;
+		
+		var result:String = null;
+		Lua.getglobal(lua, variable);
+		result = Convert.fromLua(lua, -1);
+		Lua.pop(lua, 1);
+		
+		return (result == 'true');
+		#else
+		return (lastCalledHScript?.get(variable) == true);
+		#end
+	}
+	
 	// savedata
 	public static function saveIsInitialized(name:String):Bool {
 		return (MusicBeatState.getVariables().exists('save_$name'));
@@ -468,7 +512,7 @@ class LuaUtils
 			variables.set('save_$name', save);
 			return;
 		}
-		FunkinLua.luaTrace('initSaveData: Save file already initialized: ' + name, WARN);
+		scriptTrace('initSaveData: Save file already initialized: ' + name, WARN);
 	}
 	public static function flushSaveData(name:String):Void {
 		var variables = MusicBeatState.getVariables();
@@ -476,7 +520,7 @@ class LuaUtils
 			variables.get('save_$name').flush();
 			return;
 		}
-		FunkinLua.luaTrace('flushSaveData: Save file not initialized: ' + name, false, false, ERROR);
+		scriptTrace('flushSaveData: Save file not initialized: ' + name, false, false, ERROR);
 	}
 	public static function getDataFromSave(name:String, field:String, ?defaultValue:Dynamic):Dynamic {
 		var variables = MusicBeatState.getVariables();
@@ -488,7 +532,7 @@ class LuaUtils
 				return defaultValue;
 			}
 		}
-		FunkinLua.luaTrace('getDataFromSave: Save file not initialized: ' + name, false, false, ERROR);
+		scriptTrace('getDataFromSave: Save file not initialized: ' + name, false, false, ERROR);
 		return defaultValue;
 	}
 	public static function setDataFromSave(name:String, field:String, value:Dynamic):Void {
@@ -497,7 +541,7 @@ class LuaUtils
 			Reflect.setField(variables.get('save_$name').data, field, value);
 			return;
 		}
-		FunkinLua.luaTrace('setDataFromSave: Save file not initialized: ' + name, false, false, ERROR);
+		scriptTrace('setDataFromSave: Save file not initialized: ' + name, false, false, ERROR);
 	}
 	public static function eraseSaveData(name:String):Void {
 		var variables = MusicBeatState.getVariables();
@@ -505,7 +549,7 @@ class LuaUtils
 			variables.get('save_$name').erase();
 			return;
 		}
-		FunkinLua.luaTrace('eraseSaveData: Save file not initialized: ' + name, false, false, ERROR);
+		scriptTrace('eraseSaveData: Save file not initialized: ' + name, false, false, ERROR);
 	}
 	
 	// buncho string stuffs

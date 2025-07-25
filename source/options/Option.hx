@@ -105,7 +105,7 @@ class Option
 	{
 		if (!psychlua.LuaUtils.hasField(ClientPrefs.data, variable))
 			return this.value;
-		var value = Reflect.getProperty(ClientPrefs.data, variable);
+		var value:Dynamic = Reflect.getProperty(ClientPrefs.data, variable);
 		if (type == KEYBIND)
 			return (Controls.instance.controllerMode ? value.gamepad : value.keyboard);
 		return value;

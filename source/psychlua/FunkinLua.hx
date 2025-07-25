@@ -328,7 +328,6 @@ class FunkinLua {
 	//main
 	public var lastCalledFunction:String = '';
 	public static var lastCalledScript:FunkinLua = null;
-	#if HSCRIPT_ALLOWED public static var lastCalledHScript:HScript = null; #end
 	
 	public function call(func:String, ?args:Array<Dynamic>):Dynamic {
 		if(closed) return LuaUtils.Function_Continue;
@@ -464,41 +463,11 @@ class FunkinLua {
 	}
 
 	public static function luaTrace(text:String, ignoreCheck:Bool = false, deprecated:Bool = false, ?color:FlxColor, ?level:LogType) {
-		if (ignoreCheck || getBool('luaDebugMode')) {
-			if (deprecated && !getBool('luaDeprecatedWarnings'))
-				return;
-			
-			if (level == null)
-				level = (color == null ? NONE : CUSTOM(color));
-			
-			Log.print(text, level);
-		}
+		LuaUtils.scriptTrace(text, ignoreCheck, deprecated, color, level);
 	}
 
-	public static function getBool(variable:String) {
-		var luaScript:FunkinLua = lastCalledScript;
-		
-		#if HSCRIPT_ALLOWED
-		if (lastCalledHScript != null) {
-			if (lastCalledHScript.parentLua != null) {
-				luaScript = lastCalledHScript.parentLua;
-			} else {
-				return (lastCalledHScript.get(variable) == true);
-			}
-		}
-		#end
-		
-		if (luaScript == null) return false;
-		
-		var lua:State = luaScript.lua;
-		if(lua == null) return false;
-		
-		var result:String = null;
-		Lua.getglobal(lua, variable);
-		result = Convert.fromLua(lua, -1);
-		Lua.pop(lua, 1);
-		
-		return (result == 'true');
+	public static function getBool(variable:String):Bool {
+		return LuaUtils.getBool(variable);
 	}
 
 	static function findScript(scriptFile:String, ext:String = '.lua') {

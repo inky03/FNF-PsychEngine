@@ -243,10 +243,12 @@ class HScript extends Iris {
 		#if ACHIEVEMENTS_ALLOWED
 		set('Achievements', Achievements);
 		#end
+		#if LUA_ALLOWED
+		set('FunkinLua', FunkinLua);
+		#end
 		set('Character', objects.Character);
 		set('Alphabet', Alphabet);
 		set('Note', objects.Note);
-		set('FunkinLua', FunkinLua);
 		set('CustomState', CustomState);
 		set('CustomSubstate', CustomSubstate);
 		set('MusicBeatState', MusicBeatState);
@@ -532,19 +534,19 @@ class HScript extends Iris {
 			return null;
 		}
 		
-		FunkinLua.lastCalledHScript = this;
+		LuaUtils.lastCalledHScript = this;
 		
 		try {
 			var func:Dynamic = interp.variables.get(funcToRun); // function signature
 			final ret = Reflect.callMethod(null, func, args ?? []);
 			
-			FunkinLua.lastCalledHScript = null;
+			LuaUtils.lastCalledHScript = null;
 			return {funName: funcToRun, signature: func, returnValue: ret};
 		} catch(e:Dynamic) {
 			catchError(this, e, funcToRun);
 		}
 		
-		FunkinLua.lastCalledHScript = null;
+		LuaUtils.lastCalledHScript = null;
 		return null;
 	}
 	

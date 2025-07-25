@@ -151,7 +151,7 @@ class ControlsSubState extends MusicBeatSubstate { // TODO: scriptable?
 						curOptionsValid.push(myID);
 					}
 					else grpDisplay.add(text);
-
+					
 					if(isCentered) addCenteredText(text, option, myID);
 					else addKeyText(text, option, myID);
 
@@ -173,21 +173,21 @@ class ControlsSubState extends MusicBeatSubstate { // TODO: scriptable?
 	}
 	function addKeyText(text:Alphabet, option:Array<Dynamic>, id:Int)
 	{
-		var keys:Array<Null<FlxKey>> = ClientPrefs.keyBinds.get(option[2]);
+		var keys:Null<Array<FlxKey>> = ClientPrefs.keyBinds.get(option[2]);
 		if(keys == null && onKeyboardMode)
 			keys = ClientPrefs.defaultKeys.get(option[2]).copy();
 
-		var gmpds:Array<Null<FlxGamepadInputID>> = ClientPrefs.gamepadBinds.get(option[2]);
+		var gmpds:Null<Array<FlxGamepadInputID>> = ClientPrefs.gamepadBinds.get(option[2]);
 		if(gmpds == null && !onKeyboardMode)
 			gmpds = ClientPrefs.defaultButtons.get(option[2]).copy();
 
-		for (n in 0...2)
+		for (n in 0 ... 2)
 		{
 			var key:String = null;
 			if(onKeyboardMode)
-				key = InputFormatter.getKeyName((keys[n] != null) ? keys[n] : NONE);
+				key = InputFormatter.getKeyName(keys[n] ?? NONE);
 			else
-				key = InputFormatter.getGamepadName((gmpds[n] != null) ? gmpds[n] : NONE);
+				key = InputFormatter.getGamepadName(gmpds[n] ?? NONE);
 
 			var attach:Alphabet = new Alphabet(400 + n * 420, 265, key, false);
 			attach.isMenuItem = true;
@@ -419,13 +419,13 @@ class ControlsSubState extends MusicBeatSubstate { // TODO: scriptable?
 						var key:String = null;
 						if(onKeyboardMode)
 						{
-							var savKey:Array<Null<FlxKey>> = ClientPrefs.keyBinds.get(option);
-							key = InputFormatter.getKeyName(savKey[n] != null ? savKey[n] : NONE);
+							var savKey:Null<Array<FlxKey>> = ClientPrefs.keyBinds.get(option);
+							key = InputFormatter.getKeyName(savKey[n] ?? NONE);
 						}
 						else
 						{
-							var savKey:Array<Null<FlxGamepadInputID>> = ClientPrefs.gamepadBinds.get(option);
-							key = InputFormatter.getGamepadName(savKey[n] != null ? savKey[n] : NONE);
+							var savKey:Null<Array<FlxGamepadInputID>> = ClientPrefs.gamepadBinds.get(option);
+							key = InputFormatter.getGamepadName(savKey[n] ?? NONE);
 						}
 						updateBind(Math.floor(curSelected * 2) + n, key);
 					}
