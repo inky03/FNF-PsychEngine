@@ -131,7 +131,7 @@ class VideoSprite extends FlxSpriteGroup {
 		
 		super.update(elapsed);
 		
-		#if hxCodec
+		#if hxvlc
 		if (videoSprite != null && videoSprite.bitmap != null)
 		{
 			final expectedTime = videoSprite.bitmap.getPosition(); // get expected position
