@@ -117,7 +117,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 		super.destroy();
 	}
 	
-	public static function getStateName(state:flixel.FlxSubState):String { // Used to load the appropriate substate script
+	public static function getStateName(state:flixel.FlxState):String { // Used to load the appropriate substate script
 		if (state is ScriptedSubState) {
 			return cast(state, ScriptedSubState).customStateName();
 		} else {

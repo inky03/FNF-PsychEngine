@@ -628,9 +628,9 @@ class PsychUIInputText extends FlxSpriteGroup
 				_boundaries.push(textObj.textField.textWidth);
 			}
 		}
-		text = v;
+		text = (v ?? '');
 		updateCaret();
-		return v;
+		return text;
 	}
 
 	public static function getAccentCharCode(accent:AccentCode)
