@@ -10,15 +10,19 @@
 - `git`
 - (Windows only) Microsoft Visual Studio Community 2022
 - (Linux only) VLC
-- Haxe (4.3.4 or greater)
+- Haxe (4.3.4 or greater). Download it from [the Haxe website](https://haxe.org/download/).
 
 ---
 
-### Windows & Mac
+### HashLink
 
-For `git`, you're gonna want [git-scm](https://git-scm.com/downloads), download their binary executable there
+Skip to the **Building** section; no additional steps required!
 
-For Haxe, you can get it from [the Haxe website](https://haxe.org/download/)
+Note that due to limitations, **Lua scripts** and **Videos** aren't available on this target.
+
+### Windows & Mac (C++)
+
+For `git`, you're gonna want [git-scm](https://git-scm.com/downloads), download their binary executable there.
 
 ---
 
@@ -37,7 +41,7 @@ to download the binary for Microsoft Visual Studio with the specific packages yo
 (If you wish to not do this manually, go to the `setup` folder located in the root directory of this repository, and run `msvc-windows.bat`)
 
 ---
-### Linux Distributions
+### Linux Distributions (C++)
 
 For getting all the packages you need, distros often have similar or near identical package names 
 
@@ -87,7 +91,12 @@ It depends on your operating system. For Windows, run `windows.bat`, for anythin
 
 Sit back, relax, and wait for haxelib to do its magic. You will be done when you see the word "**Finished!**"
 
-To build the game, run `lime test cpp`.
+To build the game, run the command:
+
+- `lime test hl` to compile to HashLink, or
+- `lime test cpp` to compile to C++ (you're encouraged to compile to this target following the instructions above)
+
+Don't forget to include `-D officialBuild` if you want to include the base game assets.
 
 ---
 
@@ -103,6 +112,10 @@ e.g: Fedora is `gcc-c++`, Gentoo is `sys-devel/gcc`, and so on.
 
 ### "I have an error saying ApplicationMain.exe : fatal error LNK1120: 1 unresolved externals!"
 
-Run `lime test cpp -clean` again, or delete the export folder and compile again.
+You can do either of the following:
+
+- Delete the export folder and compile again.
+- Add the `-clean` flag to your `lime test` command. (automatically recreates the folder)
+- Remove the Psych Engine .exe and `haxe` and `obj` folders in the target folder located in the export folder. This should rebuild the game without deleting any assets, if you're worried about that.
 
 ---
