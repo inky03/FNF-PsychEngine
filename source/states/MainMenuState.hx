@@ -181,7 +181,7 @@ class MainMenuState extends ScriptedState
 					return item;
 				}
 				
-				item.setPosition(50, 490);
+				item.setPosition(50, FlxG.height - item.height - 50);
 				leftItem = item;
 				add(item);
 				updateYScroll();
@@ -192,7 +192,7 @@ class MainMenuState extends ScriptedState
 					return item;
 				}
 				
-				item.setPosition(FlxG.width - item.width - 50, 490);
+				item.setPosition(FlxG.width - item.width - 50, FlxG.height - item.height - 50);
 				rightItem = item;
 				add(item);
 				updateYScroll();
@@ -268,16 +268,12 @@ class MainMenuState extends ScriptedState
 
 				if (rightItem != null && FlxG.mouse.overlaps(rightItem)) {
 					allowMouse = true;
-					if (selectedItem != rightItem) {
-						curColumn = RIGHT;
-						changeItem();
-					}
+					if (selectedItem != rightItem)
+						changeItem(RIGHT);
 				} else if (leftItem != null && FlxG.mouse.overlaps(leftItem)) {
 					allowMouse = true;
-					if (selectedItem != leftItem) {
-						curColumn = LEFT;
-						changeItem();
-					}
+					if (selectedItem != leftItem)
+						changeItem(LEFT);
 				} else {
 					var dist:Float = -1;
 					var distItem:Int = -1;
