@@ -75,8 +75,8 @@ class MainMenuState extends ScriptedState
 		bg.screenCenter();
 		add(bg);
 
-		camFollow = new FlxObject(0, 0, 1, 1);
-		add(camFollow);
+		add(camFollow = new FlxObject(0, 0, 1, 1));
+		FlxG.camera.follow(camFollow, null, .2);
 
 		magenta = new FlxSprite(-80).loadGraphic(Paths.image('menuDesat'));
 		magenta.antialiasing = ClientPrefs.data.antialiasing;
@@ -143,25 +143,18 @@ class MainMenuState extends ScriptedState
 			openSubState(new substates.OutdatedSubState());
 		}
 		#end
-
-		FlxG.camera.follow(camFollow, null, .2);
 		
-		if (rightOption != null) {
+		if (rightOption != null)
 			rightItem = addMenuItem(rightOption, null, RIGHT);
-			rightItem.setPosition(FlxG.width - rightItem.width - 50, 490);
-			add(rightItem);
-		}
-		if (leftOption != null) {
+		if (leftOption != null)
 			leftItem = addMenuItem(leftOption, null, LEFT);
-			leftItem.setPosition(50, 490);
-			add(leftItem);
-		}
 		
-		positionMenuItems();
-		updateYScroll();
 		add(menuItems);
 		
 		super.create();
+		
+		changeItem(true);
+		FlxG.camera.snapToTarget();
 	}
 	
 	function pause(yea:Bool):Void {
@@ -177,8 +170,33 @@ class MainMenuState extends ScriptedState
 		var item:MenuItem = new MenuItem(0, 0, name, onAccept ?? menuFunctions[name]);
 		item.column = column;
 		
-		if (column == CENTER)
-			menuItems.add(item);
+		switch (column) {
+			case CENTER:
+				menuItems.add(item);
+				positionMenuItems();
+				
+			case LEFT:
+				if (leftItem != null) {
+					trace('left slot already occupied by ${leftItem.name}!');
+					return item;
+				}
+				
+				item.setPosition(50, 490);
+				leftItem = item;
+				add(item);
+				updateYScroll();
+				
+			case RIGHT:
+				if (rightItem != null) {
+					trace('right slot already occupied by ${rightItem.name}!');
+					return item;
+				}
+				
+				item.setPosition(FlxG.width - item.width - 50, 490);
+				rightItem = item;
+				add(item);
+				updateYScroll();
+		}
 		
 		return item;
 	}
@@ -203,21 +221,19 @@ class MainMenuState extends ScriptedState
 	}
 	
 	function updateYScroll():Void {
-		var yScroll:Float = .7 / menuItems.length;
 		var itemYScroll:Float = Math.min(1, Math.max(menuItems.height - FlxG.height + itemYPadding, 0) / FlxG.height * .35 + .25);
-		menuItems.scrollFactor.set(.04, itemYScroll);
+		menuItems?.scrollFactor.set(.04, itemYScroll);
+		
+		var yScroll:Float = (.7 / menuItems.length);
+		leftItem?.scrollFactor.set(0, yScroll * .25);
+		rightItem?.scrollFactor.set(0, yScroll * .25);
+		
 		bg.scrollFactor.set(0, yScroll * .75);
 		magenta.scrollFactor.copyFrom(bg.scrollFactor);
-		
-		leftItem?.scrollFactor.set(0, yScroll * .5);
-		rightItem?.scrollFactor.set(0, yScroll * .5);
-		
-		changeItem(true);
-		FlxG.camera.snapToTarget();
 	}
-
+	
 	var selectedSomethin:Bool = false;
-
+	
 	var timeNotMoving:Float = 0;
 	override function update(elapsed:Float)
 	{
@@ -293,9 +309,9 @@ class MainMenuState extends ScriptedState
 						changeItem(CENTER);
 					
 				case CENTER:
-					if (controls.UI_RIGHT_P && rightOption != null) {
+					if (controls.UI_RIGHT_P && rightItem != null) {
 						changeItem(RIGHT);
-					} else if (controls.UI_LEFT_P && leftOption != null) {
+					} else if (controls.UI_LEFT_P && leftItem != null) {
 						changeItem(LEFT);
 					}
 
