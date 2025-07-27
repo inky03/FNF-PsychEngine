@@ -407,7 +407,7 @@ class MainMenuState extends ScriptedState
 			newSelectedItem.selected = true;
 			selectedItem = newSelectedItem;
 			
-			if (change != 0)
+			if (change != 0 || curColumn != oldColumn)
 				FlxG.sound.play(Paths.sound('scrollMenu'));
 			
 			if (leftItem != null) {

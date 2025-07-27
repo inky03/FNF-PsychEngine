@@ -1024,7 +1024,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 							pushedNotes.push(copied);
 							if (note.isEvent) { copiedEvents.push(copied); }
 							else { copiedNotes.push(copied); }
-							
 							/*
 							TODO: FIX COPY & PASTE :SOB:
 							var noteStep:Float = Conductor.getStep(note.strumTime);
@@ -1041,9 +1040,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						}
 						pushedNotes.sort((a:Array<Dynamic>, b:Array<Dynamic>) -> FlxSort.byValues(FlxSort.ASCENDING, a[0], b[0]));
 						
-						var minTime:Float = pushedNotes[0][0];
+						var minTime:Float = Conductor.getStep(pushedNotes[0][0]);
 						for (note in pushedNotes)
-							note[0] -= minTime;
+							note[0] = Conductor.getStep(note[0]);
 					}
 				}
 				else if(FlxG.keys.justPressed.V) // Paste (Ctrl + V)
