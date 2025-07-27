@@ -1024,19 +1024,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 							pushedNotes.push(copied);
 							if (note.isEvent) { copiedEvents.push(copied); }
 							else { copiedNotes.push(copied); }
-							/*
-							TODO: FIX COPY & PASTE :SOB:
-							var noteStep:Float = Conductor.getStep(note.strumTime);
-							copied[0] = noteStep - sectionStep;
-							
-							pushedNotes.push(copied);
-							if (note.isEvent) {
-								copiedEvents.push(copied);
-							} else {
-								copied[2] = Conductor.getStep(note.strumTime + note.sustainLength) - noteStep;
-								copiedNotes.push(copied);
-							}
-							*/
 						}
 						pushedNotes.sort((a:Array<Dynamic>, b:Array<Dynamic>) -> FlxSort.byValues(FlxSort.ASCENDING, a[0], b[0]));
 						
@@ -1054,17 +1041,15 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						resetSelectedNotes();
 						selectedNotes = pasteCopiedNotesToSection();
 						selectedNotes.sort(PlayState.sortByTime);
-
-						var didFind:Bool = false;
-						var minNoteData:Float = Math.POSITIVE_INFINITY;
+						
+						var minNoteData:Null<Int> = null;
 						for (note in selectedNotes)
 						{
 							if(note == null || note.isEvent) continue;
 
-							if(minNoteData > note.songData[1]) minNoteData = note.songData[1];
-							didFind = true;
+							if(minNoteData == null || minNoteData > note.songData[1]) minNoteData = note.songData[1];
 						}
-						if(!didFind) minNoteData = 0;
+						minNoteData ??= 0;
 						
 						var pushedNotes:Array<MetaNote> = [];
 						var pushedEvents:Array<EventMetaNote> = [];
@@ -1079,8 +1064,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 							}
 							else pushedEvents.push(cast (note, EventMetaNote));
 						}
+						
 						addUndoAction(ADD_NOTE, {notes: pushedNotes, events: pushedEvents});
-						moveSelectedNotes(Std.int(minNoteData), selectedNotes[0].y);
+						if (selectedNotes.length > 0) moveSelectedNotes(minNoteData, selectedNotes[0].y);
 					}
 				}
 				else if(FlxG.keys.justPressed.A) // Select All (Ctrl + A)
