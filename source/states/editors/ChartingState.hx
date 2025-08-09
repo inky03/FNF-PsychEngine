@@ -709,6 +709,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 		// SONG TAB
 		songNameInputText.text = PlayState.SONG.song;
+		audioSuffixInputText.text = (PlayState.SONG.audioSuffix ?? '');
 		allowVocalsCheckBox.checked = (PlayState.SONG.needsVoices != false); //If the song for some reason does not have this value, it will be set to true
 
 		bpmStepper.value = PlayState.SONG.bpm;
@@ -1802,7 +1803,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			for (key => snd in Paths.currentTrackedSounds)
 			{
 				//trace(key, snd);
-				if(key.contains('/songs/${Paths.formatToSongPath(PlayState.SONG.song)}/') && snd != null)
+				if(key.contains('/songs/${Paths.formatToSongPath(Song.loadedSongName)}/') && snd != null)
 				{
 					sndsToKill.push(key);
 					snd.close();
@@ -1819,16 +1820,18 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 		try
 		{
-			FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 0);
-			FlxG.sound.music.pause();
+			FlxG.sound.playMusic(Paths.inst(Song.loadedSongName, PlayState.SONG.audioSuffix), 0);
 			FlxG.sound.music.time = time;
 			FlxG.sound.music.onComplete = (function() songFinished = true);
 		}
 		catch(e:Exception)
 		{
+			FlxG.sound.playMusic(Paths.beep, 0);
+			FlxG.sound.music.onComplete = null;
 			FlxG.log.error('Error loading song: $e');
 			return;
 		}
+		FlxG.sound.music.pause();
 
 		@:privateAccess vocals.cleanup(true);
 		@:privateAccess opponentVocals.cleanup(true);
@@ -1836,14 +1839,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		{
 			try
 			{
-				var playerVocals:Sound = Paths.voices(PlayState.SONG.song, (characterData.vocalsP1 == null || characterData.vocalsP1.length < 1) ? 'Player' : characterData.vocalsP1);
-				vocals.loadEmbedded(playerVocals != null ? playerVocals : Paths.voices(PlayState.SONG.song));
+				var playerVocals:Sound = Paths.voices(Song.loadedSongName, (characterData.vocalsP1 == null || characterData.vocalsP1.length < 1) ? 'Player' : characterData.vocalsP1, PlayState.SONG.audioSuffix);
+				vocals.loadEmbedded(playerVocals != null ? playerVocals : Paths.voices(Song.loadedSongName));
 				vocals.volume = 0;
 				vocals.play();
 				vocals.pause();
 				vocals.time = time;
 				
-				var oppVocals:Sound = Paths.voices(PlayState.SONG.song, (characterData.vocalsP2 == null || characterData.vocalsP2.length < 1) ? 'Opponent' : characterData.vocalsP2);
+				var oppVocals:Sound = Paths.voices(Song.loadedSongName, (characterData.vocalsP2 == null || characterData.vocalsP2.length < 1) ? 'Opponent' : characterData.vocalsP2, PlayState.SONG.audioSuffix);
 				if(oppVocals != null && oppVocals.length > 0)
 				{
 					opponentVocals.loadEmbedded(oppVocals);
@@ -1873,14 +1876,24 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	{
 		trace('song completed');
 		setSongPlaying(false);
-		Conductor.songPosition = FlxG.sound.music.time = vocals.time = opponentVocals.time = FlxG.sound.music.length - 1;
+		Conductor.songPosition = FlxG.sound.music.length - 1;
+		setMusicTime(Conductor.songPosition);
 		curSec = PlayState.SONG.notes.length - 1;
 		forceDataUpdate = true;
+	}
+	
+	function setMusicTime(time:Float):Float {
+		if (FlxG.sound.music != null)
+			FlxG.sound.music.time = time;
+		opponentVocals.time = time;
+		vocals.time = time;
+		return time;
 	}
 
 	function updateAudioVolume()
 	{
-		FlxG.sound.music.volume = instVolumeStepper.value;
+		if (FlxG.sound.music != null)
+			FlxG.sound.music.volume = instVolumeStepper.value;
 		vocals.volume = playerVolumeStepper.value;
 		opponentVocals.volume = opponentVolumeStepper.value;
 		if(instMuteCheckBox.checked) FlxG.sound.music.volume = 0;
@@ -1893,7 +1906,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	{
 		#if FLX_PITCH
 		if(value == null) value = playbackRate;
-		FlxG.sound.music.pitch = value;
+		if (FlxG.sound.music != null)
+			FlxG.sound.music.pitch = value;
 		vocals.pitch = value;
 		opponentVocals.pitch = value;
 		#end
@@ -3288,8 +3302,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		addUndoAction(ADD_NOTE, {notes: nts, events: evs});
 		return pushedNotes;
 	}
-
+	
 	var songNameInputText:PsychUIInputText;
+	var audioSuffixInputText:PsychUIInputText;
 	var allowVocalsCheckBox:PsychUICheckBox;
 
 	var bpmStepper:PsychUINumericStepper;
@@ -3307,15 +3322,17 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		var objX = 10;
 		var objY = 25;
 
-		songNameInputText = new PsychUIInputText(objX, objY, 100, 'None', 8);
+		songNameInputText = new PsychUIInputText(objX, objY, 120, 'None', 8);
 		songNameInputText.onChange = function(old:String, cur:String) PlayState.SONG.song = cur;
+		audioSuffixInputText = new PsychUIInputText(objX + 158, objY, 120, '', 8);
+		audioSuffixInputText.onChange = function(old:String, cur:String) PlayState.SONG.audioSuffix = cur;
 
 		allowVocalsCheckBox = new PsychUICheckBox(objX, objY + 20, 'Allow Vocals', 80, function()
 		{
 			PlayState.SONG.needsVoices = allowVocalsCheckBox.checked;
 			loadMusic();
 		});
-		var reloadAudioButton:PsychUIButton = new PsychUIButton(objX + 120, objY, 'Reload Audio', function() loadMusic(true), 80);
+		var reloadAudioButton:PsychUIButton = new PsychUIButton(290 - 80, objY + 20, 'Reload Audio', function() loadMusic(true), 80);
 
 		#if mac
 		var reloadJsonButton:PsychUIButton = new PsychUIButton(objX + 205, objY, 'Reload JSON', function()
@@ -3372,7 +3389,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		};
 
 		tab_group.add(new FlxText(songNameInputText.x, songNameInputText.y - 15, 80, 'Song Name:'));
+		tab_group.add(new FlxText(audioSuffixInputText.x, audioSuffixInputText.y - 15, 120, 'Audio & Events Variant:'));
 		tab_group.add(songNameInputText);
+		tab_group.add(audioSuffixInputText);
 		tab_group.add(allowVocalsCheckBox);
 		tab_group.add(reloadAudioButton);
 		#if mac
@@ -3477,6 +3496,10 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 					var func:Void->Void = function()
 					{
+						var fold:String = filePath.substr(0, filePath.lastIndexOf('/'));
+						fold = fold.substr(fold.lastIndexOf('/') + 1);
+						Song.loadedSongName = fold;
+						
 						loadChart(loadedChart);
 						Song.chartPath = fileDialog.path;
 						reloadNotesDropdowns();
@@ -3710,9 +3733,10 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			{
 				if(!fileDialog.completed) return;
 				upperBox.isMinimized = true;
-	
+				
+				var file:String = (audioSuffixInputText.text.trim() == '' ? 'events' : 'events-${audioSuffixInputText.text}');
 				updateChartData();
-				fileDialog.save('events.json', PsychJsonPrinter.print({events: PlayState.SONG.events, format: 'psych_v1'}, ['events']),
+				fileDialog.save('$file.json', PsychJsonPrinter.print({events: PlayState.SONG.events, format: 'psych_v1'}, ['events']),
 					function() showOutput('Events saved successfully to: ${fileDialog.path}'), null,
 					function() showOutput('Error on saving events!', true));
 			}, btnWid);
@@ -3771,7 +3795,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				{
 					var path:String = fileDialog.path.replace('\\', '/');
 
-					var chartName:String = Paths.formatToSongPath(PlayState.SONG.song) + '.json';
+					var chartName:String = Paths.formatToSongPath(Song.loadedSongName) + '.json';
 					chartName = chartName.substring(chartName.lastIndexOf('/')+1, chartName.lastIndexOf('.'));
 
 					var chartFile:String = '$path/$chartName-chart.json';
@@ -4758,7 +4782,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}
 		else
 		{
-			var chartName:String = Paths.formatToSongPath(PlayState.SONG.song) + '.json';
+			var chartName:String = Paths.formatToSongPath(Song.loadedSongName) + '.json';
 			if(Song.chartPath != null) chartName = Song.chartPath.substr(Song.chartPath.lastIndexOf('/')).trim();
 			fileDialog.save(chartName, chartData,
 				function()

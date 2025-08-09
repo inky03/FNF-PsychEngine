@@ -211,14 +211,16 @@ class Paths
 	inline static public function music(key:String, ?modsAllowed:Bool = true):Sound
 		return returnSound('music/$key', modsAllowed);
 
-	inline static public function inst(song:String, ?modsAllowed:Bool = true):Sound
-		return returnSound('${formatToSongPath(song)}/Inst', 'songs', modsAllowed);
+	inline static public function inst(song:String, musicPostfix:String = '', ?modsAllowed:Bool = true):Sound {
+		if (musicPostfix.trim() != '') musicPostfix = '-$musicPostfix';
+		return returnSound('${formatToSongPath(song)}/Inst$musicPostfix', 'songs', modsAllowed, false);
+	}
 
-	inline static public function voices(song:String, postfix:String = null, ?modsAllowed:Bool = true):Sound
+	inline static public function voices(song:String, postfix:String = '', musicPostfix:String = '', ?modsAllowed:Bool = true):Sound
 	{
 		var songKey:String = '${formatToSongPath(song)}/Voices';
-		if(postfix != null) songKey += '-' + postfix;
-		//trace('songKey test: $songKey');
+		if (postfix.trim() != '') songKey += '-$postfix';
+		if (musicPostfix.trim() != '') songKey += '-$musicPostfix';
 		return returnSound(songKey, 'songs', modsAllowed, false);
 	}
 
@@ -438,12 +440,14 @@ class Paths
 			{
 				trace('SOUND NOT FOUND: $key, PATH: $path');
 				FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
-				return FlxAssets.getSoundAddExtension('flixel/sounds/beep');
+				return beep;
 			}
 		}
 		localTrackedAssets.push(file);
 		return currentTrackedSounds.get(file);
 	}
+	
+	public static var beep(default, null):Sound = FlxAssets.getSoundAddExtension('flixel/sounds/beep');
 
 	#if MODS_ALLOWED
 	inline static public function mods(key:String = '')

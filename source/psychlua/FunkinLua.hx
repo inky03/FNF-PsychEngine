@@ -126,6 +126,7 @@ class FunkinLua {
 			set('songPath', Paths.formatToSongPath(PlayState.SONG.song));
 			set('loadedSongName', Song.loadedSongName);
 			set('loadedSongPath', Paths.formatToSongPath(Song.loadedSongName));
+			set('songVariant', PlayState.SONG.audioSuffix ?? '');
 			set('chartPath', Song.chartPath);
 			set('startedCountdown', false);
 			set('curStage', PlayState.SONG.stage);

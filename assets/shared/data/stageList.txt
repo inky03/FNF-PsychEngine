@@ -7,3 +7,13 @@ mallEvil
 school
 schoolEvil
 tank
+phillyStreets
+phillyBlazin
+stageErect
+spookyErect
+phillyErect
+limoErect
+mallErect
+schoolErect
+tankErect
+phillyStreetsErect

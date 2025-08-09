@@ -375,6 +375,8 @@ class PlayState extends ScriptedState
 			case 'tank': new Tank();					//Week 7 - Ugh, Guns, Stress
 			case 'phillyStreets': new PhillyStreets(); 	//Weekend 1 - Darnell, Lit Up, 2Hot
 			case 'phillyBlazin': new PhillyBlazin();	//Weekend 1 - Blazin
+			
+			case 'stageErect': new StageErect();
 		}
 		if(isPixelStage) introSoundsSuffix = '-pixel';
 
@@ -568,20 +570,28 @@ class PlayState extends ScriptedState
 		eventsPushed = null;
 
 		// SONG SPECIFIC SCRIPTS
-		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
-		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'data/$songName/'))
-			for (file in FileSystem.readDirectory(folder))
-			{
-				#if LUA_ALLOWED
-				if(file.toLowerCase().endsWith('.lua'))
-					initLuaScript(folder + file);
-				#end
+		#if SCRIPTS_ALLOWED
+		for (blob in [Mods.directoriesWithFile(Paths.getSharedPath(), 'data/$songName/'), Mods.directoriesWithFile(Paths.getSharedPath(), 'data/${Paths.formatToSongPath(Song.loadedSongName)}/')]) {
+			var hasScripts:Bool = false;
+			
+			for (folder in blob) {
+				for (file in FileSystem.readDirectory(folder)) {
+					#if LUA_ALLOWED
+					if(file.toLowerCase().endsWith('.lua') && (hasScripts = true))
+						initLuaScript(folder + file);
+					#end
 
-				#if HSCRIPT_ALLOWED
-				if(file.toLowerCase().endsWith('.hx'))
-					initHScript(folder + file);
-				#end
+					#if HSCRIPT_ALLOWED
+					if(file.toLowerCase().endsWith('.hx') && (hasScripts = true))
+						initHScript(folder + file);
+					#end
+				}
 			}
+			
+			// search for scripts in folder with matching song name first (for compatibility purposes ...)
+			if (hasScripts)
+				break;
+		}
 		#end
 
 		if(eventNotes.length > 0)
@@ -1266,10 +1276,10 @@ class PlayState extends ScriptedState
 		{
 			if (songData.needsVoices)
 			{
-				var playerVocals = Paths.voices(songData.song, (boyfriend.vocalsFile == null || boyfriend.vocalsFile.length < 1) ? 'Player' : boyfriend.vocalsFile);
+				var playerVocals = Paths.voices(Song.loadedSongName, (boyfriend.vocalsFile == null || boyfriend.vocalsFile.length < 1) ? 'Player' : boyfriend.vocalsFile, PlayState.SONG.audioSuffix);
 				vocals.loadEmbedded(playerVocals != null ? playerVocals : Paths.voices(songData.song));
 				
-				var oppVocals = Paths.voices(songData.song, (dad.vocalsFile == null || dad.vocalsFile.length < 1) ? 'Opponent' : dad.vocalsFile);
+				var oppVocals = Paths.voices(Song.loadedSongName, (dad.vocalsFile == null || dad.vocalsFile.length < 1) ? 'Opponent' : dad.vocalsFile, PlayState.SONG.audioSuffix);
 				if(oppVocals != null && oppVocals.length > 0) opponentVocals.loadEmbedded(oppVocals);
 			}
 		}
@@ -1285,7 +1295,7 @@ class PlayState extends ScriptedState
 		inst = new FlxSound();
 		try
 		{
-			inst.loadEmbedded(Paths.inst(songData.song));
+			inst.loadEmbedded(Paths.inst(Song.loadedSongName, PlayState.SONG.audioSuffix));
 		}
 		catch (e:Dynamic) {}
 		FlxG.sound.list.add(inst);
@@ -1293,15 +1303,19 @@ class PlayState extends ScriptedState
 		notes = new FlxTypedGroup<Note>();
 		noteGroup.add(notes);
 
-		try
-		{
-			var eventsChart:SwagSong = Song.getChart('events', songName);
-			if(eventsChart != null)
-				for (event in eventsChart.events) //Event Notes
+		try {
+			var file:String = (SONG.audioSuffix != null && SONG.audioSuffix.trim() == '' ? 'events' : 'events-${SONG.audioSuffix}');
+			
+			var eventsChart:SwagSong = Song.getChart(file, songName);
+			eventsChart ??= Song.getChart(file, Paths.formatToSongPath(Song.loadedSongName));
+			
+			if (eventsChart != null) {
+				for (event in eventsChart.events) { //Event Notes
 					for (i in 0...event[1].length)
 						makeEvent(event, i);
-		}
-		catch(e:Dynamic) {}
+				}
+			}
+		} catch(e:Dynamic) {}
 
 		var oldNote:Note = null;
 		var sectionsData:Array<SwagSection> = PlayState.SONG.notes;

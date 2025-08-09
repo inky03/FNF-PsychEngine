@@ -20,6 +20,8 @@ typedef SwagSong =
 	var gfVersion:String;
 	var stage:String;
 	var format:String;
+	
+	@:optional var audioSuffix:String;
 
 	@:optional var gameOverChar:String;
 	@:optional var gameOverSound:String;
@@ -49,6 +51,7 @@ class Song
 	public var notes:Array<SwagSection>;
 	public var events:Array<Dynamic>;
 	public var bpm:Float;
+	public var audioSuffix:String = '';
 	public var needsVoices:Bool = true;
 	public var arrowSkin:String;
 	public var splashSkin:String;

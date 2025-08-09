@@ -220,7 +220,7 @@ class FreeplayState extends ScriptedState
 		if(WeekData.weeksList.length < 1)
 			return;
 
-		if (FlxG.sound.music.volume < 0.7)
+		if (FlxG.sound.music != null && FlxG.sound.music.volume < 0.7)
 			FlxG.sound.music.volume += 0.5 * elapsed;
 
 		lerpScore = Math.floor(FlxMath.lerp(intendedScore, lerpScore, Math.exp(-elapsed * 24)));
@@ -304,9 +304,11 @@ class FreeplayState extends ScriptedState
 		{
 			if (player.playingMusic)
 			{
-				FlxG.sound.music.stop();
+				if (FlxG.sound.music != null) {
+					FlxG.sound.music.volume = 0;
+					FlxG.sound.music.stop();
+				}
 				destroyFreeplayVocals();
-				FlxG.sound.music.volume = 0;
 				instPlaying = -1;
 
 				player.playingMusic = false;
@@ -390,7 +392,7 @@ class FreeplayState extends ScriptedState
 				}
 
 				FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 0.8);
-				FlxG.sound.music.pause();
+				FlxG.sound.music?.pause();
 				instPlaying = curSelected;
 
 				player.playingMusic = true;
@@ -448,7 +450,7 @@ class FreeplayState extends ScriptedState
 			}
 			LoadingState.prepareToSong();
 			LoadingState.loadAndSwitchState(new PlayState());
-			#if !SHOW_LOADING_SCREEN FlxG.sound.music.stop(); #end
+			#if !SHOW_LOADING_SCREEN FlxG.sound.music?.stop(); #end
 			stopMusicPlay = true;
 
 			destroyFreeplayVocals();

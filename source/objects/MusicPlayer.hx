@@ -97,7 +97,7 @@ class MusicPlayer extends FlxGroup
 			songTxt.text = Language.getPhrase('musicplayer_paused', 'PLAYING: {1} (PAUSED)', [songName]);
 
 		//if(FlxG.keys.justPressed.K) trace('Time: ${FreeplayState.vocals.time}, Playing: ${FreeplayState.vocals.playing}');
-
+		
 		if (controls.UI_LEFT_P)
 		{
 			if (playing)
@@ -105,14 +105,13 @@ class MusicPlayer extends FlxGroup
 
 			pauseOrResume();
 
-			curTime = FlxG.sound.music.time - 1000;
+			curTime = getMusicTime() - 1000;
 			instance.holdTime = 0;
-
+			
 			if (curTime < 0)
 				curTime = 0;
-
-			FlxG.sound.music.time = curTime;
-			setVocalsTime(curTime);
+			
+			setMusicTime(curTime);
 		}
 		if (controls.UI_RIGHT_P)
 		{
@@ -121,14 +120,13 @@ class MusicPlayer extends FlxGroup
 
 			pauseOrResume();
 
-			curTime = FlxG.sound.music.time + 1000;
+			curTime = getMusicTime() + 1000;
 			instance.holdTime = 0;
 
-			if (curTime > FlxG.sound.music.length)
-				curTime = FlxG.sound.music.length;
-
-			FlxG.sound.music.time = curTime;
-			setVocalsTime(curTime);
+			if (curTime > getMusicLength())
+				curTime = getMusicLength();
+			
+			setMusicTime(curTime);
 		}
 
 		if(controls.UI_LEFT || controls.UI_RIGHT)
@@ -138,19 +136,20 @@ class MusicPlayer extends FlxGroup
 			{
 				curTime += 40000 * elapsed * (controls.UI_LEFT ? -1 : 1);
 			}
+			
+			var time:Float = getMusicTime();
+			var length:Float = getMusicLength();
 
-			var difference:Float = Math.abs(curTime - FlxG.sound.music.time);
-			if(curTime + difference > FlxG.sound.music.length) curTime = FlxG.sound.music.length;
+			var difference:Float = Math.abs(curTime - time);
+			if(curTime + difference > length) curTime = length;
 			else if(curTime - difference < 0) curTime = 0;
-
-			FlxG.sound.music.time = curTime;
-			setVocalsTime(curTime);
+			
+			setMusicTime(curTime);
 		}
 
 		if(controls.UI_LEFT_R || controls.UI_RIGHT_R)
 		{
-			FlxG.sound.music.time = curTime;
-			setVocalsTime(curTime);
+			setMusicTime(curTime);
 
 			if (wasPlaying)
 			{
@@ -184,23 +183,24 @@ class MusicPlayer extends FlxGroup
 		{
 			playbackRate = 1;
 			setPlaybackRate();
-
-			FlxG.sound.music.time = 0;
-			setVocalsTime(0);
+			
+			setMusicTime(0);
 		}
 
 		if (playing)
 		{
+			var time:Float = getMusicTime();
+			
 			if(FreeplayState.vocals != null)
-				FreeplayState.vocals.volume = (FreeplayState.vocals.length > FlxG.sound.music.time) ? 0.8 : 0;
+				FreeplayState.vocals.volume = (FreeplayState.vocals.length > time) ? 0.8 : 0;
 			if(FreeplayState.opponentVocals != null)
-				FreeplayState.opponentVocals.volume = (FreeplayState.opponentVocals.length > FlxG.sound.music.time) ? 0.8 : 0;
+				FreeplayState.opponentVocals.volume = (FreeplayState.opponentVocals.length > time) ? 0.8 : 0;
 
-			if((FreeplayState.vocals != null && FreeplayState.vocals.length > FlxG.sound.music.time && Math.abs(FlxG.sound.music.time - FreeplayState.vocals.time) >= 25) ||
-			(FreeplayState.opponentVocals != null && FreeplayState.opponentVocals.length > FlxG.sound.music.time && Math.abs(FlxG.sound.music.time - FreeplayState.opponentVocals.time) >= 25))
+			if((FreeplayState.vocals != null && FreeplayState.vocals.length > time && Math.abs(time - FreeplayState.vocals.time) >= 25) ||
+			(FreeplayState.opponentVocals != null && FreeplayState.opponentVocals.length > time && Math.abs(time - FreeplayState.opponentVocals.time) >= 25))
 			{
 				pauseOrResume();
-				setVocalsTime(FlxG.sound.music.time);
+				setVocalsTime(time);
 				pauseOrResume(true);
 			}
 		}
@@ -217,12 +217,41 @@ class MusicPlayer extends FlxGroup
 		if (FreeplayState.opponentVocals != null && FreeplayState.opponentVocals.length > time)
 			FreeplayState.opponentVocals.time = time;
 	}
+	
+	function getMusicTime():Float {
+		if (FlxG.sound.music != null) {
+			return FlxG.sound.music.time;
+		} else if (FreeplayState.vocals != null) {
+			return FreeplayState.vocals.time;
+		} else if (FreeplayState.opponentVocals != null) {
+			return FreeplayState.opponentVocals.time;
+		}
+		return 0;
+	}
+	
+	function getMusicLength():Float {
+		if (FlxG.sound.music != null) {
+			return FlxG.sound.music.length;
+		} else if (FreeplayState.vocals != null) {
+			return FreeplayState.vocals.length;
+		} else if (FreeplayState.opponentVocals != null) {
+			return FreeplayState.opponentVocals.length;
+		}
+		return 0;
+	}
+
+	function setMusicTime(time:Float)
+	{
+		if (FlxG.sound.music != null)
+			FlxG.sound.music.time = time;
+		setVocalsTime(time);
+	}
 
 	public function pauseOrResume(resume:Bool = false) 
 	{
 		if (resume)
 		{
-			if(!FlxG.sound.music.playing)
+			if (FlxG.sound.music != null && !FlxG.sound.music.playing)
 				FlxG.sound.music.resume();
 
 			if (FreeplayState.vocals != null && FreeplayState.vocals.length > FlxG.sound.music.time && !FreeplayState.vocals.playing)
@@ -232,7 +261,8 @@ class MusicPlayer extends FlxGroup
 		}
 		else 
 		{
-			FlxG.sound.music.pause();
+			if (FlxG.sound.music != null)
+				FlxG.sound.music.pause();
 
 			if (FreeplayState.vocals != null)
 				FreeplayState.vocals.pause();
@@ -343,8 +373,8 @@ class MusicPlayer extends FlxGroup
 
 	function updateTimeTxt()
 	{
-		var text = FlxStringUtil.formatTime(FlxG.sound.music.time / 1000, false) + ' / ' + FlxStringUtil.formatTime(FlxG.sound.music.length / 1000, false);
-		timeTxt.text = '< ' + text + ' >';
+		var text = FlxStringUtil.formatTime(getMusicTime() / 1000, false) + ' / ' + FlxStringUtil.formatTime(getMusicTime() / 1000, false);
+		timeTxt.text = '< $text >';
 	}
 
 	function setPlaybackRate() 
