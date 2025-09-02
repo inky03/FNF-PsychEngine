@@ -78,6 +78,10 @@ class Philly extends BaseStage
 	override function update(elapsed:Float)
 	{
 		phillyWindow.alpha -= (Conductor.crochet / 1000) * elapsed * 1.5;
+		
+		var ct = phillyWindow.colorTransform;
+		ct.redOffset = ct.blueOffset = ct.greenOffset = (phillyWindow.alpha * 255 - 255);
+		
 		if(phillyGlowParticles != null)
 		{
 			phillyGlowParticles.forEachAlive(function(particle:PhillyGlowParticle)

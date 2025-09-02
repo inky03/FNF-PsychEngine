@@ -376,7 +376,8 @@ class PlayState extends ScriptedState
 			case 'phillyStreets': new PhillyStreets(); 	//Weekend 1 - Darnell, Lit Up, 2Hot
 			case 'phillyBlazin': new PhillyBlazin();	//Weekend 1 - Blazin
 			
-			case 'stageErect': new StageErect();
+			case 'stageErect': new StageErect();		// Week 1 (ERECT)
+			case 'phillyErect': new PhillyErect();		// Week 3 (ERECT)
 		}
 		if(isPixelStage) introSoundsSuffix = '-pixel';
 
