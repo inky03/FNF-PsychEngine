@@ -1826,7 +1826,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}
 		catch(e:Exception)
 		{
-			FlxG.sound.playMusic(Paths.beep, 0);
+			FlxG.sound.playMusic(Paths.unknownSound, 0);
 			FlxG.sound.music.onComplete = null;
 			FlxG.log.error('Error loading song: $e');
 			return;
@@ -3783,13 +3783,13 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		
 		btnY++;
 		btnY += 20;
-		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Save (V-Slice)...', function()
+		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Save (Modern)...', function()
 		{
 			if(!fileDialog.completed) return;
 			upperBox.isMinimized = true;
 			upperBox.bg.visible = false;
 
-			fileDialog.openDirectory('Save V-Slice Chart/Metadata JSONs', function()
+			fileDialog.openDirectory('Save Modern Chart/Metadata JSONs', function()
 			{
 				try
 				{
@@ -3868,7 +3868,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		tab_group.add(btn);
 
 		btnY += 20;
-		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Psych to V-Slice...', function()
+		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Psych to Modern...', function()
 		{
 			if(!fileDialog.completed) return;
 			upperBox.isMinimized = true;
@@ -3880,7 +3880,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				var loadedChart:SwagSong = Song.parseJSON(fileDialog.data, filePath.substr(filePath.lastIndexOf('/')));
 				if(loadedChart == null || !Reflect.hasField(loadedChart, 'song')) //Check if chart is ACTUALLY a chart and valid
 				{
-					showOutput('Error: File loaded is not a Psych Engine 0.x.x/FNF 0.2.x.x chart.', true);
+					showOutput('Error: File loaded is not a Psych Engine/Legacy (0.2.x.x) chart.', true);
 					return;
 				}
 
@@ -3952,7 +3952,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 										}
 									}
 
-									fileDialog.openDirectory('Save V-Slice Chart/Metadata JSONs', function()
+									fileDialog.openDirectory('Save Modern Chart/Metadata JSONs', function()
 									{
 										overwriteSavedSomething = false;
 										var path:String = fileDialog.path.replace('\\', '/');
@@ -4032,28 +4032,28 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		tab_group.add(btn);
 
 		btnY += 20;
-		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  V-Slice to Psych...', function()
+		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Modern to Psych...', function()
 		{
 			if(!fileDialog.completed) return;
 			upperBox.isMinimized = true;
 			upperBox.bg.visible = false;
 
-			fileDialog.open('chart.json', 'Open a V-Slice Chart file', function()
+			fileDialog.open('chart.json', 'Open a Modern Chart file', function()
 			{
 				var chart:VSliceChart = cast Json.parse(fileDialog.data);
 				if(chart == null || chart.version == null || chart.notes == null || chart.scrollSpeed == null)
 				{
-					showOutput('Error: File loaded is not a valid FNF V-Slice chart.', true);
+					showOutput('Error: File loaded is not a valid Modern (FNF 0.3.0+) chart.', true);
 					return;
 				}
 
-				fileDialog.open('metadata.json', 'Open a V-Slice Metadata file', function()
+				fileDialog.open('metadata.json', 'Open a Modern Metadata file', function()
 				{
 					var metadata:VSliceMetadata = cast Json.parse(fileDialog.data);
 					if(metadata == null || metadata.version == null || metadata.playData == null || metadata.songName == null ||
 						metadata.playData.difficulties == null || metadata.timeChanges == null || metadata.timeChanges.length < 1)
 					{
-						showOutput('Error: File loaded is not a valid FNF V-Slice metadata.', true);
+						showOutput('Error: File loaded is not a valid Modern (FNF 0.3.0+) metadata.', true);
 						return;
 					}
 
@@ -4597,7 +4597,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					btn.x += 60;
 					state.add(btn);
 			
-					var btn:PsychUIButton = new PsychUIButton(0, btnY, 'V-Slice', changeTheme.bind(VSLICE));
+					var btn:PsychUIButton = new PsychUIButton(0, btnY, 'Funkin', changeTheme.bind(VSLICE));
 					btn.screenCenter(X);
 					btn.x += 180;
 					btn.cameras = state.cameras;

@@ -70,6 +70,8 @@ class Main extends Sprite
 	public function new()
 	{
 		super();
+		
+		Paths.unknownSound = flixel.system.FlxAssets.getSoundAddExtension('flixel/sounds/beep');
 
 		#if (cpp && windows)
 		backend.macro.Native.fixScaling();

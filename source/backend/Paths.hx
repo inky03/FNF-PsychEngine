@@ -4,7 +4,6 @@ import flixel.graphics.frames.FlxFrame.FlxFrameAngle;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.FlxGraphic;
 import flixel.math.FlxRect;
-import flixel.system.FlxAssets;
 
 import openfl.display.BitmapData;
 import openfl.display3D.textures.RectangleTexture;
@@ -422,7 +421,7 @@ class Paths
 	}
 
 	public static var currentTrackedSounds:Map<String, Sound> = [];
-	public static function returnSound(key:String, ?path:String, ?modsAllowed:Bool = true, ?beepOnNull:Bool = true)
+	public static function returnSound(key:String, ?path:String, modsAllowed:Bool = true, beepOnNull:Bool = true)
 	{
 		var file:String = getPath(Language.getFileTranslation(key) + '.$SOUND_EXT', SOUND, path, modsAllowed);
 
@@ -440,14 +439,14 @@ class Paths
 			{
 				trace('SOUND NOT FOUND: $key, PATH: $path');
 				FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
-				return beep;
+				return unknownSound;
 			}
 		}
 		localTrackedAssets.push(file);
 		return currentTrackedSounds.get(file);
 	}
 	
-	public static var beep(default, null):Sound = FlxAssets.getSoundAddExtension('flixel/sounds/beep');
+	public static var unknownSound:Sound;
 
 	#if MODS_ALLOWED
 	inline static public function mods(key:String = '')
