@@ -29,7 +29,9 @@ class Limo extends BaseStage
 
 	override function create()
 	{
+		var limoOverlay:LimoOverlayShader = new LimoOverlayShader();
 		var skyBG:BGSprite = new BGSprite('limo/limoSunset', -120, -50, 0.1, 0.1);
+		skyBG.shader = limoOverlay;
 		add(skyBG);
 
 		if(!ClientPrefs.data.lowQuality) {
@@ -78,7 +80,7 @@ class Limo extends BaseStage
 	override function createPost()
 	{
 		resetFastCar();
-		addBehindGF(fastCar);
+		add(fastCar);
 		
 		var limo:BGSprite = new BGSprite('limo/limoDrive', -120, 550, 1, 1, ['Limo stage'], true);
 		addBehindGF(limo); //Shitty layering but whatev it works LOL
@@ -268,5 +270,35 @@ class Limo extends BaseStage
 				#end
 			}
 		}
+	}
+}
+
+class LimoOverlayShader extends flixel.system.FlxAssets.FlxShader {
+	@:glFragmentSource('
+		#pragma header // what freaking ever man
+
+		uniform sampler2D image;
+
+		vec4 blendOverlay(vec4 base, vec4 blend) {
+			vec4 mixed = mix(1. - 2. * (1. - base) * (1. - blend), 2. * base * blend, step(base, vec4(.5)));
+			
+			return mixed;
+		}
+
+		void main() {
+			vec2 funnyUv = openfl_TextureCoordv;
+			vec4 color = flixel_texture2D(bitmap, funnyUv);
+
+			vec2 reallyFunnyUv = vec2(vec2(0., 0.) - gl_FragCoord.xy / openfl_TextureSize.xy);
+			vec4 gf = flixel_texture2D(image, openfl_TextureCoordv.xy + vec2(.1, .2));
+
+			gl_FragColor = blendOverlay(color, gf);
+		}
+	')
+	
+	public function new() {
+		super();
+		
+		image.input = Paths.image('limo/limoOverlay')?.bitmap;
 	}
 }

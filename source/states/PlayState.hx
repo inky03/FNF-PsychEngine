@@ -378,6 +378,7 @@ class PlayState extends ScriptedState
 			
 			case 'stageErect': new StageErect();		// Week 1 (ERECT)
 			case 'phillyErect': new PhillyErect();		// Week 3 (ERECT)
+			case 'limoErect': new LimoErect();			// Week 4 (ERECT)
 		}
 		if(isPixelStage) introSoundsSuffix = '-pixel';
 

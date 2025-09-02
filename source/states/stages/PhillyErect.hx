@@ -39,6 +39,8 @@ class PhillyErect extends Philly {
 	}
 	
 	override function createPost():Void {
+		super.createPost();
+		
 		boyfriend.shader = dad.shader = gf.shader = colorShader.shader;
 	}
 }
