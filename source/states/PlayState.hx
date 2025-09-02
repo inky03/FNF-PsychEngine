@@ -379,6 +379,7 @@ class PlayState extends ScriptedState
 			case 'stageErect': new StageErect();		// Week 1 (ERECT)
 			case 'phillyErect': new PhillyErect();		// Week 3 (ERECT)
 			case 'limoErect': new LimoErect();			// Week 4 (ERECT)
+			case 'mallErect': new MallErect();			// Week 5 (ERECT)
 		}
 		if(isPixelStage) introSoundsSuffix = '-pixel';
 
@@ -1306,7 +1307,7 @@ class PlayState extends ScriptedState
 		noteGroup.add(notes);
 
 		try {
-			var file:String = (SONG.audioSuffix != null && SONG.audioSuffix.trim() == '' ? 'events' : 'events-${SONG.audioSuffix}');
+			var file:String = (SONG.audioSuffix != null && SONG.audioSuffix.trim() == '' ? 'events-${SONG.audioSuffix}' : 'events');
 			
 			var eventsChart:SwagSong = Song.getChart(file, songName);
 			eventsChart ??= Song.getChart(file, Paths.formatToSongPath(Song.loadedSongName));
@@ -1317,7 +1318,9 @@ class PlayState extends ScriptedState
 						makeEvent(event, i);
 				}
 			}
-		} catch(e:Dynamic) {}
+		} catch(e:Dynamic) {
+			trace('Error loading events: $e');
+		}
 
 		var oldNote:Note = null;
 		var sectionsData:Array<SwagSection> = PlayState.SONG.notes;

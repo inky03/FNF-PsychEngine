@@ -36,16 +36,20 @@ class Mall extends BaseStage
 		var fgSnow:BGSprite = new BGSprite('christmas/fgSnow', -600, 700);
 		add(fgSnow);
 
-		santa = new BGSprite('christmas/santa', -840, 150, 1, 1, ['santa idle in fear']);
-		add(santa);
 		Paths.sound('Lights_Shut_off');
 		setDefaultGF('gf-christmas');
 
 		if(isStoryMode && !seenCutscene)
 			setEndCallback(eggnogEndCutscene);
 	}
-
-	override function countdownTick(count:Countdown, num:Int) everyoneDance();
+	
+	override function createPost():Void {
+		super.createPost();
+		
+		santa = new BGSprite('christmas/santa', -840, 150, 1, 1, ['santa idle in fear']);
+		add(santa);
+	}
+	
 	override function beatHit() everyoneDance();
 
 	override function eventCalled(eventName:String, value1:String, value2:String, flValue1:Null<Float>, flValue2:Null<Float>, strumTime:Float)
@@ -57,8 +61,10 @@ class Mall extends BaseStage
 					case 'bf' | 'boyfriend' | '0':
 						return;
 				}
-				bottomBoppers.animation.play('hey', true);
-				bottomBoppers.heyTimer = flValue2;
+				if (bottomBoppers.canCheer) {
+					bottomBoppers.animation.play('hey', true);
+					bottomBoppers.heyTimer = flValue2;
+				}
 		}
 	}
 
@@ -83,19 +89,14 @@ class Mall extends BaseStage
 		if(nextSong == 'winter-horrorland')
 		{
 			FlxG.sound.play(Paths.sound('Lights_Shut_off'));
-
-			var blackShit:FlxSprite = new FlxSprite(-FlxG.width * FlxG.camera.zoom,
-				-FlxG.height * FlxG.camera.zoom).makeGraphic(FlxG.width * 3, FlxG.height * 3, FlxColor.BLACK);
-			blackShit.scrollFactor.set();
-			add(blackShit);
+			
+			camGame.visible = false;
 			camHUD.visible = false;
 
 			inCutscene = true;
 			canPause = false;
 
-			new FlxTimer().start(1.5, function(tmr:FlxTimer) {
-				endSong();
-			});
+			new FlxTimer().start(1.5, function(tmr:FlxTimer) endSong());
 		}
 		else endSong();
 	}
