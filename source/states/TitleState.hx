@@ -70,11 +70,6 @@ class TitleState extends ScriptedState
 		
 		rpcDetails = 'Title Screen';
 
-		if (!initialized) {
-			ClientPrefs.loadPrefs();
-			Language.reloadPhrases();
-		}
-
 		curWacky = FlxG.random.getObject(getIntroTextShit());
 
 		if(!initialized) {

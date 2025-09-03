@@ -1169,6 +1169,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			updateSelectionBox();
 		}
 		
+		for (note in curRenderedNotes) {
+			if (note.isEvent) {
+				if (cast(note, EventMetaNote).gui.hovering) {
+					ignoreClickForThisFrame = true;
+					break;
+				}
+			}
+		}
 		if(FlxG.mouse.justPressed && (draggingToy != null || FlxG.mouse.overlaps(mainBox.bg, camUI) || FlxG.mouse.overlaps(infoBox.bg, camUI)))
 			ignoreClickForThisFrame = true;
 
@@ -1414,12 +1422,12 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			
 			for (note in curRenderedNotes)
 			{
-				if(note == null || note.isEvent) continue;
+				if (note == null) continue;
 				
 				var offsetTime:Float = note.strumTime + 1;
 				var hitAlpha:Float = (FlxG.sound.music.playing ? .4 : .6);
 				note.alpha = (offsetTime > Conductor.songPosition) ? 1 : hitAlpha;
-				if (Conductor.songPosition > offsetTime && lastSongTime <= offsetTime)
+				if (!note.isEvent && Conductor.songPosition > offsetTime && lastSongTime <= offsetTime)
 					hitNote(note);
 			}
 			forceDataUpdate = false;
@@ -1993,10 +2001,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	{
 		var daStrumTime:Float = event[0];
 		var swagEvent:EventMetaNote = new EventMetaNote(daStrumTime, event, this);
-		swagEvent.x = gridBg.x;
-		swagEvent.eventText.x = swagEvent.x - swagEvent.eventText.width - 10;
 		swagEvent.scrollFactor.x = 0;
-		swagEvent.active = false;
+		swagEvent.x = gridBg.x;
 		
 		positionNoteYOnTime(swagEvent);
 		return swagEvent;
@@ -2231,7 +2237,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					if(!firstEvent) sectionFirstEventID = num;
 					curRenderedNotes.add(event);
 					event.alpha = (Conductor.songPosition - 1 > event.strumTime) ? .6 : 1;
-					event.eventText.visible = true;
 				}
 			}
 		}
@@ -2264,7 +2269,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					{
 						behindRenderedNotes.add(event);
 						event.alpha = 0.4;
-						event.eventText.visible = false;
 					}
 				}
 			}
@@ -2649,7 +2653,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				{
 					var event:EventMetaNote = cast (selectedNotes[0], EventMetaNote);
 					func(event);
-					updateSelectedEventText();
 				}
 				else showOutput('Note selected must be an Event!', true);
 			}

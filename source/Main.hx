@@ -59,22 +59,22 @@ class Main extends Sprite
 	
 	public static var fpsVar:FPSCounter;
 	public static var traces:ScriptTraceDisplay;
-
+	
 	// You can pretty much ignore everything from here on - your code should go in your states.
-
+	
 	public static function main():Void
 	{
 		Lib.current.addChild(new Main());
 	}
-
+	
 	public function new()
 	{
 		super();
-
+		
 		#if (cpp && windows)
 		backend.macro.Native.fixScaling();
 		#end
-
+		
 		// Credits to MAJigsaw77 (he's the og author for this code)
 		#if android
 		Sys.setCwd(Path.addTrailingSlash(Context.getExternalFilesDir()));
@@ -84,24 +84,28 @@ class Main extends Sprite
 		#if VIDEOS_ALLOWED
 		hxvlc.util.Handle.init(#if (hxvlc >= "1.8.0")  ['--no-lua'] #end);
 		#end
-
+		
 		#if LUA_ALLOWED
 		Mods.pushGlobalMods();
 		#end
 		Mods.loadTopMod();
-
+		
 		FlxG.save.bind('funkin', CoolUtil.getSavePath());
 		Difficulty.resetList();
 		Highscore.load();
 		
 		#if HSCRIPT_ALLOWED HScript.init(); #end
 		#if GLOBAL_SCRIPTS GlobalScriptHandler.init(); #end
-
+		
 		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
 		Controls.instance = new Controls();
 		ClientPrefs.loadDefaultKeys();
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
 		addChild(new #if UNHOLYWANDERER04 UnholyGame #else FlxGame #end(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
+		
+		ClientPrefs.loadPrefs();
+		Language.reloadPhrases();
+		substates.OutdatedSubState.updateVersion = CoolUtil.checkForUpdates();
 		
 		traces = new ScriptTraceDisplay();
 		addChild(traces);
@@ -115,12 +119,12 @@ class Main extends Sprite
 			fpsVar.visible = ClientPrefs.data.showFPS;
 		}
 		#end
-
+		
 		#if (linux || mac) // fix the app icon not showing up on the Linux Panel / Mac Dock
 		var icon = Image.fromFile("icon.png");
 		Lib.current.stage.window.setIcon(icon);
 		#end
-
+		
 		#if html5
 		FlxG.autoPause = false;
 		FlxG.mouse.visible = false;
@@ -132,11 +136,11 @@ class Main extends Sprite
 		#if CRASH_HANDLER
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
 		#end
-
+		
 		#if DISCORD_ALLOWED
 		DiscordClient.prepare();
 		#end
-
+		
 		// shader coords fix
 		FlxG.signals.gameResized.add((w:Int, h:Int) -> {
 		     if (FlxG.cameras != null) {
@@ -150,14 +154,14 @@ class Main extends Sprite
 			resetSpriteCache(FlxG.game);
 		});
 	}
-
+	
 	static function resetSpriteCache(sprite:Sprite):Void {
 		@:privateAccess {
 		        sprite.__cacheBitmap = null;
 			sprite.__cacheBitmapData = null;
 		}
 	}
-
+	
 	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
 	// very cool person for real they don't get enough credit for their work
 	#if CRASH_HANDLER

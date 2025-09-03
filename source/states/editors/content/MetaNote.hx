@@ -302,61 +302,138 @@ class EditorSustain extends Note {
 
 class EventMetaNote extends MetaNote
 {
+	public var events:Array<Array<String>>;
 	public var eventText:FlxText;
+	public var gui:EventNoteGui;
+	
 	public function new(time:Float, eventData:Dynamic, state:ChartingState)
 	{
 		super(time, -1, eventData, state);
 		this.isEvent = true;
 		events = eventData[1];
-		//trace('events: $events');
-
-		eventText = new FlxText(0, 0, 400, '', 12);
-		eventText.setFormat(Paths.font('vcr.ttf'), 12, FlxColor.WHITE, RIGHT);
-		eventText.scrollFactor.x = 0;
-		updateEventInfo();
-	}
-	
-	override function draw()
-	{
-		if(eventText != null && eventText.exists && eventText.visible)
-		{
-			eventText.y = this.y + this.height/2 - eventText.height/2;
-			eventText.alpha = this.alpha;
-			eventText.draw();
-		}
-		super.draw();
-	}
-
-	override function setSustainLength(newLength:Float, zoom:Float = 1) {}
-	public override function updateSustainToZoom(zoom:Float = 1) {}
-
-	public var events:Array<Array<String>>;
-	public function updateEventInfo()
-	{
-		var myTime:Float = Math.floor(this.strumTime);
-		if (events.length == 1) {
-			var event = events[0];
-			eventText.text = 'Event: ${event[0]} ($myTime ms)\nValue 1: ${event[1]}\nValue 2: ${event[2]}';
-			
-			loadGraphic(Paths.image('events/${event[0]}') ?? Paths.image('events/default'));
-		} else {
-			if (events.length > 1) {
-				var eventNames:Array<String> = [for (event in events) event[0]];
-				eventText.text = '${events.length} Events ($myTime ms):\n${eventNames.join(', ')}';
-			} else {
-				eventText.text = 'Error!';
-			}
-			
-			loadGraphic(Paths.image('events/default'));
-		}
 		
+		loadGraphic(Paths.image('events/default'));
 		setGraphicSize(ChartingState.GRID_SIZE);
 		updateHitbox();
+		
+		eventText = new FlxText(0, 0, width, '', 12);
+		eventText.setFormat(eventText.font, 12, FlxColor.WHITE, CENTER, SHADOW_XY(2, 2), FlxColor.BLACK);
+		eventText.scrollFactor.x = 0;
+		
+		gui = new EventNoteGui();
+		updateEventInfo();
 	}
-
-	override function destroy()
-	{
-		eventText = FlxDestroyUtil.destroy(eventText);
+	public override function update(elapsed:Float):Void {
+		super.update(elapsed);
+		gui.update(elapsed);
+	}
+	public override function draw():Void {
+		super.draw();
+		
+		gui.setPosition(x - gui.rect.width, y);
+		gui.alpha = alpha;
+		gui.draw();
+		
+		eventText.setPosition(x, y + (height - eventText.height) * .5);
+		eventText.alpha = alpha;
+		eventText.draw();
+	}
+	public override function destroy() {
 		super.destroy();
+		gui = FlxDestroyUtil.destroy(gui);
+		eventText = FlxDestroyUtil.destroy(eventText);
+	}
+	
+	public function updateEventInfo() {
+		gui.events = events;
+		gui.updateDisplay();
+		
+		eventText.text = Std.string(events.length);
+	}
+	
+	public override function setSustainLength(newLength:Float, zoom:Float = 1) {}
+	public override function updateSustainToZoom(zoom:Float = 1) {}
+}
+
+class EventNoteGui extends FlxSpriteGroup {
+	public static var maxWidth:Float = (ChartingState.GRID_SIZE * 5);
+	public var events:Array<Array<String>>;
+	
+	public var eventContainer:FlxSpriteGroup;
+	public var hovering:Bool = false;
+	public var rect:FlxSprite;
+	
+	public function new() {
+		super();
+		
+		rect = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
+		rect.color = 0xff100010;
+		add(rect);
+		
+		eventContainer = new FlxSpriteGroup();
+		add(eventContainer);
+	}
+	
+	public function updateDisplay():Void {
+		var size:Int = ChartingState.GRID_SIZE;
+		
+		rect.setGraphicSize(Std.int(Math.min(Math.max(size * events.length, size), maxWidth)), size);
+		rect.updateHitbox();
+		
+		eventContainer.group.killMembers();
+		
+		for (i => event in events) {
+			var sprite:FlxSprite = eventContainer.recycle(FlxSprite, function() {
+				var sprite:FlxSprite = new FlxSprite();
+				sprite.antialiasing = ClientPrefs.data.antialiasing;
+				
+				return sprite;
+			});
+			
+			eventContainer.remove(sprite, true);
+			
+			sprite.loadGraphic(Paths.image('events/${event[0].length == 0 ? 'default' : event[0]}') ?? Paths.image('events/default'));
+			sprite.setGraphicSize(size);
+			sprite.updateHitbox();
+			sprite.revive();
+			sprite.setPosition(FlxMath.lerp(0, rect.width - sprite.width, (events.length <= 1 ? 0 : i / (events.length - 1))), 0);
+			
+			eventContainer.add(sprite);
+		}
+	}
+	
+	public override function update(elapsed:Float):Void {
+		super.update(elapsed);
+		
+		hovering = FlxG.mouse.overlaps(rect);
+		
+		var near:Null<Float> = null;
+		var closest:FlxSprite = null;
+		
+		for (event in eventContainer) {
+			if (!event.alive) continue;
+			
+			event.setColorTransform(1, 1, 1, alpha);
+			
+			if (hovering && FlxG.mouse.overlaps(event)) {
+				var dist:Float = Math.sqrt(Math.pow(FlxG.mouse.x - event.x - event.width * .5, 2) + Math.pow(FlxG.mouse.y - event.y - event.height * .5, 2));
+				if (closest == null) {
+					closest = event;
+					near = dist;
+				} else if (dist < near) {
+					near = dist;
+					closest = event;
+				}
+			}
+		}
+		
+		if (closest != null) {
+			var m:Int = (FlxG.mouse.pressed ? -64 : 128);
+			closest.setColorTransform(1, 1, 1, alpha, m, m, m);
+		}
+	}
+	
+	public override function draw():Void {
+		super.draw();
 	}
 }
