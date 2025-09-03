@@ -350,7 +350,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		var iconY:Float = 50;
 		if(SHOW_EVENT_COLUMN)
 		{
-			eventIcon = new FlxSprite(0, iconY).loadGraphic(Paths.image('editors/eventIcon'));
+			eventIcon = new FlxSprite(0, iconY).loadGraphic(Paths.image('events/default'));
 			eventIcon.antialiasing = ClientPrefs.data.antialiasing;
 			eventIcon.alpha = 0.6;
 			eventIcon.setGraphicSize(30, 30);
@@ -1266,7 +1266,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 						note.setStrumTime(Math.max(-5000, note.strumTime + (diff * cachedSectionCrochets[curSecRow] / 4) / GRID_SIZE * curZoom));
 						positionNoteYOnTime(note);
-						if(note.isEvent) cast (note, EventMetaNote).updateEventText();
+						if(note.isEvent) cast (note, EventMetaNote).updateEventInfo();
 					}
 					movingNotesLastY = dummyArrow.y;
 				}
@@ -2630,14 +2630,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 					var event:EventMetaNote = cast (note, EventMetaNote);
 					event.events[event.events.length - 1][0] = eventName;
-					event.updateEventText();
+					event.updateEventInfo();
 				}
 			}
 			else if(selectedNotes.length == 1 && selectedNotes[0].isEvent)
 			{
 				var event:EventMetaNote = cast (selectedNotes[0], EventMetaNote);
 				event.events[Std.int(FlxMath.bound(curEventSelected, 0, event.events.length - 1))][0] = eventName;
-				event.updateEventText();
+				event.updateEventInfo();
 			}
 		});
 
@@ -2667,7 +2667,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					if(selectedEvent != null)
 					{
 						event.events.remove(selectedEvent);
-						event.updateEventText();
+						event.updateEventInfo();
 						curEventSelected--;
 					}
 					else showOutput('No event is selected when you deleted it?? Weird.', true);
@@ -2686,7 +2686,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			genericEventButton(function(event:EventMetaNote)
 			{
 				event.events.push([eventsList[Std.int(Math.max(eventDropDown.selectedIndex, 0))][0], value1InputText.text, value2InputText.text]);
-				event.updateEventText();
+				event.updateEventInfo();
 				curEventSelected++;
 			});
 		}, 20);
@@ -2716,14 +2716,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 					var event:EventMetaNote = cast (note, EventMetaNote);
 					event.events[event.events.length - 1][n] = str;
-					event.updateEventText();
+					event.updateEventInfo();
 				}
 			}
 			else if(selectedNotes.length == 1 && selectedNotes[0].isEvent)
 			{
 				var event:EventMetaNote = cast (selectedNotes[0], EventMetaNote);
 				event.events[Std.int(FlxMath.bound(curEventSelected, 0, event.events.length - 1))][n] = str;
-				event.updateEventText();
+				event.updateEventInfo();
 			}
 		}
 
@@ -2802,7 +2802,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 				if(note.isEvent)
 				{
-					cast (note, EventMetaNote).updateEventText();
+					cast (note, EventMetaNote).updateEventInfo();
 				}
 			}
 			softReloadNotes();

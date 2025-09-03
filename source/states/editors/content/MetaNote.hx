@@ -309,15 +309,11 @@ class EventMetaNote extends MetaNote
 		this.isEvent = true;
 		events = eventData[1];
 		//trace('events: $events');
-		
-		loadGraphic(Paths.image('editors/eventIcon'));
-		setGraphicSize(ChartingState.GRID_SIZE);
-		updateHitbox();
 
 		eventText = new FlxText(0, 0, 400, '', 12);
 		eventText.setFormat(Paths.font('vcr.ttf'), 12, FlxColor.WHITE, RIGHT);
 		eventText.scrollFactor.x = 0;
-		updateEventText();
+		updateEventInfo();
 	}
 	
 	override function draw()
@@ -335,20 +331,27 @@ class EventMetaNote extends MetaNote
 	public override function updateSustainToZoom(zoom:Float = 1) {}
 
 	public var events:Array<Array<String>>;
-	public function updateEventText()
+	public function updateEventInfo()
 	{
 		var myTime:Float = Math.floor(this.strumTime);
-		if(events.length == 1)
-		{
+		if (events.length == 1) {
 			var event = events[0];
 			eventText.text = 'Event: ${event[0]} ($myTime ms)\nValue 1: ${event[1]}\nValue 2: ${event[2]}';
+			
+			loadGraphic(Paths.image('events/${event[0]}') ?? Paths.image('events/default'));
+		} else {
+			if (events.length > 1) {
+				var eventNames:Array<String> = [for (event in events) event[0]];
+				eventText.text = '${events.length} Events ($myTime ms):\n${eventNames.join(', ')}';
+			} else {
+				eventText.text = 'Error!';
+			}
+			
+			loadGraphic(Paths.image('events/default'));
 		}
-		else if(events.length > 1)
-		{
-			var eventNames:Array<String> = [for (event in events) event[0]];
-			eventText.text = '${events.length} Events ($myTime ms):\n${eventNames.join(', ')}';
-		}
-		else eventText.text = 'ERROR FAILSAFE';
+		
+		setGraphicSize(ChartingState.GRID_SIZE);
+		updateHitbox();
 	}
 
 	override function destroy()
