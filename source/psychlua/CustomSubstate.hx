@@ -43,15 +43,19 @@ class CustomSubstate extends ScriptedSubState {
 	}
 	public static function insertToCustomSubstate(tag:String, ?pos:Int = -1) {
 		if (instance != null) {
-			var variableMap:Map<String, Dynamic> = MusicBeatState.getVariables();
-			var tagObject:FlxObject = cast variableMap.get(tag);
+			var object:Dynamic = LuaUtils.getObjectDirectly(tag);
 			
-			if (tagObject != null) {
-				if (pos < 0) instance.add(tagObject);
-				else instance.insert(pos, tagObject);
-				return true;
+			if (object == null) {
+				FunkinLua.luaTrace('insertToCustomSubstate: Couldnt find object: $tag', false, false, ERROR);
+				return false;
 			}
+			
+			if (pos < 0) instance.add(object);
+			else instance.insert(pos, object);
+			return true;
 		}
+		
+		FunkinLua.luaTrace('insertToCustomSubstate: Custom sub-state is not open!', false, false, ERROR);
 		return false;
 	}
 	
