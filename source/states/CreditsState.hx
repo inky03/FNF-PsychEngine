@@ -18,19 +18,16 @@ class CreditsState extends ScriptedState
 	
 	private var creditsStuff:Array<Array<String>> = [];
 	public var defaultList:Array<Array<String>> = [ //Name - Icon name - Description - Link - BG Color
-		["Fork Contributors"],
-		["victoria",			"vi",				"Main Programmer, Additional Art",							"https://x.com/fnfin3d",					"82CDE3"],
-		["Moonlight_Catalyst",	"moonlightcatalyst","Chart Editor \"Toys\" Assistance",							"https://gamebanana.com/members/1960226",	"9898CB"],
+		["Psych Engine Mint"],
+		["emi3",				"vi",				"Owner, Main Programmer, Additional Art",					"https://x.com/fnfin3d",					"82CDE3"],
+		["Moonlight_Catalyst",	"moonlightcatalyst","Contributor, Chart Editor \"Toys\"",						"https://gamebanana.com/members/1960226",	"9898CB"],
+		["BobbyDX",				"bobbydx",			"Contributor",												"https://gamebanana.com/members/3384454",	"FFFA66"],
 		[""],
-		["Psych Engine Team"],
+		["Psych Engine"],
 		["Shadow Mario",		"shadowmario",		"Main Programmer and Head of Psych Engine",					"https://ko-fi.com/shadowmario",	"444444"],
 		["Riveren",				"riveren",			"Main Artist/Animator of Psych Engine",						"https://x.com/riverennn",			"14967B"],
-		[""],
-		["Former Engine Members"],
 		["bb-panzu",			"bb",				"Ex-Programmer of Psych Engine",							"https://x.com/bbsub3",				"3E813A"],
-		[""],
-		["Engine Contributors"],
-		["crowplexus",			"crowplexus",	"Linux Support, HScript Iris, Input System v3, and Other PRs",	"https://twitter.com/IamMorwen",	"CFCFCF"],
+		["crowplexus",			"crowplexus",	"Linux Support, HScript Iris, Input System v3, and Other PRs",	"https://x.com/IamMorwen",			"CFCFCF"],
 		["Kamizeta",			"kamizeta",			"Creator of Pessy, Psych Engine's mascot.",				"https://www.instagram.com/cewweey/",	"D21C11"],
 		["MaxNeton",			"maxneton",			"Loading Screen Easter Egg Artist/Animator.",	"https://bsky.app/profile/maxneton.bsky.social","3C2E4E"],
 		["Keoiki",				"keoiki",			"Note Splash Animations and Latin Alphabet",				"https://x.com/Keoiki_",			"D2D2D2"],
@@ -48,8 +45,9 @@ class CreditsState extends ScriptedState
 		["evilsk8r",			"evilsk8r",			"Artist of Friday Night Funkin'",							"https://x.com/evilsk8r",			"5ABD4B"],
 		["kawaisprite",			"kawaisprite",		"Composer of Friday Night Funkin'",							"https://x.com/kawaisprite",		"378FC7"],
 		[""],
-		["Psych Engine Discord"],
-		["Join the Psych Ward!", "discord", "", "https://discord.gg/2ka77eMXDv", "5165F6"]
+		["Discord"],
+		["Psych Engine Mint", "discordmint", "", "https://discord.gg/nGcTH6vNVR", "5165F6"],
+		["Psych Engine", "discordpsych", "", "https://discord.gg/2ka77eMXDv", "5165F6"]
 	];
 
 	override function create() {

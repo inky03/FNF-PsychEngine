@@ -16,7 +16,7 @@ enum abstract MainMenuColumn(String) to String {
 
 class MainMenuState extends ScriptedState
 {
-	public static var psychEngineVersion:String = '1.0.4'; // This is also used for Discord RPC
+	public static var psychEngineVersion:String = '1.0.4';
 	public static var modVersion = '0.0.4h';
 	public static var curSelected:Int = 0;
 	public static var curColumn:MainMenuColumn = CENTER;
@@ -106,11 +106,11 @@ class MainMenuState extends ScriptedState
 		for (option in optionShit)
 			addMenuItem(option);
 
-		emiVer = new FlxText(12, FlxG.height - 24, 0, 'Modded by emi3 $modVersion', 11);
+		emiVer = new FlxText(12, FlxG.height - 24, 0, 'Built on Psych Engine $psychEngineVersion', 11);
 		emiVer.scrollFactor.set();
 		emiVer.setFormat(Paths.font("vcr.ttf"), 15, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(emiVer);
-		psychVer = new FlxText(12, FlxG.height - 40, 0, 'Psych Engine $psychEngineVersion', 12);
+		psychVer = new FlxText(12, FlxG.height - 40, 0, 'Psych Engine Mint $modVersion', 12);
 		psychVer.scrollFactor.set();
 		psychVer.setFormat(Paths.font("vcr.ttf"), 15, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(psychVer);

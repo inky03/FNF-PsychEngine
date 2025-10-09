@@ -17,7 +17,7 @@ import flixel.util.FlxStringUtil;
 class DiscordClient
 {
 	public static var isInitialized:Bool = false;
-	private inline static final _defaultID:String = "863222024192262205";
+	private inline static final _defaultID:String = "1425926071852859455";
 	public static var clientID(default, set):String = _defaultID;
 	private static var presence:DiscordPresence = new DiscordPresence();
 	// hides this field from scripts and reflection in general
@@ -59,6 +59,11 @@ class DiscordClient
 		trace(message);
 		if (FlxG.state is MusicBeatSubstate)
 			cast(FlxG.state, MusicBeatSubstate).updatePresence();
+		
+		var button:DiscordButton = new DiscordButton();
+		button.url = 'https://gamebanana.com/mods/591796';
+		button.label = 'On GameBanana';
+		presence.__presence.buttons[0] = button;
 	}
 
 	private static function onError(errorCode:Int, message:cpp.ConstCharStar):Void
@@ -113,10 +118,11 @@ class DiscordClient
 		presence.details = details;
 		presence.smallImageKey = smallImageKey;
 		presence.largeImageKey = largeImageKey;
-		presence.largeImageText = "Engine Version: " + states.MainMenuState.psychEngineVersion;
+		presence.largeImageText = 'Version ${states.MainMenuState.modVersion} (${states.MainMenuState.psychEngineVersion})';
 		// Obtained times are in milliseconds so they are divided so Discord can use it
 		presence.startTimestamp = Std.int(startTimestamp / 1000);
 		presence.endTimestamp = Std.int(endTimestamp / 1000);
+		
 		updatePresence();
 
 		//trace('Discord RPC Updated. Arguments: $details, $state, $smallImageKey, $hasStartTimestamp, $endTimestamp, $largeImageKey');
