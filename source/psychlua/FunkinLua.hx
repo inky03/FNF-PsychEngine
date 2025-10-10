@@ -610,13 +610,13 @@ class FunkinLua {
 	
 	public function implementLocal():Void {
 		var st:ScriptedSubState = null;
-		if (st is ScriptedSubState)
+		if (FlxG.state is ScriptedSubState)
 			st = cast FlxG.state;
 		
 		if (st != null) {
 			addLocalCallback('callScript', function(luaFile:String, funcName:String, ?args:Array<Dynamic>) {
 				args ??= [];
-
+				
 				var luaPath:String = findScript(luaFile);
 				if(luaPath != null)
 					for (luaInstance in st.luaArray)
@@ -632,7 +632,7 @@ class FunkinLua {
 						if (luaInstance.scriptName == luaPath)
 							return true;
 				}
-
+				
 				#if HSCRIPT_ALLOWED
 				var hscriptPath:String = findScript(scriptFile, '.hx');
 				if (hscriptPath != null) {
@@ -647,11 +647,11 @@ class FunkinLua {
 				var runningScripts:Array<String> = [];
 				for (script in st.luaArray)
 					runningScripts.push(script.scriptName);
-
+				
 				return runningScripts;
 			});
 			
-			registerFunction('addLuaScript', function(luaFile:String, ?ignoreAlreadyRunning:Bool = false) {
+			addLocalCallback('addLuaScript', function(luaFile:String, ?ignoreAlreadyRunning:Bool = false) {
 				var luaPath:String = findScript(luaFile);
 				if (luaPath != null) {
 					if (!ignoreAlreadyRunning) {
@@ -668,7 +668,7 @@ class FunkinLua {
 				}
 				luaTrace("addLuaScript: Script doesn't exist!", false, false, ERROR);
 			});
-			registerFunction('addHScript', function(scriptFile:String, ?ignoreAlreadyRunning:Bool = false) {
+			addLocalCallback('addHScript', function(scriptFile:String, ?ignoreAlreadyRunning:Bool = false) {
 				#if HSCRIPT_ALLOWED
 				var scriptPath:String = findScript(scriptFile, '.hx');
 				if (scriptPath != null) {
@@ -680,7 +680,7 @@ class FunkinLua {
 							}
 						}
 					}
-
+					
 					st.initHScript(scriptPath);
 					return;
 				}
@@ -689,7 +689,7 @@ class FunkinLua {
 				luaTrace("addHScript: HScript is not supported on this platform!", false, false, ERROR);
 				#end
 			});
-			registerFunction('removeLuaScript', function(luaFile:String) {
+			addLocalCallback('removeLuaScript', function(luaFile:String) {
 				var luaPath:String = findScript(luaFile);
 				if (luaPath != null) {
 					var foundAny:Bool = false;
@@ -706,7 +706,7 @@ class FunkinLua {
 				luaTrace('removeLuaScript: Script $luaFile isn\'t running!', false, false, WARN);
 				return false;
 			});
-			registerFunction('removeHScript', function(scriptFile:String) {
+			addLocalCallback('removeHScript', function(scriptFile:String) {
 				#if HSCRIPT_ALLOWED
 				var scriptPath:String = findScript(scriptFile, '.hx');
 				if (scriptPath != null) {
