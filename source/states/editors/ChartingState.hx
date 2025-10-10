@@ -218,6 +218,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	var tipBg:FlxSprite;
 	var fullTipText:FlxText;
 
+	var autoLoadEvents:Bool = true;
 	var vortexMoved:Bool = true;
 	var allowInput:Bool = false;
 	var vortexInput:Bool = false;
@@ -264,6 +265,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 		if(chartEditorSave.data.autoSave != null) autoSaveCap = chartEditorSave.data.autoSave;
 		if(chartEditorSave.data.backupLimit != null) backupLimit = chartEditorSave.data.backupLimit;
+		if(chartEditorSave.data.autoLoadEvents != null) autoLoadEvents = chartEditorSave.data.autoLoadEvents;
 		if(chartEditorSave.data.downScroll != null) downScroll = chartEditorSave.data.downScroll;
 		if(chartEditorSave.data.vortex != null) vortexEnabled = chartEditorSave.data.vortex;
 		if(chartEditorSave.data.toys != null) toysEnabled = chartEditorSave.data.toys;
@@ -1792,9 +1794,10 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	var cachedSectionTimes:Array<Float>;
 	var cachedSectionCrochets:Array<Float>;
 	var cachedSectionBPMs:Array<Float>;
-	function loadChart(song:SwagSong)
+	function loadChart(song:SwagSong, ?events:SwagSong)
 	{
 		PlayState.SONG = song;
+		PlayState.EVENTS = events;
 		StageData.loadDirectory(PlayState.SONG);
 		Conductor.bpm = PlayState.SONG.bpm;
 	}
@@ -1954,10 +1957,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			for (note in section.sectionNotes)
 				if(note != null)
 					notes.push(createNote(note, secNum));
-
-		for (eventNum => event in PlayState.SONG.events)
-			if(event != null && (cachedSectionTimes.length < 1 || event[0] < cachedSectionTimes[cachedSectionTimes.length-1])) //dont spawn events over the time limit
-				events.push(createEvent(event));
+		
+		for (eventBlob in [PlayState.SONG, PlayState.EVENTS]) {
+			if (eventBlob?.events == null) continue;
+			
+			for (eventNum => event in eventBlob.events)
+				if(event != null && (cachedSectionTimes.length < 1 || event[0] < cachedSectionTimes[cachedSectionTimes.length-1])) //dont spawn events over the time limit
+					events.push(createEvent(event));
+		}
 
 		notes.sort(PlayState.sortByTime);
 		events.sort(PlayState.sortByTime);
@@ -2392,6 +2399,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	var opponentMuteCheckBox:PsychUICheckBox;
 	
 	var vortexEditorCheckBox:PsychUICheckBox;
+	var autoloadEventCheckBox:PsychUICheckBox;
 	function addChartingTab()
 	{
 		var tab_group = mainBox.getTab('Charting').menu;
@@ -2467,6 +2475,13 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		});
 		vortexEditorCheckBox.checked = vortexEnabled;
 		tab_group.add(vortexEditorCheckBox);
+
+		autoloadEventCheckBox = new PsychUICheckBox(objX + 150, objY, 'Load Events Automatically', 100, function() {
+			autoLoadEvents = autoloadEventCheckBox.checked;
+			chartEditorSave.data.autoLoadEvents = autoLoadEvents;
+		});
+		autoloadEventCheckBox.checked = autoLoadEvents;
+		tab_group.add(autoloadEventCheckBox);
 	}
 
 	var gameOverCharDropDown:PsychUIDropDownMenu;
@@ -3338,10 +3353,13 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				showOutput('Error: File loaded is not a Psych Engine/FNF 0.2.x.x chart.', true);
 				return;
 			}
-
+			
+			var eventsChart:SwagSong = PlayState.EVENTS;
+			if (autoLoadEvents) eventsChart = try { Song.getChart('events', cur); } catch (e) { eventsChart; }
+			
 			var func:Void->Void = function()
 			{
-				loadChart(loadedChart);
+				loadChart(loadedChart, eventsChart);
 				Song.chartPath = diff ? curdiff : cur;
 				reloadNotesDropdowns();
 				prepareReload();
@@ -3480,7 +3498,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 					var func:Void->Void = function()
 					{
-						loadChart(loadedChart);
+						var cur:String = filePath.substr(0, filePath.lastIndexOf('/'));
+						cur = cur.substr(cur.lastIndexOf('/') + 1);
+						Song.loadedSongName = cur;
+						
+						var eventsChart:SwagSong = PlayState.EVENTS;
+						if (autoLoadEvents) eventsChart = try { Song.getChart('events', cur); } catch (e) { eventsChart; }
+						
+						loadChart(loadedChart, eventsChart);
 						Song.chartPath = fileDialog.path;
 						reloadNotesDropdowns();
 						prepareReload();
@@ -3740,7 +3765,11 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					try
 					{
 						var reloadedChart:SwagSong = Song.parseJSON(File.getContent(Song.chartPath));
-						loadChart(reloadedChart);
+						
+						var eventsChart:SwagSong = PlayState.EVENTS;
+						if (autoLoadEvents) eventsChart = try { Song.getChart('events', Song.chartPath); } catch (e) { eventsChart; }
+						
+						loadChart(reloadedChart, eventsChart);
 						reloadNotesDropdowns();
 						prepareReload();
 						showOutput('Chart reloaded successfully!');

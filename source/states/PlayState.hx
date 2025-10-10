@@ -128,6 +128,7 @@ class PlayState extends ScriptedState
 		return stageUI == "pixel" || stageUI.endsWith("-pixel");
 
 	public static var SONG:SwagSong = null;
+	public static var EVENTS:SwagSong = null;
 	
 	public static var isStoryMode:Bool = false;
 	public static var storyWeekData:WeekData = null;
@@ -1296,13 +1297,15 @@ class PlayState extends ScriptedState
 
 		try
 		{
-			var eventsChart:SwagSong = Song.getChart('events', songName);
-			if(eventsChart != null)
-				for (event in eventsChart.events) //Event Notes
+			EVENTS = Song.getChart('events', songName);
+			
+			if (EVENTS != null)
+				for (event in EVENTS.events) //Event Notes
 					for (i in 0...event[1].length)
 						makeEvent(event, i);
+		} catch(e:Dynamic) {
+			EVENTS = null;
 		}
-		catch(e:Dynamic) {}
 
 		var oldNote:Note = null;
 		var sectionsData:Array<SwagSection> = PlayState.SONG.notes;
