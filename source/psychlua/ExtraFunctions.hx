@@ -1,6 +1,7 @@
 package psychlua;
 
 import openfl.utils.Assets;
+import backend.Controls;
 
 //
 // Things to trivialize some dumb stuff like splitting strings on older Lua
@@ -86,33 +87,33 @@ class ExtraFunctions {
 		FunkinLua.registerFunction("keyJustPressed", function(name:String = '') {
 			name = name.toLowerCase().trim();
 			switch(name) {
-				case 'left': return PlayState.instance.controls.NOTE_LEFT_P;
-				case 'down': return PlayState.instance.controls.NOTE_DOWN_P;
-				case 'up': return PlayState.instance.controls.NOTE_UP_P;
-				case 'right': return PlayState.instance.controls.NOTE_RIGHT_P;
-				default: return PlayState.instance.controls.justPressed(name);
+				case 'left': return Controls.instance.NOTE_LEFT_P;
+				case 'down': return Controls.instance.NOTE_DOWN_P;
+				case 'up': return Controls.instance.NOTE_UP_P;
+				case 'right': return Controls.instance.NOTE_RIGHT_P;
+				default: return Controls.instance.justPressed(name);
 			}
 			return false;
 		});
 		FunkinLua.registerFunction("keyPressed", function(name:String = '') {
 			name = name.toLowerCase().trim();
 			switch(name) {
-				case 'left': return PlayState.instance.controls.NOTE_LEFT;
-				case 'down': return PlayState.instance.controls.NOTE_DOWN;
-				case 'up': return PlayState.instance.controls.NOTE_UP;
-				case 'right': return PlayState.instance.controls.NOTE_RIGHT;
-				default: return PlayState.instance.controls.pressed(name);
+				case 'left': return Controls.instance.NOTE_LEFT;
+				case 'down': return Controls.instance.NOTE_DOWN;
+				case 'up': return Controls.instance.NOTE_UP;
+				case 'right': return Controls.instance.NOTE_RIGHT;
+				default: return Controls.instance.pressed(name);
 			}
 			return false;
 		});
 		FunkinLua.registerFunction("keyReleased", function(name:String = '') {
 			name = name.toLowerCase().trim();
 			switch(name) {
-				case 'left': return PlayState.instance.controls.NOTE_LEFT_R;
-				case 'down': return PlayState.instance.controls.NOTE_DOWN_R;
-				case 'up': return PlayState.instance.controls.NOTE_UP_R;
-				case 'right': return PlayState.instance.controls.NOTE_RIGHT_R;
-				default: return PlayState.instance.controls.justReleased(name);
+				case 'left': return Controls.instance.NOTE_LEFT_R;
+				case 'down': return Controls.instance.NOTE_DOWN_R;
+				case 'up': return Controls.instance.NOTE_UP_R;
+				case 'right': return Controls.instance.NOTE_RIGHT_R;
+				default: return Controls.instance.justReleased(name);
 			}
 			return false;
 		});
