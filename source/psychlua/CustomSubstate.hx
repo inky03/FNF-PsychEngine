@@ -32,7 +32,7 @@ class CustomSubstate extends ScriptedSubState {
 				FlxG.sound.music.pause();
 		}
 		
-		MusicBeatState.switchState(new CustomSubstate(name, data));
+		FlxG.state.openSubState(new CustomSubstate(name, data));
 	}
 	public static function closeCustomSubstate() {
 		if (instance != null) {
