@@ -28,6 +28,10 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 - Added a waveform view mode for all tracks
 - Editor noteskin now changes live
 
+### Character Editor
+
+- You can now click on the animation list to select an animation, instead of scrolling with W and S
+
 ### Menus
 
 - ~~Fixed "Move mod to top" button in the Mods menu~~ *merged in 1.0.4*
