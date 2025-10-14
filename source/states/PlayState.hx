@@ -126,6 +126,11 @@ class PlayState extends ScriptedState
 	@:noCompletion
 	static function get_isPixelStage():Bool
 		return stageUI == "pixel" || stageUI.endsWith("-pixel");
+	
+	@:noCompletion function get_bf():Character
+		return boyfriend;
+	@:noCompletion function get_bfGroup():FlxSpriteGroup
+		return boyfriendGroup;
 
 	public static var SONG:SwagSong = null;
 	public static var EVENTS:SwagSong = null;
@@ -147,6 +152,9 @@ class PlayState extends ScriptedState
 	public var dad:Character = null;
 	public var gf:Character = null;
 	public var boyfriend:Character = null;
+	
+	public var bfGroup(get, never):FlxSpriteGroup;
+	public var bf(get, never):Character;
 
 	public var notes:FlxTypedGroup<Note>;
 	public var unspawnNotes:Array<Note> = [];
