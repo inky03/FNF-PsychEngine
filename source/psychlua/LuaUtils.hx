@@ -116,9 +116,9 @@ class LuaUtils
 		var char:String = string.charAt(pos);
 		return (char == '\'' || char == '"');
 	}
-	public static function getVariable(object:Dynamic, id:String, allowMaps:Bool = false):Dynamic {
-		if (object == FlxG.state && (id == 'game' || id == 'this' || id == 'instance'))
-			return FlxG.state;
+	public static function getVariable(object:Dynamic, id:String, allowMaps:Bool = false, ?state:flixel.FlxState):Dynamic {
+		if ((object == state ?? FlxG.state) && (id == 'game' || id == 'this' || id == 'instance'))
+			return object;
 		
 		if (object == null) {
 			throw 'Null Object Reference';
@@ -259,8 +259,8 @@ class LuaUtils
 		}
 	}
 	
-	public static function getObjectDirectly(objectName:String, allowMaps:Bool = false):Dynamic {
-		return getPropertyLoop(objectName, allowMaps, FlxG.state);
+	public static function getObjectDirectly(objectName:String, allowMaps:Bool = false, ?state:flixel.FlxState):Dynamic {
+		return getPropertyLoop(objectName, allowMaps, state ?? FlxG.state);
 	}
 	
 	public static var fieldCache:Map<String, Array<String>> = [];
@@ -299,6 +299,11 @@ class LuaUtils
 	}
 	public static function isLuaSupported(value:Any):Bool {
 		return (value == null || isOfTypes(value, [Bool, Int, Float, String, Array]) || Type.typeof(value) == TObject);
+	}
+	public static function luaifyArray(?array:Array<Dynamic>) {
+		if (array == null) return null;
+		
+		return [for (v in array) (LuaUtils.isLuaSupported(v) ? v : null)];
 	}
 	public static function isMap(variable:Dynamic):Bool {
 		return switch (Type.typeof(variable)) {

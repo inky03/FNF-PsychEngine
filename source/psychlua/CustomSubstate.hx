@@ -17,7 +17,7 @@ class CustomSubstate extends ScriptedSubState {
 	}
 	#end
 	
-	public static function openCustomSubstate(name:String, pauseGame:Bool = false) {
+	public static function openCustomSubstate(name:String, pauseGame:Bool = false, ?data:Dynamic) {
 		if (pauseGame) {
 			FlxG.camera.followLerp = 0;
 			FlxG.state.persistentDraw = true;
@@ -32,7 +32,7 @@ class CustomSubstate extends ScriptedSubState {
 				FlxG.sound.music.pause();
 		}
 		
-		FlxG.state.openSubState(new CustomSubstate(name));
+		MusicBeatState.switchState(new CustomSubstate(name, data));
 	}
 	public static function closeCustomSubstate() {
 		if (instance != null) {
@@ -109,8 +109,8 @@ class CustomSubstate extends ScriptedSubState {
 		}
 	}
 	
-	public function new(name:String) {
-		super();
+	public function new(name:String, ?data:Dynamic) {
+		super(data);
 		stateName = name;
 		multiScript = false;
 	}

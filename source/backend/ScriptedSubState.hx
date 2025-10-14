@@ -24,8 +24,13 @@ class ScriptedSubState extends MusicBeatSubstate {
 	var multiScript:Bool = true;
 	var loadedScripts:Bool = false;
 	
+	public var data:Dynamic = null;
 	public var scriptFolder:String = 'scripts';
 	
+	public function new(?data:Dynamic) {
+		super();
+		this.data = data;
+	}
 	public override function create():Void {
 		super.create();
 	}

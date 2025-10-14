@@ -65,9 +65,9 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 
 - EXTENDED Scripting (VERY EXPERIMENTAL)
 	- Lua scripting unsupported on Global scripts (and will probably remain this way because of its shortcomings)
-	- Custom State and Sub-state code now also admits Lua scripting!!
 - New functions
-	- Switch to a custom state in Lua with `openCustomState('stateName')`
+	- Switch to a custom state in Lua with `openCustomState('stateName', customData)` (custom data optional)
+	- Switch or open substates in Lua with `switchState('states.StateClass', {arguments})` and `openSubstate('states.SubStateClass', {arguments})` (arguments optional, whenever applicable)
 	- `loadWeek(weekFilename:String, ?difficultyIndex:Int)` to load a custom week
 - Backend rewrite
 	- Some function code previously stuck in Lua API functions is now available in other classes for more convenience
@@ -104,7 +104,7 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 				end
 				```
 	- Custom States
-		- Switch to a custom state in HScript with `MusicBeatState.switchState(new CustomState('stateName'))`
+		- Switch to a custom state in HScript with `MusicBeatState.switchState(new CustomState('stateName', ?customData))`
 		- Will only admit the highest priority script (to prevent major code conflicts)
 		- All features **scriptable states** have
 	- Custom Sub-states

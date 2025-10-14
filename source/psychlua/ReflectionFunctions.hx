@@ -3,8 +3,6 @@ package psychlua;
 import Type.ValueType;
 import haxe.Constraints;
 
-import substates.GameOverSubstate;
-
 //
 // Functions that use a high amount of Reflections, which are somewhat CPU intensive
 // These functions are held together by duct tape
@@ -67,6 +65,15 @@ class ReflectionFunctions
 			var retStr:String = '$instanceStr::$instanceName';
 			if (className != null) retStr += '::$className';
 			return retStr;
+		});
+		
+		FunkinLua.registerFunction('switchState', function(type:String, ?args:Array<Dynamic>) {
+			var cls:Class<Dynamic> = Type.resolveClass(type);
+			
+			if (cls != null)
+				return MusicBeatState.switchState(Type.createInstance(cls, parseInstances(args ?? [])));
+			
+			FunkinLua.luaTrace('switchState: Type $type doesn\'t exist or is not a state!', false, false, ERROR);
 		});
 	}
 	public static function implementLocal(funk:FunkinLua) {
@@ -188,35 +195,44 @@ class ReflectionFunctions
 		});
 		funk.addLocalCallback("addInstance", function(objectName:String, inFront:Bool = false) {
 			var obj:Dynamic = LuaUtils.getObjectDirectly(objectName);
-			var instance = LuaUtils.getTargetInstance();
+			var instance = funk.parentState;
 			
 			if (obj != null) {
 				if (inFront) {
 					instance.add(obj);
 				} else {
-					var noGame:Bool = (PlayState.instance == null);
+					var gameover = substates.GameOverSubstate.instance;
+					var addToGameover:Bool = ((instance == PlayState.instance && PlayState.instance.isDead) || instance == gameover); // yea whatever bro
 					
-					if (noGame) {
-						instance.add(obj);
-					} else if (!PlayState.instance.isDead) {
-						var pos:Int = PlayState.instance.members.indexOf(LuaUtils.getLowestCharacterGroup());
+					if (instance != PlayState.instance || addToGameover) {
+						if (addToGameover) {
+							gameover.insert(gameover.members.indexOf(gameover.boyfriend), obj);
+						} else {
+							instance.insert(0, obj);
+						}
+					} else {
+						var pos:Int = instance.members.indexOf(LuaUtils.getLowestCharacterGroup());
 						if (pos < 0) pos = 0;
 						
 						instance.insert(pos, obj);
-					} else {
-						GameOverSubstate.instance.insert(GameOverSubstate.instance.members.indexOf(GameOverSubstate.instance.boyfriend), obj);
 					}
 				}
 			}
 			else FunkinLua.luaTrace('addInstance: Can\'t add what doesn\'t exist~ ($objectName)', false, false, ERROR);
 		});
+		
+		funk.addLocalCallback('openSubstate', function(type:String, ?args:Array<Dynamic>) {
+			var cls:Class<Dynamic> = Type.resolveClass(type);
+			
+			if (cls != null)
+				return funk.parentState.openSubState(Type.createInstance(cls, parseInstances(args ?? [])));
+			
+			FunkinLua.luaTrace('openSubstate: Type $type doesn\'t exist!', false, false, ERROR);
+		});
 	}
 
 	static function parseInstanceArray(arg:Array<Dynamic>) {
-		var newArray:Array<Dynamic> = [];
-		for (val in arg)
-			newArray.push(parseInstances(val));
-		return newArray;
+		return [for (v in arg) parseInstances(v)];
 	}
 	public static function parseInstances(arg:Dynamic):Dynamic {
 		if (arg == null) return null;

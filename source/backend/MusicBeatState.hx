@@ -97,7 +97,7 @@ class MusicBeatState extends MusicBeatSubstate {
 		
 		if (nextState is CustomState) {
 			var customState:CustomState = cast nextState;
-			CustomFadeTransition.finishCallback = () -> FlxG.switchState(() -> new CustomState(customState.stateName));
+			CustomFadeTransition.finishCallback = () -> FlxG.switchState(() -> new CustomState(customState.stateName, customState.data));
 		} else {
 			if (nextState == FlxG.state) {
 				CustomFadeTransition.finishCallback = () -> FlxG.resetState();

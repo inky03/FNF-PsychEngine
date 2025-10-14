@@ -5,12 +5,12 @@ class CustomState extends ScriptedState {
 	
 	#if LUA_ALLOWED
 	public static function implement() {
-		FunkinLua.registerFunction('openCustomState', (name:String) -> MusicBeatState.switchState(new CustomState(name)));
+		FunkinLua.registerFunction('openCustomState', function(name:String, ?data:Dynamic) MusicBeatState.switchState(new CustomState(name, data)));
 	}
 	#end
 	
-	public function new(name:String) {
-		super();
+	public function new(name:String, ?data:Dynamic) {
+		super(data);
 		stateName = name;
 		multiScript = false;
 	}
