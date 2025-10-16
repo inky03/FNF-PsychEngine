@@ -182,7 +182,7 @@ class HScript extends Iris {
 		}
 	}
 	
-	public static function initFromFile(file:String, ?parent:FlxState, ?base:Class<HScript>, ?createArgs:Array<Dynamic>) {
+	public static function initFromFile(file:String, ?parent:FlxState, ?base:Class<HScript>) {
 		var newScript:HScript = null;
 		
 		try {
@@ -191,7 +191,7 @@ class HScript extends Iris {
 			newScript.execute();
 			
 			if (newScript.exists('onCreate'))
-				newScript.call('onCreate', createArgs);
+				newScript.call('onCreate');
 			
 			trace('initialized interp successfully: $file');
 			newScript.unsafe = false;

@@ -57,13 +57,13 @@ class FunkinLua {
 	public var callbacks:Map<String, Dynamic> = [];
 	public static var customFunctions:Map<String, Dynamic> = [];
 	
-	public static function initFromFile(file:String, ?parent:FlxState, ?createArgs:Array<Dynamic>):FunkinLua {
+	public static function initFromFile(file:String, ?parent:FlxState):FunkinLua {
 		var newScript:FunkinLua = null;
 		
 		try {
 			newScript = new FunkinLua(file, parent);
 			
-			newScript.call('onCreate', LuaUtils.luaifyArray(createArgs));
+			newScript.call('onCreate');
 			
 			trace('lua file loaded succesfully:' + file);
 		} catch(e:Dynamic) {

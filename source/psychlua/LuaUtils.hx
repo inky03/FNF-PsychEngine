@@ -300,11 +300,6 @@ class LuaUtils
 	public static function isLuaSupported(value:Any):Bool {
 		return (value == null || isOfTypes(value, [Bool, Int, Float, String, Array]) || Type.typeof(value) == TObject);
 	}
-	public static function luaifyArray(?array:Array<Dynamic>) {
-		if (array == null) return null;
-		
-		return [for (v in array) (LuaUtils.isLuaSupported(v) ? v : null)];
-	}
 	public static function isMap(variable:Dynamic):Bool {
 		return switch (Type.typeof(variable)) {
 			case TClass(haxe.ds.StringMap) | TClass(haxe.ds.ObjectMap) | TClass(haxe.ds.IntMap) | TClass(haxe.ds.EnumValueMap): true;
