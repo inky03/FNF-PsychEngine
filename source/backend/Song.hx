@@ -35,7 +35,7 @@ typedef SwagSong =
 typedef SwagSection =
 {
 	var sectionNotes:Array<Dynamic>;
-	var sectionBeats:Float;
+	var sectionBeats:Int;
 	var mustHitSection:Bool;
 	@:optional var altAnim:Bool;
 	@:optional var gfSection:Bool;
@@ -101,12 +101,8 @@ class Song
 
 		for (section in sectionsData)
 		{
-			var beats:Null<Float> = cast section.sectionBeats;
-			if (beats == null || Math.isNaN(beats))
-			{
-				section.sectionBeats = 4;
-				if(Reflect.hasField(section, 'lengthInSteps')) Reflect.deleteField(section, 'lengthInSteps');
-			}
+			var beats:Int = Std.int(section.sectionBeats ?? 4);
+			if (Reflect.hasField(section, 'lengthInSteps')) Reflect.deleteField(section, 'lengthInSteps');
 
 			for (note in section.sectionNotes)
 			{

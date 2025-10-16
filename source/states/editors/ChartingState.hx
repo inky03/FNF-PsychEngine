@@ -1952,11 +1952,11 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		notes = [];
 		events = [];
 		undoActions = [];
-
+		
 		for (secNum => section in PlayState.SONG.notes)
 			for (note in section.sectionNotes)
-				if(note != null)
-					notes.push(createNote(note, secNum));
+				if (note != null)
+					notes.push(createNote(note, Conductor.getSectionRounded(note[0])));
 		
 		for (eventBlob in [PlayState.SONG, PlayState.EVENTS]) {
 			if (eventBlob?.events == null) continue;
@@ -2055,12 +2055,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			row += rowRound;
 			time += beat * (rowRound / 4);
 
-			for (note in section.sectionNotes)
-			{
-				if(secNum > 0 && note[0] < lastTime) note[0] = lastTime;
-				else if(secNum < PlayState.SONG.notes.length && note[0] >= time - 0.000001) note[0] = time - 0.000001;
-			}
-
 			if(FlxG.sound.music != null && time >= FlxG.sound.music.length)
 			{
 				var lastSectionNum:Int = PlayState.SONG.notes.length - 1;
@@ -2087,7 +2081,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		{
 			var lastSection = PlayState.SONG.notes[PlayState.SONG.notes.length-1];
 			var beat:Float = Conductor.calculateCrochet(bpm);
-			var sectionBeats:Float = lastSection != null ? lastSection.sectionBeats : 4;
+			var sectionBeats:Int = lastSection != null ? lastSection.sectionBeats : 4;
 			var rowRound:Int = Math.round(4 * sectionBeats);
 			var timeAdd:Float = beat * (rowRound / 4);
 			var mustHitSec:Bool = lastSection != null ? lastSection.mustHitSection : true;
@@ -2994,7 +2988,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			var sec = getCurChartSection();
 			if (sec != null) {
 				var oldBPMMap:Array<BPMChangeEvent> = Conductor.copyBPMChanges();
-				sec.sectionBeats = beatsPerSecStepper.value;
+				sec.sectionBeats = Std.int(beatsPerSecStepper.value);
 				adaptNotes(oldBPMMap);
 			}
 		};

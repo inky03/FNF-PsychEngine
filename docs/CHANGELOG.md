@@ -220,7 +220,8 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 - Conductor
 	- BPM change map now has the initial song BPM set as the first BPM change (for consistency and stability)
 	- Most functions can now have a custom BPM change array passed to them (for use in Chart Editor)
-	- Most functions now have their step & beat equivalents
+	- Most functions now have their step, beat & section equivalents
+	- `BPMChangeEvent` now has sectionBeats
 	- `Conductor.copyBPMChanges` to copy a BPM change array to a new array
 	- `Conductor.defaultBPMChangeMap` to make default BPM change array based on an initial BPM value
 - Dialogue
