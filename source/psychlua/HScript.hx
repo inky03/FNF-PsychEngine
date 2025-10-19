@@ -193,7 +193,7 @@ class HScript extends Iris {
 			if (newScript.exists('onCreate'))
 				newScript.call('onCreate');
 			
-			trace('initialized interp successfully: $file');
+			trace('HX LOADED: $file');
 			newScript.unsafe = false;
 		} catch(e:Dynamic) {
 			var script:HScript = cast (Iris.instances.get(file), HScript);

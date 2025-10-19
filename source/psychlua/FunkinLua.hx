@@ -65,7 +65,7 @@ class FunkinLua {
 			
 			newScript.call('onCreate');
 			
-			trace('lua file loaded succesfully:' + file);
+			trace('LUA LOADED: $file');
 		} catch(e:Dynamic) {
 			Log.print(e, FATAL);
 			newScript = null;
@@ -1079,32 +1079,6 @@ class FunkinLua {
 				return;
 			}
 			luaTrace('setScrollFactor: Couldnt find object: ' + obj, false, false, ERROR);
-		});
-		registerFunction('addLuaSprite', function(tag:String, inFront:Bool = false) {
-			var mySprite:FlxBasic = LuaUtils.getObjectDirectly(tag);
-			if (mySprite == null) {
-				luaTrace('addLuaSprite: Couldnt find object: $tag', false, false, ERROR);
-				return;
-			}
-
-			var instance = LuaUtils.getTargetInstance();
-			if (inFront) {
-				instance.add(mySprite);
-			} else {
-				if (game == null) {
-					instance.insert(0, mySprite);
-					return;
-				}
-				
-				var pos:Int = instance.members.indexOf(LuaUtils.getLowestCharacterGroup());
-				if (pos < 0) pos = 0;
-				
-				if (game == null || !game.isDead) {
-					instance.insert(pos, mySprite);
-				} else {
-					GameOverSubstate.instance.insert(GameOverSubstate.instance.members.indexOf(GameOverSubstate.instance.boyfriend), mySprite);
-				}
-			}
 		});
 		registerFunction('setGraphicSize', function(obj:String, x:Float, y:Float = 0, updateHitbox:Bool = true) {
 			var obj:Dynamic = LuaUtils.getObjectDirectly(obj);

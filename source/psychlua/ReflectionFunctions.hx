@@ -39,27 +39,25 @@ class ReflectionFunctions
 		FunkinLua.registerFunction("createInstance", function(variableToSave:String, className:String, ?args:Array<Dynamic>) {
 			if (variableToSave.indexOf('.') > -1 || variableToSave.indexOf('[') > -1) {
 				FunkinLua.luaTrace('createInstance: Variable name cannot contain dots or brackets, for "$variableToSave"', false, false, ERROR);
-				return false;
 			} else if (MusicBeatState.getVariables().get(variableToSave) != null) {
 				FunkinLua.luaTrace('createInstance: Variable $variableToSave is already being used and cannot be replaced!', false, false, ERROR);
-				return false;
 			} else {
 				var myType:Class<Dynamic> = Type.resolveClass(className);
 				
 				if (myType == null) {
 					FunkinLua.luaTrace('createInstance: Couldn\'t resolve class $className', false, false, ERROR);
-					return false;
+					return null;
 				}
 				
-				var obj:Dynamic = try Type.createInstance(myType, parseInstances(args ?? [])) catch(e:Dynamic) null;
-				if (obj != null) {
+				try {
+					var obj:Dynamic = Type.createInstance(myType, parseInstances(args ?? []));
 					MusicBeatState.getVariables().set(variableToSave, obj);
-					return true;
-				} else {
-					FunkinLua.luaTrace('createInstance: Failed to create $variableToSave - arguments are possibly wrong!', false, false, ERROR);
-					return false;
+					return '$instanceStr::$variableToSave';
+				} catch(e:Dynamic) {
+					FunkinLua.luaTrace('createInstance: Failed to create $variableToSave - $e', false, false, ERROR);
 				}
 			}
+			return null;
 		});
 		FunkinLua.registerFunction("instanceArg", function(instanceName:String, ?className:String) {
 			var retStr:String = '$instanceStr::$instanceName';
@@ -73,7 +71,7 @@ class ReflectionFunctions
 			if (cls != null)
 				return MusicBeatState.switchState(Type.createInstance(cls, parseInstances(args ?? [])));
 			
-			FunkinLua.luaTrace('switchState: Type $type doesn\'t exist or is not a state!', false, false, ERROR);
+			FunkinLua.luaTrace('switchState: Couldn\'t resolve class $type', false, false, ERROR);
 		});
 	}
 	public static function implementLocal(funk:FunkinLua) {
@@ -193,7 +191,7 @@ class ReflectionFunctions
 		funk.addLocalCallback("callMethod", function(funcToRun:String, args:Array<Dynamic>) {
 			return callMethodFromObject(funk.parentState, funcToRun, parseInstances(args ?? []));
 		});
-		funk.addLocalCallback("addInstance", function(objectName:String, inFront:Bool = false) {
+		function addInstance(objectName:String, inFront:Bool = false) {
 			var obj:Dynamic = LuaUtils.getObjectDirectly(objectName);
 			var instance = funk.parentState;
 			
@@ -217,9 +215,12 @@ class ReflectionFunctions
 						instance.insert(pos, obj);
 					}
 				}
+			} else {
+				FunkinLua.luaTrace('addLuaSprite: Can\'t add what doesn\'t exist~ ($objectName)', false, false, ERROR);
 			}
-			else FunkinLua.luaTrace('addInstance: Can\'t add what doesn\'t exist~ ($objectName)', false, false, ERROR);
-		});
+		}
+		funk.addLocalCallback('addLuaSprite', addInstance);
+		funk.addLocalCallback('addInstance', addInstance);
 		
 		funk.addLocalCallback('openSubstate', function(type:String, ?args:Array<Dynamic>) {
 			var cls:Class<Dynamic> = Type.resolveClass(type);
@@ -227,7 +228,7 @@ class ReflectionFunctions
 			if (cls != null)
 				return funk.parentState.openSubState(Type.createInstance(cls, parseInstances(args ?? [])));
 			
-			FunkinLua.luaTrace('openSubstate: Type $type doesn\'t exist!', false, false, ERROR);
+			FunkinLua.luaTrace('openSubstate: Couldn\'t resolve class $type', false, false, ERROR);
 		});
 	}
 

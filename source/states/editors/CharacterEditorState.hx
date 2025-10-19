@@ -912,7 +912,7 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 			else if(FlxG.keys.justPressed.S && (changedAnim = true)) curAnim++;
 			
 			if (FlxG.mouse.justPressed && FlxG.mouse.overlaps(animsTxt, camHUD)) {
-				var p:Float = FlxMath.remapToRange(FlxG.mouse.getWorldPosition(camHUD).y, animsTxt.y, animsTxt.y + animsTxt.textField.textHeight - 20, 0, anims.length - 1);
+				var p:Float = FlxMath.remapToRange(FlxG.mouse.getWorldPosition(camHUD).y, animsTxt.y, animsTxt.y + animsTxt.textField.textHeight, 0, anims.length);
 				var animIndex:Int = Std.int(Math.min(p, anims.length - 1));
 				if (curAnim != animIndex) {
 					curAnim = animIndex;
