@@ -192,7 +192,7 @@ class ReflectionFunctions
 			return callMethodFromObject(funk.parentState, funcToRun, parseInstances(args ?? []));
 		});
 		function addInstance(objectName:String, inFront:Bool = false) {
-			var obj:Dynamic = LuaUtils.getObjectDirectly(objectName);
+			var obj:Dynamic = (parseSingleInstance(objectName, true) ?? LuaUtils.getObjectDirectly(objectName));
 			var instance = funk.parentState;
 			
 			if (obj != null) {
@@ -244,9 +244,11 @@ class ReflectionFunctions
 			return parseSingleInstance(arg);
 		}
 	}
-	public static function parseSingleInstance(arg:Dynamic) {
+	public static function parseSingleInstance(arg:Dynamic, nullIfFake:Bool = false) {
+		if (!Std.isOfType(arg, String)) return (nullIfFake ? null : arg);
+		
 		var argStr:String = cast arg;
-		if (argStr != null && argStr.length > instanceStr.length) {
+		if (argStr.length > instanceStr.length) {
 			var index:Int = argStr.indexOf('::');
 			if (index > -1) {
 				argStr = argStr.substring(index + 2);
@@ -262,7 +264,7 @@ class ReflectionFunctions
 				}
 			}
 		}
-		return arg;
+		return (nullIfFake ? null : arg);
 	}
 
 	static function callMethodFromObject(object:Dynamic, funcStr:String, args:Array<Dynamic>) {
