@@ -15,6 +15,9 @@ class CustomSubstate extends ScriptedSubState {
 		FunkinLua.registerFunction("closeCustomSubstate", closeCustomSubstate);
 		FunkinLua.registerFunction("insertToCustomSubstate", insertToCustomSubstate);
 	}
+	public override function implementLua(lua:FunkinLua):Void {
+		lua.addLocalCallback('closeSubstate', function() close());
+	}
 	#end
 	
 	public static function openCustomSubstate(name:String, pauseGame:Bool = false, ?data:Dynamic) {
