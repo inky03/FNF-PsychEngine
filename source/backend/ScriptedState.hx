@@ -20,7 +20,7 @@ class ScriptedState extends ScriptedSubState {
 		
 		super.create();
 		
-		if (!FlxTransitionableState.skipNextTransOut)
+		if (!FlxTransitionableState.skipNextTransOut && _requestedSubState == null)
 			openSubState(new CustomFadeTransition(0.5, true));
 		FlxTransitionableState.skipNextTransOut = false;
 		

@@ -29,7 +29,7 @@ class MusicBeatState extends MusicBeatSubstate {
 		
 		super.create();
 		
-		if (!FlxTransitionableState.skipNextTransOut)
+		if (!FlxTransitionableState.skipNextTransOut && _requestedSubState == null)
 			openSubState(new CustomFadeTransition(.5, true));
 		FlxTransitionableState.skipNextTransOut = false;
 		

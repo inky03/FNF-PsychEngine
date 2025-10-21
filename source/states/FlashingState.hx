@@ -29,9 +29,9 @@ class FlashingState extends ScriptedState
 		add(texts);
 
 		var warnText:FlxText = new FlxText(0, 0, FlxG.width,
-			"Hey, watch out!\n
-			This Mod may contain flashing lights!\n
-			Do you wish to disable them?");
+'Hey, watch out!\n
+This Mod may contain flashing lights!\n
+Do you wish to disable them?');
 		warnText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
 		warnText.screenCenter(Y);
 		texts.add(warnText);
@@ -41,7 +41,7 @@ class FlashingState extends ScriptedState
 			final button = new FlxText(0, 0, FlxG.width, key);
 			button.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
 			button.y = (warnText.y + warnText.height) + 24;
-			button.x += (128 * i) - 80;
+			button.x += (128 * (i - .5));
 			texts.add(button);
 		}
 

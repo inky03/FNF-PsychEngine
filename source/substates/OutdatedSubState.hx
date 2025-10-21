@@ -23,15 +23,16 @@ class OutdatedSubState extends MusicBeatSubstate
 		add(bg);
 
 		warnText = new FlxText(0, 0, FlxG.width,
-'You\'re using an outdated version of this Psych Engine mod!\n(Using ${MainMenuState.modVersion}, latest version available is $updateVersion)\n
+			Language.getPhrase('outdated_version', 
+'You\'re using an outdated version of Psych Engine Mint!\n(Using {1}, latest version available is {2})\n
 -----------------------------------------------\n
-Press ENTER to visit the repository or
+Press ENTER to visit the GameBanana page or
 press ESCAPE to ignore this message.\n
 You can disable this warning by unchecking the
 "Check for Updates" setting in the Options Menu.\n
 -----------------------------------------------\n
-Thank you for using the engine!',
-			32);
+Thank you for using this engine!',
+			[MainMenuState.modVersion, updateVersion]), 32);
 		warnText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
 		warnText.scrollFactor.set();
 		warnText.screenCenter(Y);
@@ -47,7 +48,7 @@ Thank you for using the engine!',
 		if (!leftState) {
 			if (controls.ACCEPT) {
 				leftState = true;
-				CoolUtil.browserLoad("https://github.com/inky03/FNF-PsychEngine");
+				CoolUtil.browserLoad("https://gamebanana.com/mods/591796");
 			} else if(controls.BACK) {
 				leftState = true;
 			}
