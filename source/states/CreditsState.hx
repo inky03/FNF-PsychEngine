@@ -230,11 +230,11 @@ class CreditsState extends ScriptedState
 	public static function parseCredits(?folder:String):Array<Array<String>> {
 		var list:Array<Array<String>> = [];
 		var path:String = 'data/credits.txt';
-		var creditsFile:String = (#if MODS_ALLOWED folder != null ? Paths.mods('$folder/$path') : #end Paths.getPath(path, TEXT, true));
+		var creditsFile:String = (#if MODS_ALLOWED folder != null ? Paths.mods('$folder/$path') : #end Paths.getPath(path, TEXT, false));
 		
 		#if TRANSLATIONS_ALLOWED
 		path = 'data/credits-${ClientPrefs.data.language}.txt';
-		var translatedCredits:String = (#if MODS_ALLOWED folder != null ? Paths.mods('$folder/$path') : #end Paths.getPath(path, TEXT, true));
+		var translatedCredits:String = (#if MODS_ALLOWED folder != null ? Paths.mods('$folder/$path') : #end Paths.getPath(path, TEXT, false));
 		#end
 
 		if (#if TRANSLATIONS_ALLOWED (FileSystem.exists(translatedCredits) && (creditsFile = translatedCredits) == translatedCredits) || #end FileSystem.exists(creditsFile))
