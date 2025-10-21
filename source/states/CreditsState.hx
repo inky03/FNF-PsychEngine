@@ -16,39 +16,8 @@ class CreditsState extends ScriptedState
 
 	var offsetThing:Float = -75;
 	
-	private var creditsStuff:Array<Array<String>> = [];
-	public var defaultList:Array<Array<String>> = [ //Name - Icon name - Description - Link - BG Color
-		["Psych Engine Mint"],
-		["emi3",				"vi",				"Owner, Main Programmer, Additional Art",					"https://x.com/fnfin3d",					"82CDE3"],
-		["Moonlight_Catalyst",	"moonlightcatalyst","Contributor, Chart Editor \"Toys\"",						"https://gamebanana.com/members/1960226",	"9898CB"],
-		["BobbyDX",				"bobbydx",			"Contributor",												"https://gamebanana.com/members/3384454",	"FFFA66"],
-		[""],
-		["Psych Engine"],
-		["Shadow Mario",		"shadowmario",		"Main Programmer and Head of Psych Engine",					"https://ko-fi.com/shadowmario",	"444444"],
-		["Riveren",				"riveren",			"Main Artist/Animator of Psych Engine",						"https://x.com/riverennn",			"14967B"],
-		["bb-panzu",			"bb",				"Ex-Programmer of Psych Engine",							"https://x.com/bbsub3",				"3E813A"],
-		["crowplexus",			"crowplexus",	"Linux Support, HScript Iris, Input System v3, and Other PRs",	"https://x.com/IamMorwen",			"CFCFCF"],
-		["Kamizeta",			"kamizeta",			"Creator of Pessy, Psych Engine's mascot.",				"https://www.instagram.com/cewweey/",	"D21C11"],
-		["MaxNeton",			"maxneton",			"Loading Screen Easter Egg Artist/Animator.",	"https://bsky.app/profile/maxneton.bsky.social","3C2E4E"],
-		["Keoiki",				"keoiki",			"Note Splash Animations and Latin Alphabet",				"https://x.com/Keoiki_",			"D2D2D2"],
-		["SqirraRNG",			"sqirra",			"Crash Handler and Base code for\nChart Editor's Waveform",	"https://x.com/gedehari",			"E1843A"],
-		["EliteMasterEric",		"mastereric",		"Runtime Shaders support and Other PRs",					"https://x.com/EliteMasterEric",	"FFBD40"],
-		["MAJigsaw77",			"majigsaw",			".MP4 Video Loader Library (hxvlc)",						"https://x.com/MAJigsaw77",			"5F5F5F"],
-		["iFlicky",				"flicky",			"Composer of Psync and Tea Time\nAnd some sound effects",	"https://x.com/flicky_i",			"9E29CF"],
-		["KadeDev",				"kade",				"Fixed some issues on Chart Editor and Other PRs",			"https://x.com/kade0912",			"64A250"],
-		["superpowers04",		"superpowers04",	"LUA JIT Fork",												"https://x.com/superpowers04",		"B957ED"],
-		["CheemsAndFriends",	"cheems",			"Creator of FlxAnimate",									"https://x.com/CheemsnFriendos",	"E1E1E1"],
-		[""],
-		["Funkin' Crew"],
-		["ninjamuffin99",		"ninjamuffin99",	"Programmer of Friday Night Funkin'",						"https://x.com/ninja_muffin99",		"CF2D2D"],
-		["PhantomArcade",		"phantomarcade",	"Animator of Friday Night Funkin'",							"https://x.com/PhantomArcade3K",	"FADC45"],
-		["evilsk8r",			"evilsk8r",			"Artist of Friday Night Funkin'",							"https://x.com/evilsk8r",			"5ABD4B"],
-		["kawaisprite",			"kawaisprite",		"Composer of Friday Night Funkin'",							"https://x.com/kawaisprite",		"378FC7"],
-		[""],
-		["Discord"],
-		["Psych Engine Mint", "discordmint", "", "https://discord.gg/nGcTH6vNVR", "5165F6"],
-		["Psych Engine", "discordpsych", "", "https://discord.gg/2ka77eMXDv", "5165F6"]
-	];
+	public var creditsStuff:Array<Array<String>> = [];
+	public var defaultList:Array<Array<String>>;
 
 	override function create() {
 		rpcDetails = 'Credits Menu';
@@ -64,29 +33,29 @@ class CreditsState extends ScriptedState
 
 		#if MODS_ALLOWED
 		for (mod in Mods.parseList().enabled)
-			pushModCreditsToList(mod);
+			creditsStuff = creditsStuff.concat(parseCredits(mod));
 		#end
+		
+		defaultList = parseCredits();
 		
 		preCreate();
 		
-		for (i in defaultList)
-			creditsStuff.push(i);
-	
+		creditsStuff = creditsStuff.concat(defaultList);
+		if (creditsStuff.length == 0) creditsStuff.push(['NO CREDITS FOUND']);
+		
 		for (i => credit in creditsStuff)
 		{
-			var isSelectable:Bool = !unselectableCheck(i);
-			var optionText:Alphabet = new Alphabet(FlxG.width / 2, 300, credit[0], !isSelectable);
+			Mods.currentModDirectory = credit[credit.length - 1];
+			
+			var isSeparator:Bool = (isSeparator(i));
+			var optionText:Alphabet = new Alphabet(FlxG.width / 2, 300, credit[0], isSeparator);
 			optionText.isMenuItem = true;
 			optionText.targetY = i;
 			optionText.changeX = false;
 			optionText.snapToPosition();
 			grpOptions.add(optionText);
 
-			if(isSelectable)
-			{
-				if(credit[5] != null)
-					Mods.currentModDirectory = credit[5];
-
+			if (!isSeparator) {
 				var str:String = 'credits/missing_icon';
 				if(credit[1] != null && credit[1].length > 0)
 				{
@@ -105,10 +74,12 @@ class CreditsState extends ScriptedState
 				add(icon);
 				Mods.currentModDirectory = '';
 
-				if(curSelected == -1) curSelected = i;
+				if (curSelected == -1) curSelected = i;
+			} else {
+				optionText.alignment = CENTERED;
 			}
-			else optionText.alignment = CENTERED;
 		}
+		if (curSelected == -1) curSelected = 0;
 		
 		descBox = new AttachedSprite();
 		descBox.makeGraphic(1, 1, FlxColor.BLACK);
@@ -125,7 +96,7 @@ class CreditsState extends ScriptedState
 		descBox.sprTracker = descText;
 		add(descText);
 
-		bg.color = CoolUtil.colorFromString(creditsStuff[curSelected][4]);
+		bg.color = CoolUtil.colorFromString(creditsStuff[curSelected][4] ?? '808080');
 		intendedColor = bg.color;
 		changeSelection();
 		super.create();
@@ -219,35 +190,30 @@ class CreditsState extends ScriptedState
 	function changeSelection(change:Int = 0)
 	{
 		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
-		do
-		{
+		var max:Int = creditsStuff.length;
+		do {
 			curSelected = FlxMath.wrap(curSelected + change, 0, creditsStuff.length - 1);
-		}
-		while(unselectableCheck(curSelected));
+			max --;
+		} while (isSeparator(curSelected) && max >= 0);
 
 		var newColor:FlxColor = CoolUtil.colorFromString(creditsStuff[curSelected][4]);
-		//trace('The BG color is: $newColor');
-		if(newColor != intendedColor)
-		{
+		if(newColor != intendedColor) {
 			intendedColor = newColor;
 			FlxTween.cancelTweensOf(bg);
 			FlxTween.color(bg, 1, bg.color, intendedColor);
 		}
 
-		for (num => item in grpOptions.members)
-		{
+		for (num => item in grpOptions.members) {
 			item.targetY = num - curSelected;
-			if(!unselectableCheck(num)) {
-				item.alpha = 0.6;
-				if (item.targetY == 0) {
+			if (!isSeparator(num)) {
+				item.alpha = .6;
+				if (item.targetY == 0)
 					item.alpha = 1;
-				}
 			}
 		}
 
-		descText.text = creditsStuff[curSelected][2];
-		if(descText.text.trim().length > 0)
-		{
+		descText.text = (creditsStuff[curSelected].length > 3 ? creditsStuff[curSelected][2] : '');
+		if (descText.text.trim().length > 0) {
 			descText.visible = descBox.visible = true;
 			descText.y = FlxG.height - descText.height + offsetThing - 60;
 	
@@ -256,18 +222,19 @@ class CreditsState extends ScriptedState
 	
 			descBox.setGraphicSize(Std.int(descText.width + 20), Std.int(descText.height + 25));
 			descBox.updateHitbox();
+		} else {
+			descText.visible = descBox.visible = false;
 		}
-		else descText.visible = descBox.visible = false;
 	}
-
-	#if MODS_ALLOWED
-	function pushModCreditsToList(folder:String)
-	{
-		var creditsFile:String = Paths.mods(folder + '/data/credits.txt');
+	
+	public static function parseCredits(?folder:String):Array<Array<String>> {
+		var list:Array<Array<String>> = [];
+		var path:String = 'data/credits.txt';
+		var creditsFile:String = (#if MODS_ALLOWED folder != null ? Paths.mods('$folder/$path') : #end Paths.getPath(path, TEXT, true));
 		
 		#if TRANSLATIONS_ALLOWED
-		//trace('/data/credits-${ClientPrefs.data.language}.txt');
-		var translatedCredits:String = Paths.mods(folder + '/data/credits-${ClientPrefs.data.language}.txt');
+		path = 'data/credits-${ClientPrefs.data.language}.txt';
+		var translatedCredits:String = (#if MODS_ALLOWED folder != null ? Paths.mods('$folder/$path') : #end Paths.getPath(path, TEXT, true));
 		#end
 
 		if (#if TRANSLATIONS_ALLOWED (FileSystem.exists(translatedCredits) && (creditsFile = translatedCredits) == translatedCredits) || #end FileSystem.exists(creditsFile))
@@ -276,15 +243,16 @@ class CreditsState extends ScriptedState
 			for(i in firstarray)
 			{
 				var arr:Array<String> = i.replace('\\n', '\n').split("::");
-				if(arr.length >= 5) arr.push(folder);
-				creditsStuff.push(arr);
+				arr.push(folder);
+				list.push([for (s in arr) s.trim()]);
 			}
-			creditsStuff.push(['']);
+			list.push(['']);
 		}
+		
+		return list;
 	}
-	#end
 
-	private function unselectableCheck(num:Int):Bool {
-		return creditsStuff[num].length <= 1;
+	public function isSeparator(num:Int):Bool {
+		return (creditsStuff[num].length <= 2);
 	}
 }
