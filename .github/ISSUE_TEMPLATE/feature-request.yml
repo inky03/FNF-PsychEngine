@@ -1,24 +1,29 @@
 name: Feature Request
-description: No, i won't add 6K/etc to the engine or winning icons, stop asking for it. REQUESTING FOR A STAGE EDITOR WILL RESULT IN A BAN, I ALREADY SAID I WILL DO IT LATER GOD DAMN IT.
+description: Request... a feature!
 labels: [enhancement]
 body:
   - type: textarea
+    id: request
     attributes:
       label: What feature do you want to get added on the **base** engine?
     validations:
       required: true
+
   - type: dropdown
-    id: eyetest
+    id: requesttype
     attributes:
-      label: To test your sight, and reliability, please select the option of what should NOT be requested.
+      label: "What does this feature request cover?"
       options:
-        - Proper credit that was forgotten
-        - Thing that would not cause problems
-        - Useful feature
-        - Actual feedback
-        - A good idea
-        - Stage Editor, 6K+ support, and winning icons.
-        - Better LUA mod support idea
-        - Code optimization that would make the game faster. (You should make a PR if this is your request, by the way.)
+        - "Internal (source code improvement)"
+        - "HScript Scripting"
+        - "Lua Scripting"
+        - "Other"
+    validations:
+      required: true
+  
+  - type: textarea
+    id: purpose
+    attributes:
+      label: How would users of the engine benefit from this feature?
     validations:
       required: true

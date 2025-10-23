@@ -1,4 +1,4 @@
-name: Bug report
+name: Bug Report
 description: Report bugs with the engine here
 labels: [bug]
 body:
@@ -12,25 +12,25 @@ body:
   - type: textarea
     id: terminal
     attributes:
-      label: "Command Prompt/Terminal logs (if existing)"
+      label: "Command Prompt / Terminal / Debug logs (if existing)"
       render: bash
     validations:
       required: false
 
   - type: dropdown
-    id: modding
+    id: modtype
     attributes:
-      label: "Are you modding a build from source or with Lua?"
+      label: "Does this happen in a Source Code Modification, or a Modpack?"
       options:
-        - Lua
-        - Source
+        - Source Code Mod
+        - Modpack
     validations:
       required: true
 
   - type: dropdown
-    id: btarget
+    id: buildtarget
     attributes:
-      label: "What is your build target?"
+      label: "What target are you using?"
       options:
         - "Windows"
         - "Linux"
@@ -44,7 +44,8 @@ body:
   - type: input
     id: buildsummary
     attributes:
-      label: "Did you edit anything in this build? If so, mention or summarize your changes."
-      placeholder: "Yes, I edited ClientPrefs.hx and tried to add a new setting"
+      label: "Did you edit anything from source code? Summarize your changes."
+      description: "You may ignore this question if you are not making a source code mod!"
+      placeholder: "I edited ClientPrefs.hx and tried to add a new setting"
     validations:
-      required: true
+      required: false

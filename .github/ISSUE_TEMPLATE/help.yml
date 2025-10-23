@@ -1,4 +1,4 @@
-name: Help me!
+name: Help Wanted
 description: If you need help using the engine.
 labels: [help wanted]
 body:
@@ -10,25 +10,24 @@ body:
       required: true
 
   - type: dropdown
-    id: modding
+    id: modtype
     attributes:
-      label: "Are you modding a build from source or with Lua?"
+      label: "Are you making a Source Code Modification, or a Modpack?"
       options:
-        - Lua
-        - Source
+        - Source Code Mod
+        - Modpack
     validations:
       required: true
 
   - type: dropdown
-    id: btarget
+    id: buildtarget
     attributes:
-      label: "What is your build target?"
+      label: "What target are you using?"
       options:
-        - "Windows x64"
-        - "Windows x86/x32"
+        - "Windows"
         - "Linux"
         - "Mac"
-        - "HTML5/Browser"
+        - "HTML5"
         - "Flash/Air-based target"
         - "Neko, HashLink, or other build system"
     validations:
@@ -37,7 +36,7 @@ body:
   - type: input
     id: buildsummary
     attributes:
-      label: "Did you edit anything in this build? If so, mention or summarize your changes."
-      placeholder: "Yes, I edited ClientPrefs.hx and tried to add a new setting"
+      label: "Did you edit anything from source code? Summarize your changes."
+      description: "You may ignore this question if you are not making a source code mod!"
     validations:
       required: false
