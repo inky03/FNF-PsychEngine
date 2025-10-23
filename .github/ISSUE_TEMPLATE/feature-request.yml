@@ -5,23 +5,23 @@ body:
   - type: textarea
     id: request
     attributes:
-      label: What feature do you want to get added on the **base** engine?
+      label: What feature do you want to get added on the BASE engine?
     validations:
       required: true
 
   - type: dropdown
     id: requesttype
     attributes:
-      label: "What does this feature request cover?"
+      label: "What does this feature request encompass?"
       options:
-        - "Internal (source code improvement)"
+        - "Source Code Modding"
         - "HScript Scripting"
         - "Lua Scripting"
         - "Other"
     validations:
       required: true
   
-  - type: textarea
+  - type: input
     id: purpose
     attributes:
       label: How would users of the engine benefit from this feature?

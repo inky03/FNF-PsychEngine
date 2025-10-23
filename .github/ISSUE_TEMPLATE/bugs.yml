@@ -12,7 +12,7 @@ body:
   - type: textarea
     id: terminal
     attributes:
-      label: "Command Prompt / Terminal / Debug logs (if existing)"
+      label: "Terminal / Debug / Crash logs (if existing)"
       render: bash
     validations:
       required: false
@@ -20,24 +20,24 @@ body:
   - type: dropdown
     id: modtype
     attributes:
-      label: "Does this happen in a Source Code Modification, or a Modpack?"
+      label: "Where does this bug occur?"
       options:
-        - Source Code Mod
-        - Modpack
+        - "Source Code Modding"
+        - "Modpack (HScript)"
+        - "Modpack (Lua)"
     validations:
       required: true
 
   - type: dropdown
     id: buildtarget
     attributes:
-      label: "What target are you using?"
+      label: "What target are you using this engine with?"
       options:
         - "Windows"
         - "Linux"
         - "Mac"
-        - "HTML5"
-        - "Flash/Air-based target"
-        - "Neko, HashLink, or other build system"
+        - "HTML5 / Browser"
+        - "Neko / HashLink"
     validations:
       required: true
 
@@ -47,5 +47,13 @@ body:
       label: "Did you edit anything from source code? Summarize your changes."
       description: "You may ignore this question if you are not making a source code mod!"
       placeholder: "I edited ClientPrefs.hx and tried to add a new setting"
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: "Put any additional notes about this bug here."
+      description: "Anything that helps identify the cause of this bug faster should help!"
     validations:
       required: false
