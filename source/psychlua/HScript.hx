@@ -94,6 +94,7 @@ class HScript extends Iris {
 	#end
 	
 	public static function init():Void {
+		Iris.proxyImports.set('options.GameplayChangersSubstate', options.GameplayChangersSubState); // lol
 		Iris.logLevel = (level:ErrorSeverity, x:Dynamic, ?pos:haxe.PosInfos) -> {
 			var newPos:HScriptInfos = cast pos;
 			if (newPos.showLine == null) newPos.showLine = true;
@@ -463,6 +464,7 @@ class HScript extends Iris {
 	#if LUA_ALLOWED
 	public static function implementLocal(funk:FunkinLua) {
 		funk.addLocalCallback("runHaxeCode", function(codeToRun:String, ?varsToBring:Any = null, ?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):Dynamic {
+			trace('rhc called');
 			initHaxeModuleCode(funk, codeToRun, varsToBring);
 			if (funk.hscript != null)
 			{

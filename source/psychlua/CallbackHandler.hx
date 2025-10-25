@@ -54,7 +54,7 @@ class CallbackHandler
 		{
 			if(Lua_helper.sendErrorsToLua)
 			{
-				LuaL.error(l, 'CALLBACK ERROR! ${e.details()}');
+				LuaL.error(l, 'Callback ${e.details()}');
 				return 0;
 			}
 			throw e;

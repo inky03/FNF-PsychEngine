@@ -84,6 +84,7 @@ class FunkinLua {
 		//LuaL.dostring(lua, CLENSE);
 
 		this.scriptName = scriptName.trim();
+		this.parentState = state;
 		
 		var myFolder:Array<String> = this.scriptName.split('/');
 		#if MODS_ALLOWED
@@ -94,7 +95,6 @@ class FunkinLua {
 		for (define => value in backend.macro.Scripting.Defines.list)
 			set('DEF_$define', value);
 		
-		// Lua shit
 		set('Function_StopLua', LuaUtils.Function_StopLua);
 		set('Function_StopHScript', LuaUtils.Function_StopHScript);
 		set('Function_StopAll', LuaUtils.Function_StopAll);
@@ -104,164 +104,16 @@ class FunkinLua {
 		set('luaDeprecatedWarnings', true);
 		set('version', MainMenuState.psychEngineVersion.trim());
 		set('modVersion', MainMenuState.modVersion.trim());
-		set('modFolder', this.modFolder);
-
-		// Screen stuff
+		
 		set('screenWidth', FlxG.width);
 		set('screenHeight', FlxG.height);
 		
-		parentState = state ?? FlxG.state;
-		var game:PlayState = PlayState.instance;
-		if (state is PlayState) // PlayState-only variables
-		@:privateAccess {
-			var game:PlayState = cast state;
-			
-			// Song/Week shit
-			set('curBpm', Conductor.bpm);
-			set('bpm', PlayState.SONG.bpm);
-			set('scrollSpeed', PlayState.SONG.speed);
-			set('crochet', Conductor.crochet);
-			set('stepCrochet', Conductor.stepCrochet);
-			set('songLength', FlxG.sound.music.length);
-			set('songName', PlayState.SONG.song);
-			set('songPath', Paths.formatToSongPath(PlayState.SONG.song));
-			set('loadedSongName', Song.loadedSongName);
-			set('loadedSongPath', Paths.formatToSongPath(Song.loadedSongName));
-			set('chartPath', Song.chartPath);
-			set('startedCountdown', false);
-			set('curStage', PlayState.SONG.stage);
-
-			set('isStoryMode', PlayState.isStoryMode);
-			set('difficulty', PlayState.storyDifficulty);
-
-			set('difficultyName', Difficulty.getString(false));
-			set('difficultyPath', Difficulty.getFilePath());
-			set('difficultyNameTranslation', Difficulty.getString(true));
-			set('weekRaw', PlayState.storyWeek);
-			set('week', WeekData.weeksList[PlayState.storyWeek]);
-			set('seenCutscene', PlayState.seenCutscene);
-			set('hasVocals', PlayState.SONG.needsVoices);
-			
-			// Gameplay variables
-			var curSection:SwagSection = PlayState.SONG.notes[game.curSection];
-			set('curSection', game.curSection);
-			set('curBeat', game.curBeat);
-			set('curStep', game.curStep);
-			set('curDecBeat', game.curDecBeat);
-			set('curDecStep', game.curDecStep);
-	
-			set('score', game.songScore);
-			set('misses', game.songMisses);
-			set('hits', game.songHits);
-			set('combo', game.combo);
-			set('deaths', PlayState.deathCounter);
-	
-			set('rating', game.ratingPercent);
-			set('ratingName', game.ratingName);
-			set('ratingFC', game.ratingFC);
-			set('totalPlayed', game.totalPlayed);
-			set('totalNotesHit', game.totalNotesHit);
-
-			set('inGameOver', GameOverSubstate.instance != null);
-			set('mustHitSection', curSection != null ? (curSection.mustHitSection == true) : false);
-			set('altAnim', curSection != null ? (curSection.altAnim == true) : false);
-			set('gfSection', curSection != null ? (curSection.gfSection == true) : false);
-
-			set('healthGainMult', game.healthGain);
-			set('healthLossMult', game.healthLoss);
-	
-			#if FLX_PITCH
-			set('playbackRate', game.playbackRate);
-			#else
-			set('playbackRate', 1);
-			#end
-	
-			set('guitarHeroSustains', game.guitarHeroSustains);
-			set('instakillOnMiss', game.instakillOnMiss);
-			set('botPlay', game.cpuControlled);
-			set('practice', game.practiceMode);
-	
-			for (i in 0...4) {
-				set('defaultPlayerStrumX' + i, 0);
-				set('defaultPlayerStrumY' + i, 0);
-				set('defaultOpponentStrumX' + i, 0);
-				set('defaultOpponentStrumY' + i, 0);
-			}
-	
-			// Default character data
-			set('defaultBoyfriendX', game.BF_X);
-			set('defaultBoyfriendY', game.BF_Y);
-			set('defaultOpponentX', game.DAD_X);
-			set('defaultOpponentY', game.DAD_Y);
-			set('defaultGirlfriendX', game.GF_X);
-			set('defaultGirlfriendY', game.GF_Y);
-
-			set('boyfriendName', game.boyfriend != null ? game.boyfriend.curCharacter : PlayState.SONG.player1);
-			set('dadName', game.dad != null ? game.dad.curCharacter : PlayState.SONG.player2);
-			set('gfName', game.gf != null ? game.gf.curCharacter : PlayState.SONG.gfVersion);
-			
-			// Other settings
-			set('downscroll', ClientPrefs.data.downScroll);
-			set('middlescroll', ClientPrefs.data.middleScroll);
-			set('framerate', ClientPrefs.data.framerate);
-			set('ghostTapping', ClientPrefs.data.ghostTapping);
-			set('hideHud', ClientPrefs.data.hideHud);
-			set('antialiasing', ClientPrefs.data.antialiasing);
-			set('timeBarType', ClientPrefs.data.timeBarType);
-			set('scoreZoom', ClientPrefs.data.scoreZoom);
-			set('cameraZoomOnBeat', ClientPrefs.data.camZooms);
-			set('flashingLights', ClientPrefs.data.flashing);
-			set('noteOffset', ClientPrefs.data.noteOffset);
-			set('healthBarAlpha', ClientPrefs.data.healthBarAlpha);
-			set('noResetButton', ClientPrefs.data.noReset);
-			set('lowQuality', ClientPrefs.data.lowQuality);
-			set('shadersEnabled', ClientPrefs.data.shaders);
-			set('scriptName', scriptName);
-			set('currentModDirectory', Mods.currentModDirectory);
-
-			// Noteskin/Splash
-			set('noteSkin', ClientPrefs.data.noteSkin);
-			set('noteSkinPostfix', Note.getNoteSkinPostfix());
-			set('splashSkin', ClientPrefs.data.splashSkin);
-			set('splashSkinPostfix', NoteSplash.getSplashSkinPostfix());
-			set('splashAlpha', ClientPrefs.data.splashAlpha);
-		}
-
-		// build target (windows, mac, linux, etc.)
 		set('buildTarget', LuaUtils.getBuildTarget());
-
-		addLocalCallback("setOnScripts", function(varName:String, arg:Dynamic, ?ignoreSelf:Bool = false, ?exclusions:Array<String> = null) {
-			if(exclusions == null) exclusions = [];
-			if(ignoreSelf && !exclusions.contains(scriptName)) exclusions.push(scriptName);
-			game.setOnScripts(varName, arg, exclusions);
-		});
-		addLocalCallback("setOnHScript", function(varName:String, arg:Dynamic, ?ignoreSelf:Bool = false, ?exclusions:Array<String> = null) {
-			if(exclusions == null) exclusions = [];
-			if(ignoreSelf && !exclusions.contains(scriptName)) exclusions.push(scriptName);
-			game.setOnHScript(varName, arg, exclusions);
-		});
-		addLocalCallback("setOnLuas", function(varName:String, arg:Dynamic, ?ignoreSelf:Bool = false, ?exclusions:Array<String> = null) {
-			if(exclusions == null) exclusions = [];
-			if(ignoreSelf && !exclusions.contains(scriptName)) exclusions.push(scriptName);
-			game.setOnLuas(varName, arg, exclusions);
-		});
-
-		addLocalCallback("callOnScripts", function(funcName:String, ?args:Array<Dynamic> = null, ?ignoreStops=false, ?ignoreSelf:Bool = true, ?excludeScripts:Array<String> = null, ?excludeValues:Array<Dynamic> = null) {
-			if(excludeScripts == null) excludeScripts = [];
-			if(ignoreSelf && !excludeScripts.contains(scriptName)) excludeScripts.push(scriptName);
-			return game.callOnScripts(funcName, args, ignoreStops, excludeScripts, excludeValues);
-		});
-		addLocalCallback("callOnLuas", function(funcName:String, ?args:Array<Dynamic> = null, ?ignoreStops=false, ?ignoreSelf:Bool = true, ?excludeScripts:Array<String> = null, ?excludeValues:Array<Dynamic> = null) {
-			if(excludeScripts == null) excludeScripts = [];
-			if(ignoreSelf && !excludeScripts.contains(scriptName)) excludeScripts.push(scriptName);
-			return game.callOnLuas(funcName, args, ignoreStops, excludeScripts, excludeValues);
-		});
-		addLocalCallback("callOnHScript", function(funcName:String, ?args:Array<Dynamic> = null, ?ignoreStops=false, ?ignoreSelf:Bool = true, ?excludeScripts:Array<String> = null, ?excludeValues:Array<Dynamic> = null) {
-			if(excludeScripts == null) excludeScripts = [];
-			if(ignoreSelf && !excludeScripts.contains(scriptName)) excludeScripts.push(scriptName);
-			return game.callOnHScript(funcName, args, ignoreStops, excludeScripts, excludeValues);
-		});
-
+		
+		set('modFolder', modFolder);
+		set('scriptName', scriptName);
+		set('currentModDirectory', Mods.currentModDirectory);
+		
 		// mod settings
 		addLocalCallback("getModSetting", function(saveTag:String, ?modName:String = null) {
 			#if MODS_ALLOWED
@@ -288,14 +140,6 @@ class FunkinLua {
 		});
 		
 		implementLocal();
-		ShaderFunctions.implementLocal(this);
-		ReflectionFunctions.implementLocal(this);
-		#if HSCRIPT_ALLOWED HScript.implementLocal(this) #else HScript.implement() #end; // haha
-		
-		if (parentState is ScriptedSubState) {
-			var scripted:ScriptedSubState = cast parentState;
-			scripted.implementLua(this);
-		}
 		
 		for (name => func in customFunctions) {
 			if (func != null)
@@ -332,19 +176,23 @@ class FunkinLua {
 	
 	public function call(func:String, ?args:Array<Dynamic>):Dynamic {
 		if(closed) return LuaUtils.Function_Continue;
-
+		
+		var prevFunction:String = lastCalledFunction;
+		var prevScript:FunkinLua = lastCalledScript;
+		
 		lastCalledFunction = func;
 		lastCalledScript = this;
-		args ??= [];
+		
 		try {
-			if(lua == null) return LuaUtils.Function_Continue;
-
+			if (lua == null) return LuaUtils.Function_Continue;
+			
+			args ??= [];
 			Lua.getglobal(lua, func);
 			var type:Int = Lua.type(lua, -1);
 
 			if (type != Lua.LUA_TFUNCTION) {
 				if (type > Lua.LUA_TNIL)
-					luaTrace("ERROR (" + func + "): attempt to call a " + LuaUtils.typeToString(type) + " value", false, false, ERROR);
+					luaTrace('$func: Expected function, got ${LuaUtils.typeToString(type)}', false, false, ERROR);
 
 				Lua.pop(lua, 1);
 				return LuaUtils.Function_Continue;
@@ -356,7 +204,7 @@ class FunkinLua {
 			// Checks if it's not successful, then show a error.
 			if (status != Lua.LUA_OK) {
 				var error:String = getErrorMessage(status);
-				luaTrace("ERROR (" + func + "): " + error, false, false, ERROR);
+				luaTrace('$func:$error', false, false, ERROR);
 				return LuaUtils.Function_Continue;
 			}
 
@@ -366,11 +214,18 @@ class FunkinLua {
 
 			Lua.pop(lua, 1);
 			if(closed) stop();
+			
+			lastCalledFunction = prevFunction;
+			lastCalledScript = prevScript;
+			
 			return result;
-		}
-		catch (e:Dynamic) {
+		} catch (e:Dynamic) {
 			trace(e);
 		}
+		
+		lastCalledFunction = prevFunction;
+		lastCalledScript = prevScript;
+		
 		return LuaUtils.Function_Continue;
 	}
 	
@@ -508,13 +363,12 @@ class FunkinLua {
 		}
 
 		return v;
-		return null;
 	}
 
 	public function addLocalCallback(name:String, myFunction:Dynamic)
 	{
 		callbacks.set(name, myFunction);
-		Lua_helper.add_callback(lua, name, null); //just so that it gets called
+		Lua_helper.add_callback(lua, name, myFunction);
 	}
 
 	#if (!flash && sys)
@@ -604,17 +458,31 @@ class FunkinLua {
 		DeprecatedFunctions.implement();
 		#if flxanimate FlxAnimateFunctions.implement(); #end
 		
+		#if (!HSCRIPT_ALLOWED) HScript.implement(); #end
 		#if DISCORD_ALLOWED DiscordClient.implement(); #end
 		#if TRANSLATIONS_ALLOWED Language.implement(); #end
 		#if ACHIEVEMENTS_ALLOWED Achievements.implement(); #end
 	}
 	
 	public function implementLocal():Void {
+		ShaderFunctions.implementLocal(this);
+		ReflectionFunctions.implementLocal(this);
+		#if HSCRIPT_ALLOWED HScript.implementLocal(this); #end
+		
 		var st:ScriptedSubState = null;
 		if (FlxG.state is ScriptedSubState)
 			st = cast FlxG.state;
 		
 		if (st != null) {
+			st.implementLua(this);
+			
+			set('curStep', st.curStep);
+			set('curBeat', st.curBeat);
+			set('curSection', st.curSection);
+			set('curDecStep', st.curDecStep);
+			set('curDecBeat', st.curDecBeat);
+			set('curDecSection', st.curDecSection);
+			
 			addLocalCallback('callScript', function(luaFile:String, funcName:String, ?args:Array<Dynamic>) {
 				args ??= [];
 				
@@ -663,7 +531,7 @@ class FunkinLua {
 							}
 						}
 					}
-
+					
 					st.initLuaScript(luaPath);
 					return;
 				}
@@ -727,6 +595,37 @@ class FunkinLua {
 				#else
 				luaTrace("removeHScript: HScript is not supported on this platform!", false, false, ERROR);
 				#end
+			});
+			addLocalCallback("setOnScripts", function(varName:String, arg:Dynamic, ignoreSelf:Bool = false, ?exclusions:Array<String>) {
+				exclusions ??= [];
+				if (ignoreSelf) exclusions.push(scriptName);
+				st.setOnScripts(varName, arg, exclusions);
+			});
+			addLocalCallback("setOnHScript", function(varName:String, arg:Dynamic, ignoreSelf:Bool = false, ?exclusions:Array<String>) {
+				exclusions ??= [];
+				if (ignoreSelf) exclusions.push(scriptName);
+				st.setOnHScript(varName, arg, exclusions);
+			});
+			addLocalCallback("setOnLuas", function(varName:String, arg:Dynamic, ignoreSelf:Bool = false, ?exclusions:Array<String>) {
+				exclusions ??= [];
+				if (ignoreSelf) exclusions.push(scriptName);
+				st.setOnLuas(varName, arg, exclusions);
+			});
+
+			addLocalCallback("callOnScripts", function(funcName:String, ?args:Array<Dynamic>, ignoreStops:Bool = false, ignoreSelf:Bool = true, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>) {
+				exclusions ??= [];
+				if (ignoreSelf) exclusions.push(scriptName);
+				return st.callOnScripts(funcName, args, ignoreStops, exclusions, excludeValues);
+			});
+			addLocalCallback("callOnLuas", function(funcName:String, ?args:Array<Dynamic>, ignoreStops:Bool = false, ignoreSelf:Bool = true, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>) {
+				exclusions ??= [];
+				if (ignoreSelf) exclusions.push(scriptName);
+				return st.callOnLuas(funcName, args, ignoreStops, exclusions, excludeValues);
+			});
+			addLocalCallback("callOnHScript", function(funcName:String, ?args:Array<Dynamic>, ignoreStops:Bool = false, ignoreSelf:Bool = true, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>) {
+				exclusions ??= [];
+				if (ignoreSelf) exclusions.push(scriptName);
+				return st.callOnHScript(funcName, args, ignoreStops, exclusions, excludeValues);
 			});
 		}
 	}

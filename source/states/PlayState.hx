@@ -416,6 +416,9 @@ class PlayState extends ScriptedState
 			add(boyfriendGroup);
 		}
 		
+		generateStaticArrows(false);
+		generateStaticArrows(true);
+		
 		preCreate();
 		
 		#if (SCRIPTS_ALLOWED)
@@ -466,7 +469,7 @@ class PlayState extends ScriptedState
 		add(uiGroup);
 		add(noteGroup);
 		
-		lastBeatHit = -8;
+		lastBeatHit = -6;
 		lastStepHit = lastBeatHit * 4;
 		Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
 		
@@ -630,6 +633,111 @@ class PlayState extends ScriptedState
 		cachePopUpScore();
 
 		if(eventNotes.length < 1) checkEventNote();
+	}
+	
+	public override function implementLua(lua:FunkinLua):Void {
+		// VARIABLES
+		// Song/Week shit
+		lua.set('curBpm', Conductor.bpm);
+		lua.set('bpm', SONG.bpm);
+		lua.set('scrollSpeed', SONG.speed);
+		lua.set('crochet', Conductor.crochet);
+		lua.set('stepCrochet', Conductor.stepCrochet);
+		lua.set('songLength', FlxG.sound.music.length);
+		lua.set('songName', SONG.song);
+		lua.set('songPath', Paths.formatToSongPath(SONG.song));
+		lua.set('loadedSongName', Song.loadedSongName);
+		lua.set('loadedSongPath', Paths.formatToSongPath(Song.loadedSongName));
+		lua.set('chartPath', Song.chartPath);
+		lua.set('startedCountdown', false);
+		lua.set('curStage', SONG.stage);
+		
+		lua.set('isStoryMode', isStoryMode);
+		lua.set('difficulty', storyDifficulty);
+		
+		lua.set('difficultyName', Difficulty.getString(false));
+		lua.set('difficultyPath', Difficulty.getFilePath());
+		lua.set('difficultyNameTranslation', Difficulty.getString(true));
+		lua.set('weekRaw', storyWeek);
+		lua.set('week', WeekData.weeksList[storyWeek]);
+		lua.set('seenCutscene', seenCutscene);
+		lua.set('hasVocals', SONG.needsVoices);
+		
+		// Gameplay variables
+		lua.set('score', songScore);
+		lua.set('misses', songMisses);
+		lua.set('hits', songHits);
+		lua.set('combo', combo);
+		lua.set('deaths', deathCounter);
+		
+		lua.set('rating', ratingPercent);
+		lua.set('ratingName', ratingName);
+		lua.set('ratingFC', ratingFC);
+		lua.set('totalPlayed', totalPlayed);
+		lua.set('totalNotesHit', totalNotesHit);
+		lua.set('inGameOver', false);
+		
+		var curSection:SwagSection = SONG.notes[curSection];
+		lua.set('mustHitSection', curSection != null ? (curSection.mustHitSection == true) : false);
+		lua.set('altAnim', curSection != null ? (curSection.altAnim == true) : false);
+		lua.set('gfSection', curSection != null ? (curSection.gfSection == true) : false);
+
+		lua.set('healthGainMult', healthGain);
+		lua.set('healthLossMult', healthLoss);
+
+		#if FLX_PITCH
+		lua.set('playbackRate', playbackRate);
+		#else
+		lua.set('playbackRate', 1);
+		#end
+
+		lua.set('guitarHeroSustains', guitarHeroSustains);
+		lua.set('instakillOnMiss', instakillOnMiss);
+		lua.set('botPlay', cpuControlled);
+		lua.set('practice', practiceMode);
+		
+		for (i in 0...4) {
+			lua.set('defaultPlayerStrumX' + i, 0);
+			lua.set('defaultPlayerStrumY' + i, 0);
+			lua.set('defaultOpponentStrumX' + i, 0);
+			lua.set('defaultOpponentStrumY' + i, 0);
+		}
+		
+		// Default character data
+		lua.set('defaultBoyfriendX', BF_X);
+		lua.set('defaultBoyfriendY', BF_Y);
+		lua.set('defaultOpponentX', DAD_X);
+		lua.set('defaultOpponentY', DAD_Y);
+		lua.set('defaultGirlfriendX', GF_X);
+		lua.set('defaultGirlfriendY', GF_Y);
+		
+		lua.set('boyfriendName', boyfriend != null ? boyfriend.curCharacter : SONG.player1);
+		lua.set('dadName', dad != null ? dad.curCharacter : SONG.player2);
+		lua.set('gfName', gf != null ? gf.curCharacter : SONG.gfVersion);
+		
+		// Other settings
+		lua.set('downscroll', ClientPrefs.data.downScroll);
+		lua.set('middlescroll', ClientPrefs.data.middleScroll);
+		lua.set('framerate', ClientPrefs.data.framerate);
+		lua.set('ghostTapping', ClientPrefs.data.ghostTapping);
+		lua.set('hideHud', ClientPrefs.data.hideHud);
+		lua.set('antialiasing', ClientPrefs.data.antialiasing);
+		lua.set('timeBarType', ClientPrefs.data.timeBarType);
+		lua.set('scoreZoom', ClientPrefs.data.scoreZoom);
+		lua.set('cameraZoomOnBeat', ClientPrefs.data.camZooms);
+		lua.set('flashingLights', ClientPrefs.data.flashing);
+		lua.set('noteOffset', ClientPrefs.data.noteOffset);
+		lua.set('healthBarAlpha', ClientPrefs.data.healthBarAlpha);
+		lua.set('noResetButton', ClientPrefs.data.noReset);
+		lua.set('lowQuality', ClientPrefs.data.lowQuality);
+		lua.set('shadersEnabled', ClientPrefs.data.shaders);
+
+		// Noteskin/Splash
+		lua.set('noteSkin', ClientPrefs.data.noteSkin);
+		lua.set('noteSkinPostfix', Note.getNoteSkinPostfix());
+		lua.set('splashSkin', ClientPrefs.data.splashSkin);
+		lua.set('splashSkinPostfix', NoteSplash.getSplashSkinPostfix());
+		lua.set('splashAlpha', ClientPrefs.data.splashAlpha);
 	}
 
 	function set_songSpeed(value:Float):Float
@@ -955,8 +1063,6 @@ class PlayState extends ScriptedState
 			if (skipCountdown || startOnTime > 0) skipArrowStartTween = true;
 
 			canPause = true;
-			generateStaticArrows(0);
-			generateStaticArrows(1);
 			for (i in 0...playerStrums.length) {
 				setOnScripts('defaultPlayerStrumX' + i, playerStrums.members[i].x);
 				setOnScripts('defaultPlayerStrumY' + i, playerStrums.members[i].y);
@@ -984,57 +1090,57 @@ class PlayState extends ScriptedState
 				return true;
 			}
 			moveCameraSection();
-
-			startTimer = new FlxTimer().start(Conductor.crochet / 1000 / playbackRate, (tmr:FlxTimer) -> {
-				var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
-				var introImagesArray:Array<String> = [formatUI('ready'), formatUI('set'), formatUI('go')];
-				introAssets.set(stageUI, introImagesArray);
-
-				var introAlts:Array<String> = introAssets.get(stageUI);
-				var antialias:Bool = (ClientPrefs.data.antialiasing && !isPixelStage);
-				var tick:Countdown = THREE;
-
-				switch (swagCounter) {
-					case 0:
-						FlxG.sound.play(Paths.sound('intro3' + introSoundsSuffix), 0.6);
-						tick = THREE;
-					case 1:
-						countdownReady = createCountdownSprite(introAlts[0], antialias);
-						FlxG.sound.play(Paths.sound('intro2' + introSoundsSuffix), 0.6);
-						tick = TWO;
-					case 2:
-						countdownSet = createCountdownSprite(introAlts[1], antialias);
-						FlxG.sound.play(Paths.sound('intro1' + introSoundsSuffix), 0.6);
-						tick = ONE;
-					case 3:
-						countdownGo = createCountdownSprite(introAlts[2], antialias);
-						FlxG.sound.play(Paths.sound('introGo' + introSoundsSuffix), 0.6);
-						tick = GO;
-					case 4:
-						tick = START;
-				}
-
-				if(!skipArrowStartTween)
-				{
-					notes.forEachAlive(function(note:Note) {
-						if(ClientPrefs.data.opponentStrums || note.mustPress)
-						{
-							note.copyAlpha = false;
-							note.alpha = note.multAlpha;
-							if(ClientPrefs.data.middleScroll && !note.mustPress)
-								note.alpha *= 0.35;
-						}
-					});
-				}
-
-				stagesFunc(function(stage:BaseStage) stage.countdownTick(tick, swagCounter));
-				callOnLuas('onCountdownTick', [swagCounter]);
-				callOnHScript('onCountdownTick', [tick, swagCounter]);
-
-				swagCounter ++;
-			}, 5);
 		}
 		return true;
+	}
+	
+	static var introAssets:Map<String, Array<String>> = [];
+	public function countdownTick(tick:Countdown):Void {
+		if (skipCountdown) return;
+		
+		var introImagesArray:Array<String> = [formatUI('ready'), formatUI('set'), formatUI('go')];
+		introAssets.set(stageUI, [formatUI('ready'), formatUI('set'), formatUI('go')]);
+		
+		var introAlts:Array<String> = introAssets.get(stageUI);
+		var antialias:Bool = (ClientPrefs.data.antialiasing && !isPixelStage);
+		
+		var counter:Int = switch (tick) {
+			case THREE:
+				if (!isStoryMode && !skipArrowStartTween)
+					tweenInArrows();
+				
+				FlxG.sound.play(Paths.sound('intro3$introSoundsSuffix'), .6);
+				0;
+			case TWO:
+				countdownReady = createCountdownSprite(introAlts[0], antialias);
+				FlxG.sound.play(Paths.sound('intro2$introSoundsSuffix'), .6);
+				1;
+			case ONE:
+				countdownSet = createCountdownSprite(introAlts[1], antialias);
+				FlxG.sound.play(Paths.sound('intro1$introSoundsSuffix'), .6);
+				2;
+			case GO:
+				countdownGo = createCountdownSprite(introAlts[2], antialias);
+				FlxG.sound.play(Paths.sound('introGo$introSoundsSuffix'), .6);
+				3;
+			case START:
+				4;
+		}
+		
+		if (!skipArrowStartTween) {
+			notes.forEachAlive(function(note:Note) {
+				if (ClientPrefs.data.opponentStrums || note.mustPress) {
+					note.copyAlpha = false;
+					note.alpha = note.multAlpha;
+					if(ClientPrefs.data.middleScroll && !note.mustPress)
+						note.alpha *= 0.35;
+				}
+			});
+		}
+
+		stagesFunc(function(stage:BaseStage) stage.countdownTick(tick, counter));
+		callOnLuas('onCountdownTick', [counter]);
+		callOnHScript('onCountdownTick', [tick, counter]);
 	}
 
 	inline private function createCountdownSprite(image:String, antialias:Bool):FlxSprite
@@ -1489,38 +1595,33 @@ class PlayState extends ScriptedState
 	}
 
 	public var skipArrowStartTween:Bool = false; //for lua
-	private function generateStaticArrows(player:Int):Void
+	private function generateStaticArrows(player:Bool):Void
 	{
 		var strumLineX:Float = ClientPrefs.data.middleScroll ? STRUM_X_MIDDLESCROLL : STRUM_X;
 		var strumLineY:Float = ClientPrefs.data.downScroll ? (FlxG.height - 150) : 50;
 		for (i in 0...4)
 		{
-			// FlxG.log.add(i);
-			var targetAlpha:Float = 1;
-			if (player < 1)
-			{
-				if(!ClientPrefs.data.opponentStrums) targetAlpha = 0;
-				else if(ClientPrefs.data.middleScroll) targetAlpha = 0.35;
-			}
-
-			var babyArrow:StrumNote = new StrumNote(strumLineX, strumLineY, i, player);
+			var babyArrow:StrumNote = new StrumNote(strumLineX, strumLineY, i, player ? 1 : 0);
 			babyArrow.downScroll = ClientPrefs.data.downScroll;
-			if (!isStoryMode && !skipArrowStartTween)
-			{
-				//babyArrow.y -= 10;
+			
+			if (skipArrowStartTween) {
+				var targetAlpha:Float = 1;
+				if (!player) {
+					if (!ClientPrefs.data.opponentStrums) targetAlpha = 0;
+					else if (ClientPrefs.data.middleScroll) targetAlpha = 0.35;
+				}
+				
+				babyArrow.alpha = targetAlpha;
+			} else {
 				babyArrow.alpha = 0;
-				FlxTween.tween(babyArrow, {/*y: babyArrow.y + 10,*/ alpha: targetAlpha}, 1, {ease: FlxEase.circOut, startDelay: 0.5 + (0.2 * i)});
 			}
-			else babyArrow.alpha = targetAlpha;
 
-			if (player == 1)
+			if (player) {
 				playerStrums.add(babyArrow);
-			else
-			{
-				if(ClientPrefs.data.middleScroll)
-				{
+			} else {
+				if (ClientPrefs.data.middleScroll) {
 					babyArrow.x += 310;
-					if(i > 1) { //Up and Right
+					if (i > 1) { //Up and Right
 						babyArrow.x += FlxG.width / 2 + 25;
 					}
 				}
@@ -1531,18 +1632,33 @@ class PlayState extends ScriptedState
 			babyArrow.playerPosition();
 		}
 	}
+	function tweenInArrows():Void {
+		for (group in [playerStrums, opponentStrums]) {
+			for (i => strum in group.members) {
+				var targetY:Float = strum.y;
+				
+				var targetAlpha:Float = 1;
+				if (group == opponentStrums) {
+					if (!ClientPrefs.data.opponentStrums) targetAlpha = 0;
+					else if (ClientPrefs.data.middleScroll) targetAlpha = 0.35;
+				}
+				
+				strum.alpha = 0;
+				strum.y += (ClientPrefs.data.downScroll ? 10 : -10);
+				FlxTween.tween(strum, {y: targetY, alpha: targetAlpha}, 1, {ease: FlxEase.circOut, startDelay: .5 + .2 * i});
+			}
+		}
+	}
 
 	override function openSubState(SubState:FlxSubState)
 	{
 		stagesFunc(function(stage:BaseStage) stage.openSubState(SubState));
-		if (paused)
-		{
-			if (FlxG.sound.music != null)
-			{
-				FlxG.sound.music.pause();
-				vocals.pause();
-				opponentVocals.pause();
-			}
+		
+		if (paused) {
+			FlxG.sound.music?.pause();
+			opponentVocals?.pause();
+			vocals?.pause();
+			
 			FlxTimer.globalManager.forEach(function(tmr:FlxTimer) if(!tmr.finished) tmr.active = false);
 			FlxTween.globalManager.forEach(function(twn:FlxTween) if(!twn.finished) twn.active = false);
 		}
@@ -1877,12 +1993,7 @@ class PlayState extends ScriptedState
 		persistentUpdate = false;
 		persistentDraw = true;
 		paused = true;
-
-		if(FlxG.sound.music != null) {
-			FlxG.sound.music.pause();
-			vocals.pause();
-			opponentVocals.pause();
-		}
+		
 		if(!cpuControlled)
 		{
 			for (note in playerStrums)
@@ -3124,8 +3235,15 @@ class PlayState extends ScriptedState
 		if (lastBeatHit >= beat)
 			return;
 		
-		if (generatedMusic)
-			notes.members.sort((a:Note, b:Note) -> Std.int(b.strumTime) - Std.int(a.strumTime));
+		if (beat >= -4 && beat <= 0) {
+			countdownTick(switch(beat) {
+				default: START;
+				case -4: THREE;
+				case -3: TWO;
+				case -2: ONE;
+				case -1: GO;
+			});
+		}
 		
 		iconP1.scale.set(1.2, 1.2);
 		iconP2.scale.set(1.2, 1.2);

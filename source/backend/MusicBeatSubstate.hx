@@ -17,6 +17,8 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	public var curDecStep:Float = 0;
 	public var curDecBeat:Float = 0;
 	
+	public var keepUp:Bool = false;
+	
 	var _pre:Bool = false;
 	var _psychCameraInitialized:Bool = false;
 	
@@ -88,6 +90,10 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		updateSection();
 		
 		if (oldStep != curStep) {
+			if (keepUp) {
+				while (++ oldStep < curStep)
+					stepHit(oldStep);
+			}
 			stepHit(curStep);
 
 			if (PlayState.SONG != null) {
