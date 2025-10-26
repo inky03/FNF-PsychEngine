@@ -72,12 +72,13 @@ class CreditsState extends ScriptedState
 				// using a FlxGroup is too much fuss!
 				iconArray.push(icon);
 				add(icon);
-				Mods.currentModDirectory = '';
 
 				if (curSelected == -1) curSelected = i;
 			} else {
 				optionText.alignment = CENTERED;
 			}
+			
+			Mods.currentModDirectory = '';
 		}
 		if (curSelected == -1) curSelected = 0;
 		
@@ -243,7 +244,7 @@ class CreditsState extends ScriptedState
 			for(i in firstarray)
 			{
 				var arr:Array<String> = i.replace('\\n', '\n').split("::");
-				arr.push(folder);
+				arr.push(folder ?? '');
 				list.push([for (s in arr) s.trim()]);
 			}
 			list.push(['']);
