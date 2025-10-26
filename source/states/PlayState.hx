@@ -1090,6 +1090,11 @@ class PlayState extends ScriptedState
 				return true;
 			}
 			moveCameraSection();
+			
+			if (!skipArrowStartTween && !isStoryMode) {
+				for (strum in strumLineNotes)
+					strum.alpha = 0;
+			}
 		}
 		return true;
 	}
@@ -1106,7 +1111,7 @@ class PlayState extends ScriptedState
 		
 		var counter:Int = switch (tick) {
 			case THREE:
-				if (!isStoryMode && !skipArrowStartTween)
+				if (!skipArrowStartTween && !isStoryMode)
 					tweenInArrows();
 				
 				FlxG.sound.play(Paths.sound('intro3$introSoundsSuffix'), .6);
@@ -1125,17 +1130,6 @@ class PlayState extends ScriptedState
 				3;
 			case START:
 				4;
-		}
-		
-		if (!skipArrowStartTween) {
-			notes.forEachAlive(function(note:Note) {
-				if (ClientPrefs.data.opponentStrums || note.mustPress) {
-					note.copyAlpha = false;
-					note.alpha = note.multAlpha;
-					if(ClientPrefs.data.middleScroll && !note.mustPress)
-						note.alpha *= 0.35;
-				}
-			});
 		}
 
 		stagesFunc(function(stage:BaseStage) stage.countdownTick(tick, counter));
@@ -1519,11 +1513,24 @@ class PlayState extends ScriptedState
 				oldNote = swagNote;
 			}
 		}
+		
 		if (ghostNotesCaught > 0)
 			trace('["${SONG.song.toUpperCase()}" CHART INFO]: Ghost Notes Cleared: $ghostNotesCaught');
+		
 		for (event in songData.events) //Event Notes
 			for (i in 0...event[1].length)
 				makeEvent(event, i);
+		
+		if (!skipArrowStartTween && !isStoryMode) {
+			notes.forEachAlive(function(note:Note) {
+				if (ClientPrefs.data.opponentStrums || note.mustPress) {
+					note.copyAlpha = false;
+					note.alpha = note.multAlpha;
+					if(ClientPrefs.data.middleScroll && !note.mustPress)
+						note.alpha *= 0.35;
+				}
+			});
+		}
 
 		unspawnNotes.sort(sortByTime);
 		generatedMusic = true;
@@ -1604,17 +1611,12 @@ class PlayState extends ScriptedState
 			var babyArrow:StrumNote = new StrumNote(strumLineX, strumLineY, i, player ? 1 : 0);
 			babyArrow.downScroll = ClientPrefs.data.downScroll;
 			
-			if (skipArrowStartTween) {
-				var targetAlpha:Float = 1;
-				if (!player) {
-					if (!ClientPrefs.data.opponentStrums) targetAlpha = 0;
-					else if (ClientPrefs.data.middleScroll) targetAlpha = 0.35;
-				}
-				
-				babyArrow.alpha = targetAlpha;
-			} else {
-				babyArrow.alpha = 0;
+			var targetAlpha:Float = 1;
+			if (!player) {
+				if (!ClientPrefs.data.opponentStrums) targetAlpha = 0;
+				else if (ClientPrefs.data.middleScroll) targetAlpha = 0.35;
 			}
+			babyArrow.alpha = targetAlpha;
 
 			if (player) {
 				playerStrums.add(babyArrow);
