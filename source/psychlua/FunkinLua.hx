@@ -180,40 +180,47 @@ class FunkinLua {
 		var prevFunction:String = lastCalledFunction;
 		var prevScript:FunkinLua = lastCalledScript;
 		
-		lastCalledFunction = func;
-		lastCalledScript = this;
-		
 		try {
 			if (lua == null) return LuaUtils.Function_Continue;
+			
+			lastCalledFunction = func;
+			lastCalledScript = this;
 			
 			args ??= [];
 			Lua.getglobal(lua, func);
 			var type:Int = Lua.type(lua, -1);
-
+			
 			if (type != Lua.LUA_TFUNCTION) {
 				if (type > Lua.LUA_TNIL)
 					luaTrace('$func: Expected function, got ${LuaUtils.typeToString(type)}', false, false, ERROR);
-
+				
 				Lua.pop(lua, 1);
+				
+				lastCalledFunction = prevFunction;
+				lastCalledScript = prevScript;
+				
 				return LuaUtils.Function_Continue;
 			}
-
+			
 			for (arg in args) Convert.toLua(lua, arg);
 			var status:Int = Lua.pcall(lua, args.length, 1, 0);
-
+			
 			// Checks if it's not successful, then show a error.
 			if (status != Lua.LUA_OK) {
 				var error:String = getErrorMessage(status);
 				luaTrace('$func:$error', false, false, ERROR);
+				
+				lastCalledFunction = prevFunction;
+				lastCalledScript = prevScript;
+				
 				return LuaUtils.Function_Continue;
 			}
-
+			
 			// If successful, pass and then return the result.
-			var result:Dynamic = cast Convert.fromLua(lua, -1);
-			if (result == null) result = LuaUtils.Function_Continue;
+			var result:Dynamic = (cast Convert.fromLua(lua, -1) ?? LuaUtils.Function_Continue);
 
 			Lua.pop(lua, 1);
-			if(closed) stop();
+			if (closed) stop();
 			
 			lastCalledFunction = prevFunction;
 			lastCalledScript = prevScript;
@@ -368,7 +375,7 @@ class FunkinLua {
 	public function addLocalCallback(name:String, myFunction:Dynamic)
 	{
 		callbacks.set(name, myFunction);
-		Lua_helper.add_callback(lua, name, myFunction);
+		Lua_helper.add_callback(lua, name, null);
 	}
 
 	#if (!flash && sys)
@@ -1012,8 +1019,8 @@ class FunkinLua {
 				return;
 			
 			var groupObj:Dynamic = LuaUtils.getObjectDirectly(group);
+			groupObj?.remove(obj, true);
 			
-			groupObj.remove(obj, true);
 			if (destroy) {
 				MusicBeatState.getVariables().remove(tag);
 				obj.destroy();

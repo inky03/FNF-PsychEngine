@@ -464,7 +464,6 @@ class HScript extends Iris {
 	#if LUA_ALLOWED
 	public static function implementLocal(funk:FunkinLua) {
 		funk.addLocalCallback("runHaxeCode", function(codeToRun:String, ?varsToBring:Any = null, ?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):Dynamic {
-			trace('rhc called');
 			initHaxeModuleCode(funk, codeToRun, varsToBring);
 			if (funk.hscript != null)
 			{
