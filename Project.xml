@@ -27,11 +27,12 @@
 	<define name="DISCORD_ALLOWED" if="cpp" />
 	<define name="TRANSLATIONS_ALLOWED" />
 	<define name="IRIS_DEBUG" />
+	<define name="EMIMOD"/>
 	
+	<define name="INCLUDE_ALL_CLASSES" /> <!-- Removes DCE and compiles (most) classes, for use in scripting -->
 	<define name="MULTITHREADED_LOADING" /> <!-- UNCOMMENTING THIS LINE WILL ENABLE MULTITHREADED LOADING, WHICH IMPROVES LOADING TIMES, BUT APPARENTLY CAN FREEZE THE GAME ON SONG LOAD IN OLDER PCs? -->
 	<define name="SHOW_LOADING_SCREEN" />
 	<define name="PSYCH_WATERMARKS"/> <!-- DELETE THIS TO REMOVE THE PSYCH LOGO FROM LOADING SCREEN -->
-	<define name="EMIMOD"/> <!-- for use in Scripts -->
 	
 	<!-- define name="UNHOLYWANDERER04" -->
 	<!-- compile with this define to add an excellent function -->
@@ -119,15 +120,12 @@
 	
 	<define name="SCRIPTS_ALLOWED" if="HSCRIPT_ALLOWED || LUA_ALLOWED" />
 	
-	<haxeflag name="-dce no" if="SCRIPTS_ALLOWED" />
+	<section if="INCLUDE_ALL_CLASSES SCRIPTS_ALLOWED">
+		<haxeflag name="-dce no" />
+		<haxeflag name="--macro" value="backend.macro.Init.includeClasses()" />
+	</section>
 	
-	<haxeflag name="--macro" value="addMetadata('@:build(backend.macro.Scripting.ExtraDataMacro.build())', 'flixel.FlxBasic')" />
-	<haxeflag name="--macro" value="addMetadata('@:build(backend.macro.Flixel.FlixelMacro.buildFlxText())', 'flixel.text.FlxText')" />
-	<haxeflag name="--macro" value="addMetadata('@:build(psychlua.HScript.HScriptMacro.buildInterp())', 'crowplexus.hscript.Interp')" if="HSCRIPT_ALLOWED" />
-	<haxeflag name="--macro" value="include('flixel', true, ['flixel.addons.nape', 'flixel.addons.editors.spine', 'flixel.system.macros'])" if="SCRIPTS_ALLOWED" />
-	<haxeflag name="--macro" value="include('haxe', true, ['haxe.atomic', 'haxe.macro'])" if="SCRIPTS_ALLOWED" />
-	<haxeflag name="--macro" value="include('sys', true, ['sys.db', 'sys.ssl', 'sys.net'])" if="SCRIPTS_ALLOWED hl" />
-	<haxeflag name="--macro" value="include('sys', true)" if="SCRIPTS_ALLOWED !hl" />
+	<haxeflag name="--macro" value="backend.macro.Init.init()" />
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
@@ -181,7 +179,6 @@
 	<!--HScript-->
 	<haxedef name="hscriptPos" if="HSCRIPT_ALLOWED" />
 	<define name="GLOBAL_SCRIPTS" if="HSCRIPT_ALLOWED" />
-	<define name="SCRIPTS_ALLOWED" if="HSCRIPT_ALLOWED || LUA_ALLOWED" />
 
 	<!-- _________________________________ Custom _______________________________ -->
 

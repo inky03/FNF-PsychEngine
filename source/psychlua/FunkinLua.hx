@@ -61,11 +61,11 @@ class FunkinLua {
 		var newScript:FunkinLua = null;
 		
 		try {
+			trace('LOADING LUA: $file');
+			
 			newScript = new FunkinLua(file, parent);
 			
 			newScript.call('onCreate');
-			
-			trace('LUA LOADED: $file');
 		} catch(e:Dynamic) {
 			Log.print(e, FATAL);
 			newScript = null;

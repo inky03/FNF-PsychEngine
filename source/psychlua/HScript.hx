@@ -1,6 +1,8 @@
 package psychlua;
 
 #if macro
+
+#if HSCRIPT_ALLOWED
 import haxe.macro.Expr;
 import haxe.macro.Type;
 import haxe.macro.Context;
@@ -18,6 +20,7 @@ class HScriptMacro {
 		return fields;
 	}
 }
+#end
 
 #else
 
