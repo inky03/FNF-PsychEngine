@@ -4,63 +4,57 @@ import flixel.FlxObject;
 
 class CustomSubstate extends ScriptedSubState {
 	public static var name:String = 'unnamed';
-	public static var instance:ScriptedSubState;
+	public static var instance:CustomSubstate;
 	
 	public var stateName:String;
 	public var parentState:ScriptedSubState = null;
 	
 	#if LUA_ALLOWED
 	public static function implement() {
-		FunkinLua.registerFunction("openCustomSubstate", openCustomSubstate);
-		FunkinLua.registerFunction("closeCustomSubstate", closeCustomSubstate);
-		FunkinLua.registerFunction("insertToCustomSubstate", insertToCustomSubstate);
+		FunkinLua.registerFunction('openCustomSubstate', function(name:String, pauseGame:Bool = false, ?data:Dynamic) {
+			var st:Dynamic = FlxG.state;
+			
+			if (pauseGame) {
+				if (st.paused != null)
+					st.paused = true;
+				
+				FlxG.state.persistentDraw = true;
+				FlxG.state.persistentUpdate = false;
+			}
+			
+			FlxG.state.openSubState(new CustomSubstate(name, data));
+		});
+		FunkinLua.registerFunction('closeCustomSubstate', function() {
+			if (instance != null) {
+				FlxG.state.closeSubState();
+				return true;
+			}
+			return false;
+		});
+		FunkinLua.registerFunction('insertToCustomSubstate', function(tag:String, ?pos:Int = -1) {
+			if (instance != null) {
+				var object:Dynamic = LuaUtils.getObjectDirectly(tag);
+				
+				if (object == null) {
+					FunkinLua.luaTrace('insertToCustomSubstate: Couldnt find object: $tag', false, false, ERROR);
+					return false;
+				}
+				
+				if (pos < 0) instance.add(object);
+				else instance.insert(pos, object);
+				return true;
+			}
+			
+			FunkinLua.luaTrace('insertToCustomSubstate: Custom sub-state is not open!', false, false, ERROR);
+			return false;
+		});
 	}
 	public override function implementLua(lua:FunkinLua):Void {
-		lua.addLocalCallback('closeSubstate', function() close());
+		lua.addLocalCallback('closeSubstate', function() {
+			@:privateAccess parent.closeSubState();
+		});
 	}
 	#end
-	
-	public static function openCustomSubstate(name:String, pauseGame:Bool = false, ?data:Dynamic) {
-		if (pauseGame) {
-			FlxG.camera.followLerp = 0;
-			FlxG.state.persistentDraw = true;
-			FlxG.state.persistentUpdate = false;
-			
-			if (PlayState.instance != null) {
-				PlayState.instance.paused = true;
-				PlayState.instance.vocals?.pause();
-			}
-			
-			if (FlxG.sound.music != null)
-				FlxG.sound.music.pause();
-		}
-		
-		FlxG.state.openSubState(new CustomSubstate(name, data));
-	}
-	public static function closeCustomSubstate() {
-		if (instance != null) {
-			PlayState.instance.closeSubState();
-			return true;
-		}
-		return false;
-	}
-	public static function insertToCustomSubstate(tag:String, ?pos:Int = -1) {
-		if (instance != null) {
-			var object:Dynamic = LuaUtils.getObjectDirectly(tag);
-			
-			if (object == null) {
-				FunkinLua.luaTrace('insertToCustomSubstate: Couldnt find object: $tag', false, false, ERROR);
-				return false;
-			}
-			
-			if (pos < 0) instance.add(object);
-			else instance.insert(pos, object);
-			return true;
-		}
-		
-		FunkinLua.luaTrace('insertToCustomSubstate: Custom sub-state is not open!', false, false, ERROR);
-		return false;
-	}
 	
 	public override function create() {
 		CustomSubstate.name = stateName;

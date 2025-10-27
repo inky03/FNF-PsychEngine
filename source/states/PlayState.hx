@@ -451,7 +451,7 @@ class PlayState extends ScriptedState
 				gf.visible = false;
 		}
 		
-		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
+		#if (SCRIPTS_ALLOWED)
 		// STAGE SCRIPTS
 		#if LUA_ALLOWED startLuasNamed('stages/' + curStage + '.lua'); #end
 		#if HSCRIPT_ALLOWED startHScriptsNamed('stages/' + curStage + '.hx'); #end
@@ -581,7 +581,7 @@ class PlayState extends ScriptedState
 		eventsPushed = null;
 
 		// SONG SPECIFIC SCRIPTS
-		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
+		#if (SCRIPTS_ALLOWED)
 		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'data/$songName/'))
 			for (file in FileSystem.readDirectory(folder))
 			{
@@ -635,6 +635,7 @@ class PlayState extends ScriptedState
 		if(eventNotes.length < 1) checkEventNote();
 	}
 	
+	#if LUA_ALLOWED
 	public override function implementLua(lua:FunkinLua):Void {
 		// VARIABLES
 		// Song/Week shit
@@ -739,6 +740,7 @@ class PlayState extends ScriptedState
 		lua.set('splashSkinPostfix', NoteSplash.getSplashSkinPostfix());
 		lua.set('splashAlpha', ClientPrefs.data.splashAlpha);
 	}
+	#end
 
 	function set_songSpeed(value:Float):Float
 	{
@@ -937,7 +939,7 @@ class PlayState extends ScriptedState
 				videoCutscene.play();
 			return videoCutscene;
 		}
-		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
+		#if (SCRIPTS_ALLOWED)
 		else addTextToDebug("Video not found: " + fileName, FlxColor.RED);
 		#else
 		else FlxG.log.error("Video not found: " + fileName);
@@ -1051,13 +1053,18 @@ class PlayState extends ScriptedState
 
 	public function startCountdown()
 	{
-		if(startedCountdown) {
+		if (startedCountdown) {
 			callOnScripts('onStartCountdown');
 			return false;
 		}
-
-		seenCutscene = true;
+		
 		inCutscene = false;
+		seenCutscene = true;
+		if (!skipArrowStartTween && !isStoryMode) {
+			for (strum in strumLineNotes)
+				strum.alpha = 0;
+		}
+		
 		var ret:Dynamic = callOnScripts('onStartCountdown', null, true);
 		if(ret != LuaUtils.Function_Stop) {
 			if (skipCountdown || startOnTime > 0) skipArrowStartTween = true;
@@ -1090,12 +1097,8 @@ class PlayState extends ScriptedState
 				return true;
 			}
 			moveCameraSection();
-			
-			if (!skipArrowStartTween && !isStoryMode) {
-				for (strum in strumLineNotes)
-					strum.alpha = 0;
-			}
 		}
+		
 		return true;
 	}
 	

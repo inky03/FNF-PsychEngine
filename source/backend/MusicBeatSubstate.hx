@@ -28,11 +28,14 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	public var rpcState:Null<String> = null;
 	public var autoUpdateRPC:Bool = true; //performance setting for custom RPC things
 	
+	public var parent:flixel.FlxState = null;
+	
 	public function new() {
 		super();
 	}
 	
 	public override function create() {
+		parent = _parentState;
 		subStateClosed.add((_) -> updatePresence());
 		
 		if (!_pre) preCreate();

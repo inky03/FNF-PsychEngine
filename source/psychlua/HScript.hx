@@ -61,7 +61,7 @@ class HScript extends Iris {
 	public var parentLua:FunkinLua;
 	public static function initHaxeModule(parent:FunkinLua) {
 		if (parent.hscript == null) {
-			trace('initializing haxe interp for: ${parent.scriptName}');
+			trace('INIT HAXE INTERP FOR: ${parent.scriptName}');
 			parent.hscript = new HScript(parent, null, null, null, parent.parentState);
 		}
 	}
@@ -187,6 +187,8 @@ class HScript extends Iris {
 		var newScript:HScript = null;
 		
 		try {
+			trace('LOADING HX: $file');
+			
 			newScript = Type.createInstance(base ?? HScript, [null, file, null, true, parent]);
 			newScript.unsafe = true;
 			newScript.execute();
@@ -194,7 +196,6 @@ class HScript extends Iris {
 			if (newScript.exists('onCreate'))
 				newScript.call('onCreate');
 			
-			trace('HX LOADED: $file');
 			newScript.unsafe = false;
 		} catch(e:Dynamic) {
 			var script:HScript = cast (Iris.instances.get(file), HScript);
