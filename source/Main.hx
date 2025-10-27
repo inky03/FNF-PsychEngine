@@ -153,6 +153,11 @@ class Main extends Sprite
 			if (FlxG.game != null)
 			resetSpriteCache(FlxG.game);
 		});
+		
+		FlxG.signals.postGameStart.add(function() {
+			#if (!html5 && !switch) FlxG.autoPause = ClientPrefs.data.autoPause; #end
+			FlxG.fixedTimestep = false;
+		});
 	}
 	
 	static function resetSpriteCache(sprite:Sprite):Void {

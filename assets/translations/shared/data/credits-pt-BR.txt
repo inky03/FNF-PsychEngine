@@ -1,0 +1,31 @@
+Psych Engine Mint
+emi3 :: vi :: Criadora, Programadora Principal, Arte Adicional :: https://x.com/fnfin3d :: 82CDE3
+Moonlight_Catalyst :: moonlightcatalyst :: Contribuidor, "Toys" do Editor de Chart :: https://gamebanana.com/members/1960226 :: 9898CB
+BobbyDX :: bobbydx :: Contribuidor :: https://gamebanana.com/members/3384454 :: FFFA66
+SquidBoy84 :: squidboy84 :: Contribuidor, Tradução adicionais PT-BR :: https://x.com/SquidBoy84 :: 5FCC16
+
+Psych Engine
+Shadow Mario :: shadowmario :: Programador Principal e Chefão da Psych Engine :: https://ko-fi.com/shadowmario :: 444444
+Riveren :: riveren :: Artista/Animadora Principal da Psych Engine :: https://x.com/riverennn :: 14967B
+bb-panzu :: bb :: Ex-Programador da Psych Engine :: https://x.com/bbsub3 :: 3E813A
+crowplexus :: crowplexus :: Suporte ao Linux, HScript Iris, Sistema de Input v3, e Outros PRs :: https://x.com/IamMorwen :: CFCFCF
+Kamizeta :: kamizeta :: Criadora da Pessy, Mascote da Psych Engine :: https://www.instagram.com/cewweey/ :: D21C11
+MaxNeton :: maxneton :: Artista/Animador do Easter Egg da Tela de Carregamento :: https://bsky.app/profile/maxneton.bsky.social :: 3C2E4E
+Keoiki :: keoiki :: Animações do Splash das Notas e Alfabeto Latim :: https://x.com/Keoiki_ :: D2D2D2
+SqirraRNG :: sqirra :: Crash Handler e Codigo base e Forma de Onda do Editor de Chart :: https://x.com/gedehari :: E1843A
+EliteMasterEric :: mastereric :: Suporte para Runtime Shaders e Outros PRs :: https://x.com/EliteMasterEric :: FFBD40
+MAJigsaw77 :: majigsaw :: Biblioteca de Carregamento de Vídeos em .MP4 (hxvlc) :: https://x.com/MAJigsaw77 :: 5F5F5F
+iFlicky :: flicky :: Compositor das Músicas Psync e Tea Time e alguns Efeitos Sonoros :: https://x.com/flicky_i :: 9E29CF
+KadeDev :: kade :: Arrumou Alguns Problemas no Editor de Chart e Outros PRs :: https://x.com/kade0912 :: 64A250
+superpowers04 :: superpowers04 :: Fork da LUA JIT :: https://x.com/superpowers04 :: B957ED
+CheemsAndFriends :: cheems :: Criador do FlxAnimate :: https://x.com/CheemsnFriendos :: E1E1E1
+
+Funkin' Crew
+ninjamuffin99 :: ninjamuffin99 :: Programador do Friday Night Funkin' :: https://x.com/ninja_muffin99 :: CF2D2D
+PhantomArcade :: phantomarcade :: Animador do Friday Night Funkin' :: https://x.com/PhantomArcade3K :: FADC45
+evilsk8r :: evilsk8r :: Artista do Friday Night Funkin' :: https://x.com/evilsk8r :: 5ABD4B
+kawaisprite :: kawaisprite :: Compositor do Friday Night Funkin' :: https://x.com/kawaisprite :: 378FC7
+
+Discord
+Psych Engine Mint :: discordmint :: :: https://discord.gg/nGcTH6vNVR :: 5165F6
+Psych Engine :: discordpsych :: :: https://discord.gg/2ka77eMXDv :: 5165F6

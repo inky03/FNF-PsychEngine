@@ -39,6 +39,7 @@ blueballed: "Broxadas: {1}"
 images/mainmenu/menu_story_mode: "images/pt-BR/mainmenu/menu_story_mode"
 images/mainmenu/menu_credits: "images/pt-BR/mainmenu/menu_credits"
 images/mainmenu/menu_options: "images/pt-BR/mainmenu/menu_options"
+outdated_version: "Você está usando uma versão antiga da Psych Engine Mint!\n(Atualmente usando a {1}, versão mais recente é a {2})\n\n\n-----------------------------------------------\n\n\nPressione ENTER para visitar a página do GameBanana ou\n\npressione ESCAPE para ignorar esta mensagem.\n\n\nVocê pode desabilitar este aviso desmarcando a opção\n\n"Verificar por Atualizações" no menu de Opções.\n\n\n-----------------------------------------------\n\n\nObrigado por usar esta engine!"
 
 // Story Mode
 images/Menu_Tracks: "images/pt-BR/Menu_Tracks"

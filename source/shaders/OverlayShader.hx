@@ -6,26 +6,19 @@ class OverlayShader extends FlxShader
 {
 	@:glFragmentSource('
 		#pragma header
-		uniform vec4 uBlendColor;
-
-		vec3 blendLighten(base:Vec3, blend:Vec3) : Vec3 {
-			return mix(
-				1.0 - 2.0 * (1.0 - base) * (1.0 - blend),
-				2.0 * base * blend,
-				step( base, vec3(0.5) )
-			);
+		
+		uniform sampler2D bitmapOverlay;
+		
+		vec4 blendOverlay(vec4 base, vec4 blend) {
+			return mix(base, mix(1.0 - 2.0 * (1.0 - base) * (1.0 - blend), 2.0 * base * blend, step(base, vec4(0.5))), blend.a);
 		}
-
-		vec4 blendLighten(vec4 base, vec4 blend, float opacity)
-		{
-			return (blendLighten(base, blend) * opacity + base * (1.0 - opacity));
-		}
-
-		void main()
-		{
+		
+		void main() {
 			vec4 base = texture2D(bitmap, openfl_TextureCoordv);
-			gl_FragColor = blendLighten(base, uBlendColor, uBlendColor.a);
+			vec4 blend = texture2D(bitmapOverlay, openfl_TextureCoordv);
+			gl_FragColor = blendOverlay(base, blend);
 		}')
+	
 	public function new()
 	{
 		super();
