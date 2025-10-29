@@ -567,26 +567,23 @@ class LoadingState extends ScriptedState
 			}
 			
 			#if (target.threaded) if (threaded) {
-				threadsMax++;
+				threadsMax ++;
 				threadPool.run(() -> { try { preloadCharacter(player1, prefixVocals); } catch (e:Dynamic) {} completedThread(); });
-			} else #else
+			} else #end
 			preloadCharacter(player1, prefixVocals);
-			#end
 			if (player2 != player1) {
 				#if (target.threaded) if (threaded) {
-					threadsMax++;
+					threadsMax ++;
 					threadPool.run(() -> { try { preloadCharacter(player2, prefixVocals); } catch (e:Dynamic) {} completedThread(); });
-				} else #else
+				} else #end
 				preloadCharacter(player2, prefixVocals);
-				#end
 			}
 			if (!stageData.hide_girlfriend && gfVersion != player2 && gfVersion != player1) {
 				#if (target.threaded) if (threaded) {
-					threadsMax++;
+					threadsMax ++;
 					threadPool.run(() -> { try { preloadCharacter(gfVersion); } catch (e:Dynamic) {} completedThread(); });
-				} else #else
+				} else #end
 				preloadCharacter(gfVersion, prefixVocals);
-				#end
 			}
 			
 			threadsMax ++;
