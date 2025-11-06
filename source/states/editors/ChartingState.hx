@@ -90,6 +90,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		['Play Sound', "Value 1: Sound file name\nValue 2: Volume (Default: 1), ranges from 0 to 1"]
 	];
 	
+	public static var startOnTime:Float = 0;
 	public static var keysArray:Array<FlxKey> = [ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT]; //Used for Vortex Editor
 	public static var SHOW_EVENT_COLUMN = true;
 	public static var GRID_COLUMNS_PER_PLAYER = 4;
@@ -198,11 +199,10 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 	var selectionStart:FlxPoint = FlxPoint.get();
 	var selectionBox:FlxSprite;
-
-	var _shouldReset:Bool = true;
-	public function new(?shouldReset:Bool = true)
-	{
-		this._shouldReset = shouldReset;
+	
+	public function new(shouldReset:Bool = false) {
+		if (shouldReset) startOnTime = 0;
+		
 		super();
 	}
 
@@ -238,13 +238,12 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		if(Difficulty.list.length < 1) Difficulty.resetList();
 		_keysPressedBuffer.resize(keysArray.length);
 		_heldNotes.resize(keysArray.length);
-
-		if(_shouldReset) Conductor.songPosition = 0;
+		
 		persistentUpdate = false;
 		FlxG.mouse.visible = true;
 		FlxG.sound.list.add(vocals);
 		FlxG.sound.list.add(opponentVocals);
-
+		
 		vocals.autoDestroy = false;
 		vocals.looped = true;
 		opponentVocals.autoDestroy = false;
@@ -469,14 +468,12 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 		loadMusic();
 		reloadNotesDropdowns();
-		if(!_shouldReset)
-		{
-			vocals.time = opponentVocals.time = FlxG.sound.music.time = Conductor.songPosition - Conductor.offset;
-			if(FlxG.sound.music.time >= vocals.length)
-				vocals.pause();
-			if(FlxG.sound.music.time >= opponentVocals.length)
-				opponentVocals.pause();
-		}
+		
+		vocals.time = opponentVocals.time = FlxG.sound.music.time = Math.max(Math.min(ChartingState.startOnTime - Conductor.offset, FlxG.sound.music.length), 0);
+		if(FlxG.sound.music.time >= vocals.length)
+			vocals.pause();
+		if(FlxG.sound.music.time >= opponentVocals.length)
+			opponentVocals.pause();
 
 		reloadNotes();
 		updateGridVisibility();
@@ -1796,6 +1793,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	var cachedSectionBPMs:Array<Float>;
 	function loadChart(song:SwagSong, ?events:SwagSong)
 	{
+		ChartingState.startOnTime = 0;
+		
 		PlayState.SONG = song;
 		PlayState.EVENTS = events;
 		StageData.loadDirectory(PlayState.SONG);
@@ -4926,6 +4925,11 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 	function goToPlayState()
 	{
+		ChartingState.startOnTime = FlxG.sound.music.time;
+		
+		if (FlxG.keys.pressed.SHIFT)
+			PlayState.startOnTime = FlxG.sound.music.time;
+		
 		persistentUpdate = false;
 		FlxG.mouse.visible = false;
 		chartEditorSave.flush();

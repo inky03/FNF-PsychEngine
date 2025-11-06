@@ -960,6 +960,8 @@ class PlayState extends ScriptedState
 	}
 	
 	public static function restartSong(skipTransition:Bool = false):Void {
+		if (instance == null || instance.callOnScripts('onRestartSong', null, true) == LuaUtils.Function_Stop) return;
+		
 		PlayState.instance.paused = true; // For lua
 		FlxG.sound.music.volume = 0;
 		PlayState.instance.vocals.volume = 0;
@@ -971,6 +973,8 @@ class PlayState extends ScriptedState
 		MusicBeatState.resetState();
 	}
 	public static function exitSong(skipTransition:Bool = false):Void {
+		if (instance == null || instance.callOnScripts('onExitSong', null, true) == LuaUtils.Function_Stop) return;
+		
 		if (skipTransition) {
 			FlxTransitionableState.skipNextTransIn = true;
 			FlxTransitionableState.skipNextTransOut = true;
@@ -1060,7 +1064,7 @@ class PlayState extends ScriptedState
 		
 		inCutscene = false;
 		seenCutscene = true;
-		if (!skipArrowStartTween && !isStoryMode) {
+		if (!skipArrowStartTween && !isStoryMode && !skipCountdown && startOnTime <= 0) {
 			for (strum in strumLineNotes)
 				strum.alpha = 0;
 		}
@@ -1088,7 +1092,7 @@ class PlayState extends ScriptedState
 			var swagCounter:Int = 0;
 			if (startOnTime > 0) {
 				clearNotesBefore(startOnTime);
-				setSongTime(startOnTime - 350);
+				setSongTime(startOnTime - 700);
 				return true;
 			}
 			else if (skipCountdown)
@@ -1182,7 +1186,7 @@ class PlayState extends ScriptedState
 		var i:Int = unspawnNotes.length - 1;
 		while (i >= 0) {
 			var daNote:Note = unspawnNotes[i];
-			if(daNote.strumTime - 350 < time)
+			if(daNote.strumTime < time - 1)
 			{
 				daNote.active = false;
 				daNote.visible = false;
@@ -1198,7 +1202,7 @@ class PlayState extends ScriptedState
 		i = notes.length - 1;
 		while (i >= 0) {
 			var daNote:Note = notes.members[i];
-			if(daNote.strumTime - 350 < time)
+			if(daNote.strumTime < time - 1)
 			{
 				daNote.active = false;
 				daNote.visible = false;
