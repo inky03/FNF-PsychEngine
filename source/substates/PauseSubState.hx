@@ -272,6 +272,8 @@ class PauseSubState extends ScriptedSubState
 						PlayState.restartSong();
 						PlayState.chartingMode = false;
 					case 'Skip Time':
+						curTime = Math.max(curTime, 1);
+						
 						if (curTime < Conductor.songPosition) {
 							PlayState.startOnTime = curTime;
 							PlayState.restartSong(true);

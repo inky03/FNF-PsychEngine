@@ -1091,7 +1091,7 @@ class PlayState extends ScriptedState
 
 			var swagCounter:Int = 0;
 			if (startOnTime > 0) {
-				clearNotesBefore(startOnTime);
+				if (startOnTime > 700) clearNotesBefore(startOnTime);
 				setSongTime(startOnTime - 700);
 				return true;
 			}
@@ -1286,26 +1286,29 @@ class PlayState extends ScriptedState
 		FlxG.sound.music.pause();
 		vocals.pause();
 		opponentVocals.pause();
+		
+		if (time >= 0) {
+			FlxG.sound.music.time = time - Conductor.offset;
+			#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
+			FlxG.sound.music.play();
 
-		FlxG.sound.music.time = time - Conductor.offset;
-		#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
-		FlxG.sound.music.play();
+			if (Conductor.songPosition < vocals.length)
+			{
+				vocals.time = time - Conductor.offset;
+				#if FLX_PITCH vocals.pitch = playbackRate; #end
+				vocals.play();
+			}
+			else vocals.pause();
 
-		if (Conductor.songPosition < vocals.length)
-		{
-			vocals.time = time - Conductor.offset;
-			#if FLX_PITCH vocals.pitch = playbackRate; #end
-			vocals.play();
+			if (Conductor.songPosition < opponentVocals.length)
+			{
+				opponentVocals.time = time - Conductor.offset;
+				#if FLX_PITCH opponentVocals.pitch = playbackRate; #end
+				opponentVocals.play();
+			}
+			else opponentVocals.pause();
 		}
-		else vocals.pause();
-
-		if (Conductor.songPosition < opponentVocals.length)
-		{
-			opponentVocals.time = time - Conductor.offset;
-			#if FLX_PITCH opponentVocals.pitch = playbackRate; #end
-			opponentVocals.play();
-		}
-		else opponentVocals.pause();
+		
 		Conductor.songPosition = time;
 	}
 
@@ -3244,7 +3247,7 @@ class PlayState extends ScriptedState
 		if (lastBeatHit >= beat)
 			return;
 		
-		if (beat >= -4 && beat <= 0) {
+		if (startOnTime <= 0 && !skipCountdown && beat >= -4 && beat <= 0) {
 			countdownTick(switch(beat) {
 				default: START;
 				case -4: THREE;

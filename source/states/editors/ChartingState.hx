@@ -530,6 +530,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			"",
 			"F12 - Preview Chart",
 			"Enter - Playtest Chart",
+			"Shift + Enter - Playtest Chart at Current Time",
 			"Space - Stop/Resume song",
 			"",
 			"Alt + Click - Select Note(s)",
