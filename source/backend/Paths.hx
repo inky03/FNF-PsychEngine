@@ -246,7 +246,7 @@ class Paths
 		if (bitmap == null)
 		{
 			var file:String = getPath(key, IMAGE, parentFolder, true);
-			#if MODS_ALLOWED
+			#if (MODS_ALLOWED && sys)
 			if (FileSystem.exists(file))
 				bitmap = BitmapData.fromFile(file);
 			else #end if (OpenFlAssets.exists(file, IMAGE))
@@ -293,13 +293,14 @@ class Paths
 		#end
 	}
 
-	inline static public function font(key:String)
+	inline static public function font(key:String, embedded:Bool = true)
 	{
 		var folderKey:String = Language.getFileTranslation('fonts/$key');
-		#if MODS_ALLOWED
+		#if (MODS_ALLOWED && sys)
 		var file:String = modFolders(folderKey);
-		if(FileSystem.exists(file)) return file;
+		if (FileSystem.exists(file)) return file;
 		#end
+		if (OpenFlAssets.exists('assets/$folderKey')) return OpenFlAssets.getFont('assets/$folderKey').fontName;
 		return 'assets/$folderKey';
 	}
 
@@ -373,12 +374,13 @@ class Paths
 	inline static public function getSparrowAtlas(key:String, ?parentFolder:String = null, ?allowGPU:Bool = true):FlxAtlasFrames
 	{
 		var imageLoaded:FlxGraphic = image(key, parentFolder, allowGPU);
-		#if MODS_ALLOWED
+		#if (MODS_ALLOWED && sys)
 		var xmlExists:Bool = false;
 
 		var xml:String = modsXml(key);
 		if(FileSystem.exists(xml)) xmlExists = true;
-
+		
+		trace(getPath(Language.getFileTranslation('images/$key') + '.xml', TEXT, parentFolder));
 		return FlxAtlasFrames.fromSparrow(imageLoaded, (xmlExists ? getTextFromFile(xml) : getPath(Language.getFileTranslation('images/$key') + '.xml', TEXT, parentFolder)));
 		#else
 		return FlxAtlasFrames.fromSparrow(imageLoaded, getPath(Language.getFileTranslation('images/$key') + '.xml', TEXT, parentFolder));
@@ -388,7 +390,7 @@ class Paths
 	inline static public function getPackerAtlas(key:String, ?parentFolder:String = null, ?allowGPU:Bool = true):FlxAtlasFrames
 	{
 		var imageLoaded:FlxGraphic = image(key, parentFolder, allowGPU);
-		#if MODS_ALLOWED
+		#if (MODS_ALLOWED && sys)
 		var txtExists:Bool = false;
 		
 		var txt:String = modsTxt(key);
@@ -403,7 +405,7 @@ class Paths
 	inline static public function getAsepriteAtlas(key:String, ?parentFolder:String = null, ?allowGPU:Bool = true):FlxAtlasFrames
 	{
 		var imageLoaded:FlxGraphic = image(key, parentFolder, allowGPU);
-		#if MODS_ALLOWED
+		#if (MODS_ALLOWED && sys)
 		var jsonExists:Bool = false;
 
 		var json:String = modsImagesJson(key);
@@ -430,7 +432,7 @@ class Paths
 		//trace('precaching sound: $file');
 		if(!currentTrackedSounds.exists(file))
 		{
-			#if sys
+			#if (MODS_ALLOWED && sys)
 			if(FileSystem.exists(file))
 				currentTrackedSounds.set(file, Sound.fromFile(file));
 			#else

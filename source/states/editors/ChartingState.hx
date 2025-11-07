@@ -415,7 +415,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		mainBox.scrollFactor.set();
 		mainBox.cameras = [camUI];
 		add(mainBox);
-
+		
 		autoSaveIcon = new FlxSprite(50).loadGraphic(Paths.image('editors/autosave'));
 		autoSaveIcon.screenCenter(Y);
 		autoSaveIcon.scale.set(0.6, 0.6);
@@ -449,7 +449,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 		if(PlayState.SONG == null) //Atleast try to avoid crashes
 		{
-			openNewChart();
+			try { Song.loadFromJson('test', 'test'); } catch(e:Dynamic) { openNewChart(); }
 		}
 
 		updateJsonData();
@@ -745,7 +745,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 	var fileDialog:FileDialogHandler = new FileDialogHandler();
 	var lastFocus:PsychUIInputText;
-
+	
 	var autoSaveTime:Float = 0;
 	var autoSaveCap:Int = 2; //in minutes
 	var backupLimit:Int = 10;
@@ -790,6 +790,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}
 		
 		var charterFocus:Bool = focusedOnEditor();
+		
+		#if sys
 		if(autoSaveCap > 0)
 		{
 			autoSaveTime += elapsed / 60.0;
@@ -866,6 +868,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				});
 			}
 		}
+		#end
 
 		ClientPrefs.toggleVolumeKeys(charterFocus);
 		
@@ -3702,7 +3705,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			btn.text.alignment = LEFT;
 			tab_group.add(btn);
 		}
-
+		
+		#if sys
 		btnY++;
 		btnY += 20;
 		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Save', function()
@@ -3715,9 +3719,10 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}, btnWid);
 		btn.text.alignment = LEFT;
 		tab_group.add(btn);
+		#end
 
 		btnY += 20;
-		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Save as...', function()
+		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, #if sys '  Save as...' #else '  Download' #end, function()
 		{
 			if(!fileDialog.completed) return;
 			upperBox.isMinimized = true;
@@ -3731,7 +3736,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		if(SHOW_EVENT_COLUMN)
 		{
 			btnY += 20;
-			var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Save Events...', function()
+			var btn:PsychUIButton = new PsychUIButton(btnX, btnY, #if sys '  Save Events...' #else '  Download Events' #end, function()
 			{
 				if(!fileDialog.completed) return;
 				upperBox.isMinimized = true;
@@ -4118,6 +4123,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		btn.text.alignment = LEFT;
 		tab_group.add(btn);
 		
+		#if sys
 		btnY += 20;
 		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Update (Legacy)...', function()
 		{
@@ -4162,6 +4168,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}, btnWid);
 		btn.text.alignment = LEFT;
 		tab_group.add(btn);
+		#end
 
 		btnY++;
 		btnY += 20;
@@ -4245,6 +4252,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			tab_group.add(btn);
 		}
 		
+		#if sys
 		btnY++;
 		btnY += 20;
 		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Autosave Settings...', btnWid);
@@ -4301,6 +4309,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		};
 		btn.text.alignment = LEFT;
 		tab_group.add(btn);
+		#end
 
 		btnY++;
 		btnY += 20;
@@ -4780,22 +4789,27 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	{
 		updateChartData();
 		var chartData:String = PsychJsonPrinter.print(PlayState.SONG, ['sectionNotes', 'events']);
-		if(canQuickSave && Song.chartPath != null)
+		#if sys if(canQuickSave && Song.chartPath != null)
 		{
 			File.saveContent(Song.chartPath, chartData);
 			showOutput('Chart saved successfully to: ${Song.chartPath}');
 		}
 		else
-		{
+		#end {
 			var chartName:String = Paths.formatToSongPath(PlayState.SONG.song) + '.json';
 			if(Song.chartPath != null) chartName = Song.chartPath.substr(Song.chartPath.lastIndexOf('/')).trim();
 			fileDialog.save(chartName, chartData,
 				function()
 				{
+					#if sys
 					var newPath:String = fileDialog.path;
 					Song.chartPath = newPath.replace('\\', '/');
 					reloadNotesDropdowns();
+					
 					showOutput('Chart saved successfully to: $newPath');
+					#else
+					showOutput('Chart downloaded successfully');
+					#end
 
 				}, null, function() showOutput('Error on saving chart!', true));
 		}
@@ -5299,6 +5313,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	var overwriteSavedSomething:Bool = false;
 	function overwriteCheck(savePath:String, overwriteName:String, saveData:String, continueFunc:Void->Void = null, ?continueOnCancel:Bool = false)
 	{
+		#if sys
+		
 		if(FileSystem.exists(savePath))
 		{
 			openSubState(new Prompt('Overwrite: "$overwriteName"?', function()
@@ -5315,6 +5331,13 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			File.saveContent(savePath, saveData);
 			if(continueFunc != null) continueFunc();
 		}
+		
+		#else
+		
+		overwriteSavedSomething = true;
+		if (continueFunc != null) continueFunc();
+		
+		#end
 	}
 
 	// Undo/Redo stuff

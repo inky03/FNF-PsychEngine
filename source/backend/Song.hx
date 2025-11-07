@@ -146,6 +146,7 @@ class Song
 			rawData = Paths.getTextFromFile(_lastPath);
 		else
 		#end
+		if (Assets.exists(_lastPath))
 			rawData = Assets.getText(_lastPath);
 
 		return rawData != null ? parseJSON(rawData, jsonInput) : null;

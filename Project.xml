@@ -9,9 +9,7 @@
 
 	<!-- NOTE TO SELF: DISABLE THIS IF ISSUES ARE FOUND -->
 	<haxedef name="LINC_LUA_RELATIVE_DYNAMIC_LIB"/> <!-- stable luas PUT AFTER FIRST LINE WITH APP NAME AND ETC -->
-
-	<!--The flixel preloader is not accurate in Chrome. You can use it regularly if you embed the swf into a html file
-		or you can set the actual size of your file manually at "FlxPreloaderBase-onUpdate-bytesTotal"-->
+	
 	<!-- <app preloader="Preloader" resizable="true" /> -->
 	<app preloader="flixel.system.FlxPreloader" />
 
@@ -75,39 +73,32 @@
 
 	<!-- Assets -->
 	<assets path="assets/fonts" />
-	<assets path="assets/shared"        exclude="*.ogg" if="web"/>
-	<assets path="assets/shared"        exclude="*.mp3" unless="web"/>
-	<assets path="assets/embed"         exclude="*.ogg" if="web" embed="true"/>
-	<assets path="assets/embed"         exclude="*.mp3" unless="web" embed="true"/>
+	<assets path="assets/songs" />
+	<assets path="assets/shared" />
+	<assets path="assets/embed"         embed="true"/>
 	<assets path="assets/videos"        if="VIDEOS_ALLOWED"/>
-	<assets path="assets/songs"         exclude="*.ogg" if="web"/>
-	<assets path="assets/songs"         exclude="*.mp3" unless="web"/>
-	<assets path="assets/week_assets"   rename="assets" exclude="*.ogg" if="web"/>
-	<assets path="assets/week_assets"   rename="assets" exclude="*.mp3" unless="web"/>
+	<assets path="assets/week_assets"   rename="assets"/>
+	
 	<section if="TITLE_SCREEN_EASTER_EGG">
-		<assets path="assets/secrets" rename="assets/shared" exclude="*.ogg" if="web"/>
-		<assets path="assets/secrets" rename="assets/shared" exclude="*.mp3"  unless="web"/>
+		<assets path="assets/secrets" rename="assets/shared"/>
 	</section>
 
 	<section if="TRANSLATIONS_ALLOWED">
-		<assets path="assets/translations" rename="assets" exclude="*.ogg" if="web"/>
-		<assets path="assets/translations" rename="assets" exclude="*.mp3"  unless="web"/>
+		<assets path="assets/translations" rename="assets"/>
 	</section>
 
-	<section if="BASE_GAME_FILES">
-		<assets path="assets/base_game" rename="assets" exclude="*.ogg" if="web"/>
-		<assets path="assets/base_game" rename="assets" exclude="*.mp3"  unless="web"/>
-		<haxelib name="grig.audio" if="BASE_GAME_FILES"/>
-		<haxelib name="funkin.vis" if="BASE_GAME_FILES"/>
+	<section if="BASE_GAME_FILES" unless="html5"> <!-- currently not very functional under html5. seriously . Dont Try it. -->
+		<assets path="assets/base_game" rename="assets"/>
 	</section>
-
-	<define name="CHECK_FOR_UPDATES" if="officialBuild"/>
-
+	
 	<section if="MODS_ALLOWED">
 		<assets path='example_mods' rename='mods' embed='false' type='template' unless="mac"/>
 		<assets path='example_mods' rename='mods' embed='false' if="mac"/>
 		<assets path='list.txt' rename='modsList.txt' />
 	</section>
+
+	<define name="CHECK_FOR_UPDATES" if="officialBuild"/>
+
 	<assets path='art/readme.txt' rename='do NOT readme.txt' />
 
 	<!-- OpenAL config -->
@@ -139,6 +130,10 @@
 	<haxelib name="hscript-iris" if="HSCRIPT_ALLOWED" />
 	<haxelib name="hxdiscord_rpc" if="DISCORD_ALLOWED" />
 	<haxelib name="flxanimate" />
+	
+	<!-- Other -->
+	<haxelib name="grig.audio" />
+	<haxelib name="funkin.vis" />
 
 	<!-- Disable Discord IO Thread -->
 	<haxedef name="DISCORD_DISABLE_IO_THREAD" if="hxdiscord_rpc" />

@@ -353,13 +353,11 @@ class MainMenuState extends ScriptedState
 					fade(false, item);
 				}
 			}
-			#if desktop
 			if (controls.justPressed('debug_1')) {
 				selectedSomethin = true;
 				FlxG.mouse.visible = false;
 				openSubState(new MasterEditorMenu());
 			}
-			#end
 		}
 
 		super.update(elapsed);
