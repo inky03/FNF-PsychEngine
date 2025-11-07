@@ -26,7 +26,7 @@ class ModsMenuState extends MusicBeatState
 
 	var bgList:FlxSprite;
 	var buttonReload:MenuButton;
-	//var buttonModFolder:MenuButton;
+	var buttonToggle:MenuButton;
 	var buttonEnableAll:MenuButton;
 	var buttonDisableAll:MenuButton;
 	var buttons:Array<MenuButton> = [];
@@ -152,29 +152,6 @@ class ModsMenuState extends MusicBeatState
 		add(buttonDisableAll);
 		checkToggleButtons();
 
-		if(modsList.all.length < 1)
-		{
-			buttonDisableAll.visible = buttonDisableAll.enabled = false;
-			buttonEnableAll.visible = true;
-
-			var myX = bgList.x + bgList.width + 20;
-			noModsTxt = new FlxText(myX, 0, FlxG.width - myX - 20, Language.getPhrase('no_mods_installed', 'NO MODS INSTALLED\nPRESS BACK TO EXIT OR INSTALL A MOD'), 48);
-			if(FlxG.random.bool(0.1)) noModsTxt.text += '\nBITCH.'; //meanie
-			noModsTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-			noModsTxt.borderSize = 2;
-			add(noModsTxt);
-			noModsTxt.screenCenter(Y);
-
-			var txt = new FlxText(bgList.x + 15, bgList.y + 15, bgList.width - 30, Language.getPhrase('no_mods_found', "No Mods found."), 16);
-			txt.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE);
-			add(txt);
-
-			FlxG.autoPause = false;
-			changeSelectedMod();
-			return super.create();
-		}
-		//
-
 		bgTitle = FlxSpriteUtil.drawRoundRectComplex(new FlxSprite(bgList.x + bgList.width + 20, 40).makeGraphic(840, 180, FlxColor.TRANSPARENT), 0, 0, 840, 180, 15, 15, 0, 0, FlxColor.BLACK);
 		bgTitle.alpha = 0.6;
 		add(bgTitle);
@@ -245,11 +222,11 @@ class ModsMenuState extends MusicBeatState
 		settingsButton.icon.animation.play('icon', true);
 		add(settingsButton);
 		buttons.push(settingsButton);
-
-		if(modsGroup.members[curSelectedMod].settings == null || modsGroup.members[curSelectedMod].settings.length < 1)
+		
+		if(modsList.all.length < 1 || modsGroup.members[curSelectedMod].settings == null || modsGroup.members[curSelectedMod].settings.length < 1)
 			settingsButton.enabled = false;
 
-		var button = new MenuButton(buttonsX + 400, buttonsY, 80, 80, Paths.image('modsMenuButtons'), function() //On/Off
+		buttonToggle = new MenuButton(buttonsX + 400, buttonsY, 80, 80, Paths.image('modsMenuButtons'), function() //On/Off
 		{
 			var curMod:ModItem = modsGroup.members[curSelectedMod];
 			var mod:String = curMod.folder;
@@ -275,19 +252,29 @@ class ModsMenuState extends MusicBeatState
 			checkToggleButtons();
 			FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
 		}, 54, 54);
-		button.icon.animation.add('icon', [4]);
-		button.icon.animation.play('icon', true);
-		add(button);
-		buttons.push(button);
-		button.focusChangeCallback = function(focus:Bool) {
+		buttonToggle.icon.animation.add('icon', [4]);
+		buttonToggle.icon.animation.play('icon', true);
+		add(buttonToggle);
+		buttons.push(buttonToggle);
+		buttonToggle.focusChangeCallback = function(focus:Bool) {
 			if(!focus)
-				button.bg.color = modsList.enabled.contains(modsGroup.members[curSelectedMod].folder) ? FlxColor.GREEN : 0xFFFF6666;
+				buttonToggle.bg.color = modsList.enabled.contains(modsGroup.members[curSelectedMod]?.folder) ? FlxColor.GREEN : 0xFFFF6666;
 		};
 
-		if(modsList.all.length < 1)
-		{
+		if (modsList.all.length < 1) {
 			for (btn in buttons) btn.enabled = false;
-			button.focusChangeCallback = null;
+			
+			icon.visible = modRestartText.visible = false;
+			buttonDisableAll.visible = buttonDisableAll.enabled = false;
+			buttonEnableAll.visible = true;
+
+			var myX = bgList.x + bgList.width + 20;
+			noModsTxt = new FlxText(myX, 0, FlxG.width - myX - 20, Language.getPhrase('no_mods_installed', 'No Mods installed!\nPress BACK to exit or install a mod!'), 48);
+			noModsTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
+			noModsTxt.y = (bgTitle.y + (bgTitle.height - noModsTxt.height) * .5);
+			add(noModsTxt);
+			
+			changeSelectedMod();
 		}
 		
 		add(bgList);

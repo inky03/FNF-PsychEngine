@@ -58,8 +58,7 @@ musicplayer_paused: "MÚSICA: {1} (PAUSADO)"
 musicplayer_tip: "Aperte SPACE para Pausar / Aperte ESC para Sair / Aperte R para Reiniciar a Música"
 
 // Mods Menu
-no_mods_installed: "NENHUM MOD INSTALADO\nAPERTE BACK PARA SAIR OU ADICIONE UM MOD"
-no_mods_found: "Nenhum Mod encontrado."
+no_mods_installed: "Nenhum Mod instalado!\nAperte BACK para sair ou adicione um mod!"
 mod_restart: "* Mover ou Alternar o Mod reiniciará o jogo."
 reload_button: "RECARREGAR"
 enable_all_button: "LIGAR TUDO"

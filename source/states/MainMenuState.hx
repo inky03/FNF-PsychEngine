@@ -127,6 +127,8 @@ class MainMenuState extends ScriptedState
 		#end
 		
 		subStateClosed.add((sub:flixel.FlxSubState) -> {
+			if (sub is CustomFadeTransition) return;
+			
 			fade(true);
 			pause(false);
 		});
