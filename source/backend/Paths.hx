@@ -380,7 +380,6 @@ class Paths
 		var xml:String = modsXml(key);
 		if(FileSystem.exists(xml)) xmlExists = true;
 		
-		trace(getPath(Language.getFileTranslation('images/$key') + '.xml', TEXT, parentFolder));
 		return FlxAtlasFrames.fromSparrow(imageLoaded, (xmlExists ? getTextFromFile(xml) : getPath(Language.getFileTranslation('images/$key') + '.xml', TEXT, parentFolder)));
 		#else
 		return FlxAtlasFrames.fromSparrow(imageLoaded, getPath(Language.getFileTranslation('images/$key') + '.xml', TEXT, parentFolder));
