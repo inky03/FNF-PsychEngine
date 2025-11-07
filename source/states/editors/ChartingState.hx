@@ -42,6 +42,11 @@ typedef UndoStruct = {
 	var data:Dynamic;
 }
 
+typedef SelectedEventData = {
+	var event:Array<String>;
+	var note:EventMetaNote;
+}
+
 enum abstract UndoAction(String)
 {
 	var ADD_NOTE = 'Add Note';
@@ -526,23 +531,23 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		fullTipText.scrollFactor.set();
 		fullTipText.visible = fullTipText.active = false;
 		fullTipText.text = [
-			"W/S/Mouse Wheel - Move Conductor's Time",
-			"A/D - Change Sections",
+			"W/S/Mouse Wheel - Go Forward/Back in Song",
+			"A/D - Move a Section Back/Forward",
 			"Q/E - Decrease/Increase Note Sustain Length",
 			"Hold Shift/Alt to Increase/Decrease move by 4x",
 			"",
 			"F12 - Preview Chart",
 			"Enter - Playtest Chart",
 			"Shift + Enter - Playtest Chart at Current Time",
-			"Space - Stop/Resume song",
+			"Space - Stop/Resume Song",
 			"",
 			"Alt + Click - Select Note(s)",
 			"Shift + Click - Select/Unselect Note(s)",
 			"Right Click - Selection Box",
 			"",
-			"R - Reset Section",
-			"Home / Shift + R - Jump to the Start of the Song",
-			"End - Jump to the End of the Song",
+			"R - Jump to Start of current Section",
+			"Home / Shift + R - Jump to Start of the Song",
+			"End - Jump to End of the Song",
 			"Z/X - Zoom in/out",
 			"Left/Right - Change Snap (in Vortex Mode)",
 			"Page/Arrows Up/Down - Scroll (in Vortex Mode)",
@@ -739,6 +744,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	
 	var noteSelectionSine:Float = 0;
 	var selectedNotes:Array<MetaNote> = [];
+	var selectedEvents:Array<SelectedEventData> = [];
 	var ignoreClickForThisFrame:Bool = false;
 	var outputAlpha:Float = 0;
 	var songFinished:Bool = false;
@@ -1095,6 +1101,24 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			}
 			if(doCut || FlxG.keys.justPressed.DELETE || FlxG.keys.justPressed.BACKSPACE || (isMovingNotes && (FlxG.mouse.justPressedRight || FlxG.keys.justPressed.ESCAPE))) // Delete button
 			{
+				while (selectedEvents.length > 0) {
+					var event:SelectedEventData = selectedEvents.shift();
+					
+					if (event.note.events.length > 1) {
+						event.note.events.remove(event.event);
+						event.note.updateEventInfo();
+						
+						curEventSelected = Std.int(Math.min(curEventSelected, event.note.events.length - 1));
+						
+						selectedEvents.remove(event);
+					} else {
+						events.remove(event.note);
+						selectedNotes.remove(event.note);
+						curRenderedNotes.remove(event.note, true);
+						// charter.addUndoAction(DELETE_NOTE, {events: [event.note]}); TODO UNDO ACTIONS
+					}
+				}
+				
 				if(selectedNotes.length > 0)
 				{
 					var removedNotes:Array<MetaNote> = [];
@@ -1142,8 +1166,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				for (note in curRenderedNotes)
 				{
 					if(note == null) continue;
+					
+					if (note.isEvent) {
+						var eventNote:EventMetaNote = cast note;
+						
+						eventNote.gui.select(selectionBounds);
+					}
 
-					if(!selectedNotes.contains(note) || holdingAlt /*&& FlxG.overlap(selectionBox, note)*/) //overlap doesnt work here
+					if(!selectedNotes.contains(note) || holdingAlt)
 					{
 						var noteBounds = note.getScreenBounds(null, camUI);
 						noteBounds.top -= scrollY;
@@ -1408,6 +1438,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			dummyArrow.visible = false;
 		}
 		ignoreClickForThisFrame = false;
+		
+		// TODO:  do this only on demand instead (this is Not gonna do wonders)
+		var i:Int = (selectedEvents.length);
+		while (-- i >= 0) {
+			var event:SelectedEventData = selectedEvents[i];
+			if (!events.contains(event.note))
+				selectedEvents.remove(event);
+		}
 
 		if (Conductor.songPosition != lastSongTime || forceDataUpdate)
 		{
@@ -1441,7 +1479,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		
 		lastSongTime = Conductor.songPosition;
 
-		if(selectedNotes.length > 0)
+		if(selectedNotes.length > 0 || selectedEvents.length > 0)
 		{
 			noteSelectionSine += elapsed;
 			var sineValue:Float = 0.75 + Math.cos(Math.PI * noteSelectionSine * (isMovingNotes ? 8 : 2)) / 4;
@@ -1683,6 +1721,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			note.colorTransform.redMultiplier = note.colorTransform.greenMultiplier = note.colorTransform.blueMultiplier = 1;
 			if(note.animation.curAnim != null) note.animation.curAnim.curFrame = 0;
 		}
+		selectedEvents.resize(0);
 		selectedNotes.resize(0);
 		onSelectNote();
 		forceDataUpdate = true;
@@ -1707,10 +1746,12 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					noteTypeDropDown.selectedLabel = '';
 				}
 			}
-			else //Event note
-			{
+			
+			if (note.isEvent) {
 				var eventNote:EventMetaNote = cast (selectedNotes[0], EventMetaNote);
-				updateSelectedEventText();
+				
+				if (eventNote.events.length > 0 && selectedEvents.length == 0)
+					selectedEvents.push({event: eventNote.events[0], note: eventNote});
 			}
 		}
 		else if(selectedNotes.length > 1)
@@ -1724,34 +1765,48 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			value2InputText.text = '';
 		}
 		forceDataUpdate = true;
+		
+		updateSelectedEventText();
 	}
 
 	function updateSelectedEventText()
 	{
-		if(selectedNotes.length == 1 && selectedNotes[0].isEvent)
-		{
-			var eventNote:EventMetaNote = cast (selectedNotes[0], EventMetaNote);
+		if (selectedEvents.length == 1) {
+			var eventNote:EventMetaNote = selectedEvents[0].note;
+			
 			curEventSelected = Std.int(FlxMath.bound(curEventSelected, 0, eventNote.events.length - 1));
 			selectedEventText.text = 'Selected Event: ${curEventSelected + 1} / ${eventNote.events.length}';
 			selectedEventText.visible = true;
+		} else {
+			selectedEventText.visible = false;
+		}
+		
+		var eventName:Null<String> = null;
+		var eventV1:Null<String> = null;
+		var eventV2:Null<String> = null;
+		
+		for (event in selectedEvents) { // find matching / mismatching fields ... 
+			if (eventName == null) {
+				eventName = (event.event[0] ?? '');
+				eventDropDown.selectedIndex = (Lambda.findIndex(eventsList, (n:Array<String>) -> (n[0] == eventName)) ?? 0);
+			} else if (event.event[0] != eventName) {
+				eventDropDown.selectedIndex = 0;
+			}
 			
-			var myEvent:Array<String> = eventNote.events[curEventSelected];
-			if(myEvent != null)
-			{
-				var eventName:String = (myEvent[0] != null) ? myEvent[0] : '';
-				for (num => event in eventsList)
-				{
-					if(event[0] == eventName)
-					{
-						eventDropDown.selectedIndex = num;
-						break;
-					}
-				}
-				value1InputText.text = (myEvent[1] != null) ? myEvent[1] : '';
-				value2InputText.text = (myEvent[2] != null) ? myEvent[2] : '';
+			if (eventV1 == null) {
+				eventV1 = (event.event[1] ?? '');
+				value1InputText.text = eventV1;
+			} else if (event.event[1] != eventName) {
+				value1InputText.text = '';
+			}
+			
+			if (eventV2 == null) {
+				eventV2 = (event.event[2] ?? '');
+				value2InputText.text = eventV2;
+			} else if (event.event[2] != eventName) {
+				value2InputText.text = '';
 			}
 		}
-		else selectedEventText.visible = false;
 	}
 
 	function createGrids()
@@ -2641,80 +2696,78 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			var eventName:String = eventSelected[0];
 			var description:String = eventSelected[1];
 			eventDescriptionText.text = description;
-			if(selectedNotes.length > 1)
-			{
-				for (note in selectedNotes)
-				{
-					if(note == null || !note.isEvent) continue;
-
-					var event:EventMetaNote = cast (note, EventMetaNote);
-					event.events[event.events.length - 1][0] = eventName;
-					event.updateEventInfo();
-				}
-			}
-			else if(selectedNotes.length == 1 && selectedNotes[0].isEvent)
-			{
-				var event:EventMetaNote = cast (selectedNotes[0], EventMetaNote);
-				event.events[Std.int(FlxMath.bound(curEventSelected, 0, event.events.length - 1))][0] = eventName;
-				event.updateEventInfo();
+			
+			for (event in selectedEvents) {
+				event.event[0] = eventName;
+				event.note.updateEventInfo();
 			}
 		});
 
-		function genericEventButton(func:EventMetaNote->Void)
+		function genericEventButton(func:SelectedEventData->Void, multi:Bool = false)
 		{
-			if(selectedNotes.length == 1)
-			{
-				if(selectedNotes[0].isEvent)
-				{
-					var event:EventMetaNote = cast (selectedNotes[0], EventMetaNote);
-					func(event);
-				}
-				else showOutput('Note selected must be an Event!', true);
+			if (selectedEvents.length == 0) {
+				showOutput('No events are selected!', true);
+				return;
+			} else if (!multi && selectedEvents.length > 1) {
+				showOutput('Can\'t perform this action with multiple events selected!', true);
+				return;
 			}
-			else showOutput('You must select a single event to press this button.', true);
+			
+			for (data in selectedEvents)
+				func(data);
 		}
 
 		var objX2 = 140;
 		var removeButton:PsychUIButton = new PsychUIButton(objX2, objY, '-', function()
 		{
-			genericEventButton(function(event:EventMetaNote)
-			{
-				if(event.events.length > 1)
-				{
-					var selectedEvent = event.events[curEventSelected];
-					if(selectedEvent != null)
-					{
-						event.events.remove(selectedEvent);
-						event.updateEventInfo();
-						curEventSelected--;
-					}
-					else showOutput('No event is selected when you deleted it?? Weird.', true);
+			genericEventButton(function(event:SelectedEventData) {
+				if (event.note.events.length > 1) {
+					event.note.events.remove(event.event);
+					event.note.updateEventInfo();
+					
+					curEventSelected = Std.int(Math.min(curEventSelected, event.note.events.length - 1));
+					
+					selectedEvents.remove(event);
+				} else {
+					selectedNotes.remove(event.note);
+					events.remove(event.note);
+					curRenderedNotes.remove(event.note, true);
+					addUndoAction(DELETE_NOTE, {events: [event.note]});
 				}
-				else
-				{
-					selectedNotes.remove(event);
-					events.remove(event);
-					curRenderedNotes.remove(event, true);
-					addUndoAction(DELETE_NOTE, {events: [event]});
-				}
-			});
+			}, true);
 		}, 20);
 		var addButton:PsychUIButton = new PsychUIButton(objX2 + 30, objY, '+', function()
 		{
-			genericEventButton(function(event:EventMetaNote)
-			{
-				event.events.push([eventsList[Std.int(Math.max(eventDropDown.selectedIndex, 0))][0], value1InputText.text, value2InputText.text]);
-				event.updateEventInfo();
-				curEventSelected++;
-			});
+			var newSelection:Array<SelectedEventData> = [];
+			var addedEvent:Array<EventMetaNote> = [];
+			
+			genericEventButton(function(event:SelectedEventData) {
+				if (!addedEvent.contains(event.note)) {
+					var newEvent = [eventsList[Std.int(Math.max(eventDropDown.selectedIndex, 0))][0], value1InputText.text, value2InputText.text];
+					
+					event.note.events.push(newEvent);
+					event.note.updateEventInfo();
+					
+					newSelection.push({event: newEvent, note: event.note});
+					addedEvent.push(event.note);
+				}
+				
+				curEventSelected = (event.note.events.length - 1);
+			}, true);
+			
+			if (!FlxG.keys.pressed.SHIFT && !FlxG.keys.pressed.ALT)
+				selectedEvents.resize(0);
+			
+			for (selection in newSelection)
+				selectedEvents.push(selection);
 		}, 20);
 		var leftButton:PsychUIButton = new PsychUIButton(objX2 + 80, objY, '<', function()
 		{
-			genericEventButton(function(event:EventMetaNote) curEventSelected = FlxMath.wrap(curEventSelected - 1, 0, event.events.length - 1));
+			genericEventButton(function(event:SelectedEventData) curEventSelected = FlxMath.wrap(curEventSelected - 1, 0, event.note.events.length - 1));
 		}, 20);
 		var rightButton:PsychUIButton = new PsychUIButton(objX2 + 110, objY, '>', function()
 		{
-			genericEventButton(function(event:EventMetaNote) curEventSelected = FlxMath.wrap(curEventSelected + 1, 0, event.events.length - 1));
+			genericEventButton(function(event:SelectedEventData) curEventSelected = FlxMath.wrap(curEventSelected + 1, 0, event.note.events.length - 1));
 		}, 20);
 		removeButton.normalStyle.bgColor = FlxColor.RED;
 		removeButton.normalStyle.textColor = FlxColor.WHITE;
@@ -2724,24 +2777,10 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		selectedEventText = new FlxText(150, objY + 30, 150, '');
 		selectedEventText.visible = false;
 
-		function changeEventsValue(str:String, n:Int)
-		{
-			if(selectedNotes.length > 1)
-			{
-				for (note in selectedNotes)
-				{
-					if(note == null || !note.isEvent) continue;
-
-					var event:EventMetaNote = cast (note, EventMetaNote);
-					event.events[event.events.length - 1][n] = str;
-					event.updateEventInfo();
-				}
-			}
-			else if(selectedNotes.length == 1 && selectedNotes[0].isEvent)
-			{
-				var event:EventMetaNote = cast (selectedNotes[0], EventMetaNote);
-				event.events[Std.int(FlxMath.bound(curEventSelected, 0, event.events.length - 1))][n] = str;
-				event.updateEventInfo();
+		function changeEventsValue(str:String, n:Int) {
+			for (event in selectedEvents) {
+				event.event[n] = str;
+				event.note.updateEventInfo();
 			}
 		}
 
