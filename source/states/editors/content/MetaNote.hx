@@ -320,7 +320,7 @@ class EventMetaNote extends MetaNote
 		eventText.setFormat(eventText.font, 12, FlxColor.WHITE, CENTER, SHADOW_XY(2, 2), FlxColor.BLACK);
 		eventText.scrollFactor.x = 0;
 		
-		gui = new EventNoteGui();
+		gui = new EventNoteGui(this);
 		updateEventInfo();
 	}
 	public override function update(elapsed:Float):Void {
@@ -357,21 +357,43 @@ class EventMetaNote extends MetaNote
 
 class EventNoteGui extends FlxSpriteGroup {
 	public static var maxWidth:Float = (ChartingState.GRID_SIZE * 5);
+	public var selectedEventSprite:FlxSprite;
 	public var events:Array<Array<String>>;
+	public var eventNote:EventMetaNote;
 	
 	public var eventContainer:FlxSpriteGroup;
 	public var hovering:Bool = false;
 	public var rect:FlxSprite;
 	
-	public function new() {
+	public var fields:FlxText;
+	public var desc:FlxText;
+	
+	var valuePair:FlxTextFormatMarkerPair;
+	var titlePair:FlxTextFormatMarkerPair;
+	
+	static var closestGui:EventNoteGui = null;
+	
+	public function new(event:EventMetaNote) {
 		super();
+		
+		eventNote = event;
 		
 		rect = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
 		rect.color = 0xff100010;
 		add(rect);
 		
+		fields = new FlxText(-500 - 6, 2, 500, '', 12);
+		fields.setFormat(Paths.font('vcr.ttf'), 12, 0xffffff, RIGHT, FlxTextBorderStyle.OUTLINE, 0xff000000);
+		add(fields);
+		desc = new FlxText(-410 - 6, 2, 410, '', 12);
+		desc.setFormat(Paths.font('vcr.ttf'), 12, 0xa3a3a3, RIGHT, FlxTextBorderStyle.OUTLINE, 0x80000000);
+		add(desc);
+		
 		eventContainer = new FlxSpriteGroup();
 		add(eventContainer);
+		
+		valuePair = new FlxTextFormatMarkerPair(new FlxTextFormat(0x80ffc0), '\u0100');
+		titlePair = new FlxTextFormatMarkerPair(new FlxTextFormat(0xffffff), '\u0101');
 	}
 	
 	public function updateDisplay():Void {
@@ -392,6 +414,7 @@ class EventNoteGui extends FlxSpriteGroup {
 			
 			eventContainer.remove(sprite, true);
 			
+			sprite.ID = i;
 			sprite.loadGraphic(Paths.image('events/${event[0].length == 0 ? 'default' : event[0]}') ?? Paths.image('events/default'));
 			sprite.setGraphicSize(size);
 			sprite.updateHitbox();
@@ -405,7 +428,17 @@ class EventNoteGui extends FlxSpriteGroup {
 	public override function update(elapsed:Float):Void {
 		super.update(elapsed);
 		
-		hovering = FlxG.mouse.overlaps(rect);
+		if (FlxG.mouse.overlaps(rect)) {
+			if (closestGui == null || Math.abs(y + height * .5 - FlxG.mouse.y) < Math.abs(closestGui.y + closestGui.height * .5 - FlxG.mouse.y))
+				closestGui = this;
+		}
+	}
+	
+	public function updateHover(hovering:Bool):Void {
+		this.hovering = hovering;
+		
+		if (hovering)
+			closestGui = null;
 		
 		var near:Null<Float> = null;
 		var closest:FlxSprite = null;
@@ -428,12 +461,40 @@ class EventNoteGui extends FlxSpriteGroup {
 		}
 		
 		if (closest != null) {
+			fields.visible = desc.visible = true;
 			var m:Int = (FlxG.mouse.pressed ? -64 : 128);
 			closest.setColorTransform(1, 1, 1, alpha, m, m, m);
+			
+			var info:Array<String> = events[closest.ID];
+			var fieldPadding:Int = Std.int(Math.max(Math.max( // umm yeah this is annoying actually
+				(info[0].length == 0 ? 4 : info[0].length),
+				(info[1].length == 0 ? 7 : info[1].length)
+				), (info[2].length == 0 ? 7 : info[2].length)
+			));
+			var fieldSpace:String = ('').rpad(' ', fieldPadding);
+			
+			fields.text = 'event  $fieldSpace\nvalue 1  $fieldSpace\nvalue 2  $fieldSpace';
+			desc.applyMarkup(
+				(info[0].length == 0 ? 'None' : '\u0101' + info[0] + '\u0101') +
+				'\n' + (info[1].length == 0 ? '<empty>' : '\u0100' + info[1] + '\u0100') +
+				'\n' + (info[2].length == 0 ? '<empty>' : '\u0100' + info[2] + '\u0100')
+			, [
+				valuePair,
+				titlePair
+			]);
+		} else {
+			fields.visible = desc.visible = false;
 		}
+		
+		selectedEventSprite = closest;
 	}
 	
 	public override function draw():Void {
+		updateHover(closestGui == this);
+		
+		fields.alpha = .5;
+		desc.alpha = 1;
+		
 		super.draw();
 	}
 }

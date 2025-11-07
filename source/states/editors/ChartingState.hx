@@ -90,6 +90,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		['Play Sound', "Value 1: Sound file name\nValue 2: Volume (Default: 1), ranges from 0 to 1"]
 	];
 	
+	public static var instance:ChartingState = null;
 	public static var startOnTime:Float = 0;
 	public static var keysArray:Array<FlxKey> = [ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT]; //Used for Vortex Editor
 	public static var SHOW_EVENT_COLUMN = true;
@@ -238,6 +239,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		if(Difficulty.list.length < 1) Difficulty.resetList();
 		_keysPressedBuffer.resize(keysArray.length);
 		_heldNotes.resize(keysArray.length);
+		
+		instance = this;
 		
 		persistentUpdate = false;
 		FlxG.mouse.visible = true;
@@ -4960,6 +4963,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 	override function destroy()
 	{
+		instance = null;
+		
 		Note.globalRgbShaders = [];
 		backend.NoteTypesConfig.clearNoteTypesData();
 
