@@ -3,8 +3,6 @@ package options;
 import objects.AttachedText;
 import objects.CheckboxThingie;
 
-import options.Option;
-
 class GameplayChangersSubState extends BaseOptionsMenu
 {
 	var scrollType:GameplayOption;

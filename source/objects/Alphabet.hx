@@ -293,11 +293,7 @@ class AlphaCharacter extends FlxSprite
 		allLetters = new Map<String, Null<Letter>>();
 		try
 		{
-			#if MODS_ALLOWED
-			var data:Dynamic = Json.parse(File.getContent(path));
-			#else
-			var data:Dynamic = Json.parse(Assets.getText(path));
-			#end
+			var data:Dynamic = Json.parse(Paths.getTextFromFile(path));
 
 			if(data.allowed != null && data.allowed.length > 0)
 			{

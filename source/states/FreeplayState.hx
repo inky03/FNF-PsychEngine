@@ -475,7 +475,7 @@ class FreeplayState extends ScriptedState
 		{
 			var path:String = Paths.getPath('characters/$char.json', TEXT);
 			#if MODS_ALLOWED
-			var character:Dynamic = Json.parse(File.getContent(path));
+			var character:Dynamic = Json.parse(Paths.getTextFromFile(path));
 			#else
 			var character:Dynamic = Json.parse(Assets.getText(path));
 			#end

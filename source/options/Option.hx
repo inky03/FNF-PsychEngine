@@ -83,6 +83,27 @@ class Option
 		}
 		catch(e) {}
 	}
+	
+	public static function typeFromString(str:String):OptionType
+	{
+		switch(str.toLowerCase().trim())
+		{
+			case 'bool':
+				return BOOL;
+			case 'int', 'integer':
+				return INT;
+			case 'float', 'fl':
+				return FLOAT;
+			case 'percent':
+				return PERCENT;
+			case 'string', 'str':
+				return STRING;
+			case 'keybind', 'key':
+				return KEYBIND;
+		}
+		FlxG.log.error("Could not find option type: " + str);
+		return BOOL;
+	}
 
 	public function change(mod:Float = 0, hold:Bool = false)
 	{

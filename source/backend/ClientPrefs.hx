@@ -126,6 +126,11 @@ class ClientPrefs {
 	];
 	public static var defaultKeys:Map<String, Array<FlxKey>> = null;
 	public static var defaultButtons:Map<String, Array<FlxGamepadInputID>> = null;
+	
+	public static var modsEnabled:Map<String, Bool> = [];
+	
+	public static var controlsSave(default, null):FlxSave;
+	public static var modsSave(default, null):FlxSave;
 
 	public static function resetKeys(controller:Null<Bool> = null) //Null = both, False = Keyboard, True = Controller
 	{
@@ -148,30 +153,30 @@ class ClientPrefs {
 		while(gamepadBind != null && gamepadBind.contains(NONE)) gamepadBind.remove(NONE);
 	}
 
-	public static function loadDefaultKeys()
-	{
-		defaultKeys = keyBinds.copy();
-		defaultButtons = gamepadBinds.copy();
-	}
-
 	public static function saveSettings() {
 		for (key in Reflect.fields(data))
 			Reflect.setField(FlxG.save.data, key, Reflect.field(data, key));
 
 		#if ACHIEVEMENTS_ALLOWED Achievements.save(); #end
-		FlxG.save.flush();
 
-		//Placing this in a separate save so that it can be manually deleted without removing your Score and stuff
-		var save:FlxSave = new FlxSave();
-		save.bind('controls_v3', CoolUtil.getSavePath());
-		save.data.keyboard = keyBinds;
-		save.data.gamepad = gamepadBinds;
-		save.flush();
+		// separate saves so that they can be manually deleted without removing your Score and stuff
+		
+		controlsSave.data.keyboard = keyBinds;
+		controlsSave.data.gamepad = gamepadBinds;
+		controlsSave.flush();
+		
+		modsSave.data.modsEnabled = modsEnabled;
+		modsSave.flush();
+		
+		FlxG.save.flush();
 		FlxG.log.add("Settings saved!");
 	}
 
 	public static function loadPrefs() {
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
+		
+		defaultKeys ??= keyBinds.copy();
+		defaultButtons ??= gamepadBinds.copy();
 
 		for (key in Reflect.fields(data))
 			if (key != 'gameplaySettings' && Reflect.hasField(FlxG.save.data, key))
@@ -208,32 +213,41 @@ class ClientPrefs {
 		}
 		
 		// flixel automatically saves your volume!
-		if(FlxG.save.data.volume != null)
+		if (FlxG.save.data.volume != null)
 			FlxG.sound.volume = FlxG.save.data.volume;
 		if (FlxG.save.data.mute != null)
 			FlxG.sound.muted = FlxG.save.data.mute;
 
 		#if DISCORD_ALLOWED DiscordClient.check(); #end
-
-		// controls on a separate save file
-		var save:FlxSave = new FlxSave();
-		save.bind('controls_v3', CoolUtil.getSavePath());
-		if(save != null)
-		{
-			if(save.data.keyboard != null)
-			{
-				var loadedControls:Map<String, Array<FlxKey>> = save.data.keyboard;
-				for (control => keys in loadedControls)
-					if(keyBinds.exists(control)) keyBinds.set(control, keys);
-			}
-			if(save.data.gamepad != null)
-			{
-				var loadedControls:Map<String, Array<FlxGamepadInputID>> = save.data.gamepad;
-				for (control => keys in loadedControls)
-					if(gamepadBinds.exists(control)) gamepadBinds.set(control, keys);
-			}
-			reloadVolumeKeys();
+		
+		// Controls and Mods on separate save files
+		if (controlsSave == null) {
+			controlsSave = new FlxSave();
+			controlsSave.bind('controls_v3', CoolUtil.getSavePath());
 		}
+		if (modsSave == null) {
+			modsSave = new FlxSave();
+			modsSave.bind('mods', CoolUtil.getSavePath());
+		}
+		
+		var loadedKeyboard:Map<String, Array<FlxKey>> = controlsSave.data.keyboard;
+		var loadedGamepad:Map<String, Array<FlxGamepadInputID>> = controlsSave.data.gamepad;
+		var loadedMods:Map<String, Bool> = modsSave.data.modsEnabled;
+		
+		if (loadedKeyboard != null) {
+			for (control => keys in loadedKeyboard)
+				if (keyBinds.exists(control)) keyBinds.set(control, keys);
+		}
+		if (loadedGamepad != null) {
+			for (control => keys in loadedGamepad)
+				if (gamepadBinds.exists(control)) gamepadBinds.set(control, keys);
+		}
+		if (loadedMods != null) {
+			for (mod => enabled in loadedMods)
+				modsEnabled.set(mod, enabled);
+		}
+		
+		reloadVolumeKeys();
 	}
 
 	inline public static function getGameplaySetting(name:String, defaultValue:Dynamic = null, ?customDefaultValue:Bool = false):Dynamic

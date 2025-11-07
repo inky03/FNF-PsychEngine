@@ -56,6 +56,7 @@ class Main extends Sprite
 		skipSplash: true, // if the default flixel splash screen should be skipped
 		startFullscreen: false // if the game should start at fullscreen mode
 	};
+	public static var appName(default, null):String;
 	
 	public static var fpsVar:FPSCounter;
 	public static var traces:ScriptTraceDisplay;
@@ -70,6 +71,12 @@ class Main extends Sprite
 	public function new()
 	{
 		super();
+		
+		#if CRASH_HANDLER
+		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
+		#end
+		
+		appName = (FlxG.stage.application.meta.get('file') ?? 'PsychEngineMint');
 		
 		#if (cpp && windows)
 		backend.macro.Native.fixScaling();
@@ -90,21 +97,21 @@ class Main extends Sprite
 		#end
 		Mods.loadTopMod();
 		
-		FlxG.save.bind('funkin', CoolUtil.getSavePath());
+		Controls.instance = new Controls();
+		Language.reloadPhrases();
 		Difficulty.resetList();
-		Highscore.load();
 		
 		#if HSCRIPT_ALLOWED HScript.init(); #end
 		#if GLOBAL_SCRIPTS GlobalScriptHandler.init(); #end
-		
 		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
-		Controls.instance = new Controls();
-		ClientPrefs.loadDefaultKeys();
+		
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
 		addChild(new #if UNHOLYWANDERER04 UnholyGame #else FlxGame #end(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
 		
+		FlxG.save.bind('funkin', CoolUtil.getSavePath());
 		ClientPrefs.loadPrefs();
-		Language.reloadPhrases();
+		Highscore.load();
+		
 		substates.OutdatedSubState.updateVersion = CoolUtil.checkForUpdates();
 		
 		traces = new ScriptTraceDisplay();
@@ -132,10 +139,6 @@ class Main extends Sprite
 		
 		FlxG.game.focusLostFramerate = 60;
 		FlxG.keys.preventDefaultKeys = [TAB];
-		
-		#if CRASH_HANDLER
-		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
-		#end
 		
 		#if DISCORD_ALLOWED
 		DiscordClient.prepare();
@@ -173,7 +176,6 @@ class Main extends Sprite
 	function onCrash(e:UncaughtErrorEvent):Void
 	{
 		var gh:String = 'https://github.com/inky03/FNF-PsychEngineMint'; // change this link to your actual repository if you're modding !
-		var app:String = (FlxG.stage.application.meta.get('file') ?? 'PsychEngineMint');
 		var dateNow:String = Date.now().toString().replace(' ', '_').replace(':', "'"); // yayyyy
 		
 		var errMsg:String = 'UNCAUGHT EXCEPTION: ${e.error}\n\nSTACK TRACEBACK:';
@@ -197,10 +199,10 @@ class Main extends Sprite
 		for (stackItem in callStack)
 			errMsg += ('\n' + stackItemToString(stackItem));
 		
-		var errText:String = '$app ${states.MainMenuState.modVersion}\n\n$errMsg\n\n$gh\n';
+		var errText:String = '$appName ${states.MainMenuState.modVersion}\n\n$errMsg\n\n$gh\n';
 		
 		#if sys
-		var path:String = './crash/${app}_$dateNow.txt';
+		var path:String = './crash/${appName}_$dateNow.txt';
 		errMsg += '\n\nA crash dump has been saved in ${Path.normalize(path)}';
 		#end
 		

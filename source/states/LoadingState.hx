@@ -393,15 +393,8 @@ class LoadingState extends ScriptedState
 		if (stopMusic && FlxG.sound.music != null)
 			FlxG.sound.music.stop();
 
-		while(true)
-		{
-			if(checkLoaded())
-			{
-				_loaded();
-				break;
-			}
-			else Sys.sleep(0.001);
-		}
+		checkLoaded();
+		
 		return target;
 	}
 

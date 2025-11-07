@@ -82,9 +82,6 @@ class TitleState extends ScriptedState
 			persistentDraw = true;
 		}
 
-		if (FlxG.save.data.weekCompleted != null)
-			StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
-
 		FlxG.mouse.visible = false;
 		
 		preCreate();

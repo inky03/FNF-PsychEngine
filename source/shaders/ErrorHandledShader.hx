@@ -40,13 +40,20 @@ class ErrorHandledShader extends FlxShader implements IErrorHandler
 		// Save a crash log on Release builds
 		var errMsg:String = "";
 		var dateNow:String = Date.now().toString().replace(" ", "_").replace(":", "'");
-
+		
+		#if sys
 		if (!FileSystem.exists('./crash/'))
 			FileSystem.createDirectory('./crash/');
 
 		var crashLogPath:String = './crash/shader_${shaderName}_${dateNow}.txt';
 		File.saveContent(crashLogPath, error);
 		Log.print('$alertTitle\nError log saved at: $crashLogPath', FATAL);
+		#else
+		var errMsg:String = 'ERROR ON SHADER:\n$error';
+		
+		trace(errMsg);
+		FlxG.stage.window.alert(errMsg, 'Oops...');
+		#end
 		#else
 		Log.print('$alertTitle\nError logs aren\'t created on debug builds, check the trace log instead!', FATAL);
 		#end

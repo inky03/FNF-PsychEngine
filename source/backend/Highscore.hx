@@ -1,10 +1,13 @@
 package backend;
 
+import flixel.util.FlxSave;
+import states.StoryMenuState;
+
 class Highscore
 {
-	public static var weekScores:Map<String, Int> = new Map();
-	public static var songScores:Map<String, Int> = new Map<String, Int>();
-	public static var songRating:Map<String, Float> = new Map<String, Float>();
+	public static var weekScores:Map<String, Int> = [];
+	public static var songScores:Map<String, Int> = [];
+	public static var songRating:Map<String, Float> = [];
 
 	public static function resetSong(song:String, diff:Int = 0):Void
 	{
@@ -109,15 +112,16 @@ class Highscore
 		return weekScores.get(daWeek);
 	}
 
-	public static function load():Void
-	{
-		if (FlxG.save.data.weekScores != null)
-			weekScores = FlxG.save.data.weekScores;
-
-		if (FlxG.save.data.songScores != null)
-			songScores = FlxG.save.data.songScores;
-
-		if (FlxG.save.data.songRating != null)
-			songRating = FlxG.save.data.songRating;
+	public static function load():Void {
+		weekScores = (FlxG.save.data.weekScores ?? weekScores);
+		songScores = (FlxG.save.data.songScores ?? songScores);
+		songRating = (FlxG.save.data.songRating ?? songRating);
+		StoryMenuState.weekCompleted = (FlxG.save.data.weekCompleted ?? StoryMenuState.weekCompleted);
+	}
+	public static function saveScores():Void {
+		FlxG.save.data.weekCompleted = StoryMenuState.weekCompleted;
+		FlxG.save.data.weekScores = weekScores;
+		FlxG.save.data.songScores = songScores;
+		FlxG.save.data.songRating = songRating;
 	}
 }

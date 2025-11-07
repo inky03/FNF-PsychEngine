@@ -3572,7 +3572,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						{
 							try
 							{
-								var loadedChart:SwagSong = Song.parseJSON(File.getContent(path), autosaveName, null);
+								var loadedChart:SwagSong = Song.parseJSON(Paths.getTextFromFile(path), autosaveName, null);
 								if(loadedChart == null || !Reflect.hasField(loadedChart, '__original_path'))
 								{
 									showOutput('Error: File loaded is not a valid Psych Engine autosave.', true);
@@ -3761,7 +3761,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				{
 					try
 					{
-						var reloadedChart:SwagSong = Song.parseJSON(File.getContent(Song.chartPath));
+						var reloadedChart:SwagSong = Song.parseJSON(Paths.getTextFromFile(Song.chartPath));
 						
 						var eventsChart:SwagSong = PlayState.EVENTS;
 						if (autoLoadEvents) eventsChart = try { Song.getChart('events', Song.chartPath); } catch (e) { eventsChart; }
@@ -3921,7 +3921,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 										var chartToFind:String = parentFolder + songName + diffPostfix + '.json';
 										if(FileSystem.exists(chartToFind))
 										{
-											var diffChart:SwagSong = Song.parseJSON(File.getContent(chartToFind), songName + diffPostfix);
+											var diffChart:SwagSong = Song.parseJSON(Paths.getTextFromFile(chartToFind), songName + diffPostfix);
 											if(diffChart != null)
 											{
 												var subpack:VSlicePackage = VSlice.export(diffChart);
@@ -3941,7 +3941,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 									var chartToFind:String = parentFolder + 'events.json';
 									if(FileSystem.exists(chartToFind))
 									{
-										var eventsChart:SwagSong = Song.parseJSON(File.getContent(chartToFind), 'events');
+										var eventsChart:SwagSong = Song.parseJSON(Paths.getTextFromFile(chartToFind), 'events');
 										if(eventsChart != null)
 										{
 											var subpack:VSlicePackage = VSlice.export(eventsChart);
@@ -5285,7 +5285,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			{
 				var path:String = Paths.getPath('characters/' + char + '.json', TEXT);
 				#if MODS_ALLOWED
-				var unparsedJson = File.getContent(path);
+				var unparsedJson = Paths.getTextFromFile(path);
 				#else
 				var unparsedJson = Assets.getText(path);
 				#end

@@ -4,10 +4,11 @@ class Log {
 	public static function print(message:String, level:LogType = ERROR, ?size:Int):Void {
 		message = getLogHeader(level) + message;
 		
-		Sys.println(formatLog(message, level));
+		#if sys Sys.println(formatLog(message, level)); #end
 		Main.traces?.print(message, getLogColor(level), (level == FATAL ? 17 : 15));
 	}
 	
+	#if sys
 	static function formatLog(message:String, level:LogType):String { // this sucks lol
 		var esc:String = '\033[';
 		
@@ -29,6 +30,8 @@ class Log {
 		
 		return prefix + message + (esc + '0m');
 	}
+	#end
+	
 	static function getLogHeader(level:LogType):String {
 		return switch (level) {
 			default: '';

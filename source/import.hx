@@ -19,6 +19,7 @@ import sys.*;
 import sys.io.*;
 #elseif js
 import js.html.*;
+import backend.JSFileSystem as FileSystem;
 #end
 
 import backend.Paths;

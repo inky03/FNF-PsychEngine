@@ -75,7 +75,7 @@ class ModsMenuState extends MusicBeatState
 
 		modsGroup = new FlxTypedGroup<ModItem>();
 
-		for (i => mod in modsList.all)
+		for (i => mod in modsList.available)
 		{
 			if(startMod == mod) curSelectedMod = i;
 
@@ -203,7 +203,7 @@ class ModsMenuState extends MusicBeatState
 		add(button);
 		buttons.push(button);
 		
-		if(modsList.all.length < 2)
+		if(modsList.available.length < 2)
 		{
 			for (button in buttons)
 				button.enabled = false;
@@ -223,7 +223,7 @@ class ModsMenuState extends MusicBeatState
 		add(settingsButton);
 		buttons.push(settingsButton);
 		
-		if(modsList.all.length < 1 || modsGroup.members[curSelectedMod].settings == null || modsGroup.members[curSelectedMod].settings.length < 1)
+		if(modsList.available.length < 1 || modsGroup.members[curSelectedMod].settings == null || modsGroup.members[curSelectedMod].settings.length < 1)
 			settingsButton.enabled = false;
 
 		buttonToggle = new MenuButton(buttonsX + 400, buttonsY, 80, 80, Paths.image('modsMenuButtons'), function() //On/Off
@@ -261,7 +261,7 @@ class ModsMenuState extends MusicBeatState
 				buttonToggle.bg.color = modsList.enabled.contains(modsGroup.members[curSelectedMod]?.folder) ? FlxColor.GREEN : 0xFFFF6666;
 		};
 
-		if (modsList.all.length < 1) {
+		if (modsList.available.length < 1) {
 			for (btn in buttons) btn.enabled = false;
 			
 			icon.visible = modRestartText.visible = false;
@@ -297,7 +297,7 @@ class ModsMenuState extends MusicBeatState
 	{
 		if(controls.BACK && hoveringOnMods)
 		{
-			saveTxt();
+			saveMods();
 
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 			if(waitingToRestart)
@@ -335,7 +335,7 @@ class ModsMenuState extends MusicBeatState
 
 		if(controls.UI_DOWN_R || controls.UI_UP_R) holdTime = 0;
 
-		if(modsList.all.length > 0)
+		if(modsList.available.length > 0)
 		{
 			if(controls.controllerMode && holdingMod)
 			{
@@ -345,7 +345,7 @@ class ModsMenuState extends MusicBeatState
 			}
 
 			var lastMode = hoveringOnMods;
-			if(modsList.all.length > 1)
+			if(modsList.available.length > 1)
 			{
 				if(FlxG.mouse.justPressed)
 				{
@@ -382,7 +382,7 @@ class ModsMenuState extends MusicBeatState
 					else if(FlxG.keys.justPressed.HOME || FlxG.keys.justPressed.END ||
 						FlxG.gamepads.anyJustPressed(LEFT_TRIGGER) || FlxG.gamepads.anyJustPressed(RIGHT_TRIGGER))
 					{
-						if(FlxG.keys.justPressed.END || FlxG.gamepads.anyJustPressed(RIGHT_TRIGGER)) curSelectedMod = modsList.all.length-1;
+						if(FlxG.keys.justPressed.END || FlxG.gamepads.anyJustPressed(RIGHT_TRIGGER)) curSelectedMod = modsList.available.length-1;
 						else curSelectedMod = 0;
 						changeSelectedMod();
 					}
@@ -483,7 +483,7 @@ class ModsMenuState extends MusicBeatState
 							switch(curSelectedButton)
 							{
 								case -2:
-									curSelectedMod = (modsList.all.length - 1);
+									curSelectedMod = (modsList.available.length - 1);
 									if (curSelectedMod < 0) curSelectedMod = 0;
 									
 									hoveringOnMods = true;
@@ -536,7 +536,7 @@ class ModsMenuState extends MusicBeatState
 				@:privateAccess
 				Mods.updateModList();
 				modsList = Mods.parseList();
-				if(modsList.all.length > 0)
+				if(modsList.available.length > 0)
 				{
 					trace('mod(s) found! reloading');
 					reload();
@@ -586,13 +586,13 @@ class ModsMenuState extends MusicBeatState
 			case -1: return buttonEnableAll.enabled ? buttonEnableAll : buttonDisableAll;
 		}
 
-		if(modsList.all.length < 1) return buttonReload; //prevent possible crash from my irresponsibility
+		if(modsList.available.length < 1) return buttonReload; //prevent possible crash from my irresponsibility
 		return buttons[Std.int(Math.max(0, Math.min(buttons.length-1, curSelectedButton)))];
 	}
 
 	function changeSelectedMod(add:Int = 0, isMouseWheel:Bool = false)
 	{
-		var max = modsList.all.length - 1;
+		var max = modsList.available.length - 1;
 		if(max < 0) return;
 
 		if(hoveringOnMods)
@@ -693,7 +693,7 @@ class ModsMenuState extends MusicBeatState
 		{
 			if(mod == null)
 			{
-				trace('Mod #$i is null, maybe it was ' + modsList.all[i]);
+				trace('Mod #$i is null, maybe it was ' + modsList.available[i]);
 				continue;
 			}
 
@@ -710,12 +710,12 @@ class ModsMenuState extends MusicBeatState
 	var waitingToRestart:Bool = false;
 	function moveModToPosition(?mod:String = null, position:Int = 0)
 	{
-		if(mod == null) mod = modsList.all[curSelectedMod];
-		if(position >= modsList.all.length) position = 0;
-		else if(position < 0) position = modsList.all.length-1;
+		if(mod == null) mod = modsList.available[curSelectedMod];
+		if(position >= modsList.available.length) position = 0;
+		else if(position < 0) position = modsList.available.length-1;
 
 		trace('Moved mod $mod to position $position');
-		var id:Int = modsList.all.indexOf(mod);
+		var id:Int = modsList.available.indexOf(mod);
 		if(position == id) return;
 
 		var curMod:ModItem = modsGroup.members[id];
@@ -724,10 +724,10 @@ class ModsMenuState extends MusicBeatState
 		if(curMod.mustRestart || modsGroup.members[position].mustRestart) waitingToRestart = true;
 
 		modsGroup.remove(curMod, true);
-		modsList.all.remove(mod);
+		modsList.available.remove(mod);
 		//if(position > id) position--;
 		modsGroup.insert(position, curMod);
-		modsList.all.insert(position, mod);
+		modsList.available.insert(position, mod);
 
 		curSelectedMod = position;
 		updateModDisplayData();
@@ -749,7 +749,7 @@ class ModsMenuState extends MusicBeatState
 
 	function reload()
 	{
-		saveTxt();
+		saveMods();
 		FlxG.autoPause = ClientPrefs.data.autoPause;
 		FlxTransitionableState.skipNextTransIn = true;
 		FlxTransitionableState.skipNextTransOut = true;
@@ -757,24 +757,13 @@ class ModsMenuState extends MusicBeatState
 		MusicBeatState.switchState(new ModsMenuState(curMod != null ? curMod.folder : null));
 	}
 	
-	function saveTxt()
+	function saveMods()
 	{
-		var fileStr:String = '';
-		for (mod in modsList.all)
-		{
-			if(mod.trim().length < 1) continue;
-
-			if(fileStr.length > 0) fileStr += '\n';
-
-			var on = '1';
-			if(modsList.disabled.contains(mod)) on = '0';
-			fileStr += '$mod|$on';
-		}
-
-		var path:String = 'modsList.txt';
-		File.saveContent(path, fileStr);
-		Mods.parseList();
+		Mods.updateModList(modsList);
 		Mods.loadTopMod();
+		
+		ClientPrefs.modsSave.data.modsEnabled = ClientPrefs.modsEnabled;
+		ClientPrefs.modsSave.flush();
 	}
 }
 
@@ -808,7 +797,7 @@ class ModItem extends FlxSpriteGroup
 			try
 			{
 				//trace('trying to load settings: $folder');
-				settings = tjson.TJSON.parse(File.getContent(path));
+				settings = tjson.TJSON.parse(Paths.getTextFromFile(path));
 			}
 			catch(e:Dynamic)
 			{

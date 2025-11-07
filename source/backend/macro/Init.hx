@@ -10,7 +10,7 @@ class Init {
 		Compiler.include('haxe', true, ['haxe.atomic', 'haxe.macro']);
 		Compiler.include('shaders', true);
 		
-		if (Context.defined('SCRIPTS_ALLOWED')) {
+		if (Context.defined('sys') && Context.defined('SCRIPTS_ALLOWED')) {
 			if (Context.defined('hl')) {
 				Compiler.include('sys', true, ['sys.db', 'sys.ssl', 'sys.net']);
 			} else {

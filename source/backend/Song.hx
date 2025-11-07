@@ -143,7 +143,7 @@ class Song
 
 		#if MODS_ALLOWED
 		if(FileSystem.exists(_lastPath))
-			rawData = File.getContent(_lastPath);
+			rawData = Paths.getTextFromFile(_lastPath);
 		else
 		#end
 			rawData = Assets.getText(_lastPath);

@@ -7,6 +7,7 @@ import haxe.Json;
 typedef ModsList = {
 	enabled:Array<String>,
 	disabled:Array<String>,
+	available:Array<String>,
 	all:Array<String>
 };
 
@@ -28,12 +29,10 @@ class Mods
 		'weeks',
 		'fonts',
 		'scripts',
-		'achievements',
-		'pack.json',
-		'pack.png'
+		'achievements'
 	];
 
-	private static var globalMods:Array<String> = [];
+	public static var globalMods:Array<String> = [];
 
 	inline public static function getGlobalMods()
 		return globalMods;
@@ -41,10 +40,9 @@ class Mods
 	inline public static function pushGlobalMods() // prob a better way to do this but idc
 	{
 		globalMods = [];
-		for(mod in parseList().enabled)
-		{
+		for (mod in parseList().enabled) {
 			var pack:Dynamic = getPack(mod);
-			if(pack != null && pack.runsGlobally) globalMods.push(mod);
+			if (pack != null && pack.runsGlobally) globalMods.push(mod);
 		}
 		return globalMods;
 	}
@@ -52,17 +50,18 @@ class Mods
 	inline public static function getModDirectories():Array<String>
 	{
 		var list:Array<String> = [];
+		
 		#if MODS_ALLOWED
 		var modsFolder:String = Paths.mods();
-		if(FileSystem.exists(modsFolder)) {
-			for (folder in FileSystem.readDirectory(modsFolder))
-			{
-				var path = haxe.io.Path.join([modsFolder, folder]);
-				if (FileSystem.isDirectory(path) && !list.contains(folder) && directoryIsMod(Paths.mods(folder)))
+		
+		if (FileSystem.exists(modsFolder)) {
+			for (folder in FileSystem.readDirectory(modsFolder)) {
+				if (directoryIsMod(folder))
 					list.push(folder);
 			}
 		}
 		#end
+		
 		return list;
 	}
 	
@@ -97,7 +96,11 @@ class Mods
 	{
 		var foldersToCheck:Array<String> = [];
 		//Main folder
-		if(FileSystem.exists(path + fileToFind))
+		#if sys
+		if (FileSystem.exists(path + fileToFind))
+		#else
+		if (Assets.exists(path + fileToFind))
+		#end
 			foldersToCheck.push(path + fileToFind);
 
 		// Week folder
@@ -142,7 +145,7 @@ class Mods
 		if(FileSystem.exists(path)) {
 			try {
 				#if sys
-				var rawJson:String = File.getContent(path);
+				var rawJson:String = Paths.getTextFromFile(path);
 				#else
 				var rawJson:String = Assets.getText(path);
 				#end
@@ -157,82 +160,78 @@ class Mods
 
 	public static var updatedOnState:Bool = false;
 	inline public static function parseList():ModsList {
-		if(!updatedOnState) updateModList();
-		var list:ModsList = {enabled: [], disabled: [], all: []};
-
+		var list:ModsList = {enabled: [], disabled: [], all: [], available: []};
+		
 		#if MODS_ALLOWED
-		try {
-			for (mod in CoolUtil.coolTextFile('modsList.txt'))
-			{
-				//trace('Mod: $mod');
-				if(mod.trim().length < 1) continue;
-
-				var dat = mod.split("|");
-				list.all.push(dat[0]);
-				if (dat[1] == "1")
-					list.enabled.push(dat[0]);
-				else
-					list.disabled.push(dat[0]);
+		#if sys if (FileSystem.exists('modsList.txt')) {
+			try {
+				for (mod in CoolUtil.coolTextFile('modsList.txt')) {
+					if (mod.trim().length < 1) continue;
+					
+					var dat = mod.split('|');
+					var folder:String = dat[0];
+					var modEnabled:Bool = (dat[1] == '1');
+					
+					list.all.push(folder);
+					(modEnabled ? list.enabled : list.disabled).push(folder);
+					if (directoryIsMod(folder)) list.available.push(folder);
+					
+					ClientPrefs.modsEnabled.set(folder, modEnabled);
+				}
+			} catch(e) {
+				trace(e);
+				
+				FileSystem.deleteFile('modsList.txt');
 			}
-		} catch(e) {
-			trace(e);
+		} else #end {
+			for (mod => enabled in ClientPrefs.modsEnabled) {
+				list.all.push(mod);
+				(enabled ? list.enabled : list.disabled).push(mod);
+				if (directoryIsMod(mod)) list.available.push(mod);
+			}
 		}
 		#end
+		
+		if (!updatedOnState) updateModList(list);
+		
 		return list;
 	}
 	
-	private static function updateModList()
-	{
+	public static function updateModList(?list:ModsList) {
 		#if MODS_ALLOWED
-		// Find all that are already ordered
-		var list:Array<Array<Dynamic>> = [];
-		var added:Array<String> = [];
-		try {
-			for (mod in CoolUtil.coolTextFile('modsList.txt'))
-			{
-				var dat:Array<String> = mod.split("|");
-				var folder:String = dat[0];
-				if(folder.trim().length > 0 && FileSystem.exists(Paths.mods(folder)) && FileSystem.isDirectory(Paths.mods(folder)) && !added.contains(folder) && directoryIsMod(Paths.mods(folder)))
-				{
-					added.push(folder);
-					list.push([folder, (dat[1] == "1")]);
-				}
+		var list:ModsList = (list ?? parseList());
+		
+		for (folder in getModDirectories()) {
+			if (!list.all.contains(folder) && directoryIsMod(folder)) {
+				list.all.push(folder);
+				list.enabled.push(folder);
+				list.available.push(folder);
+				
+				ClientPrefs.modsEnabled.set(folder, true);
 			}
-		} catch(e) {
-			trace(e);
 		}
 		
-		// Scan for folders that aren't on modsList.txt yet
-		for (folder in getModDirectories())
-		{
-			if (folder.trim().length > 0 && FileSystem.exists(Paths.mods(folder)) && !added.contains(folder) && directoryIsMod(Paths.mods(folder)))
-			{
-				added.push(folder);
-				list.push([folder, true]); //i like it false by default. -bb //Well, i like it True! -Shadow Mario (2022)
-				//Shadow Mario (2023): What the fuck was bb thinking
-			}
-		}
-
-		// Now save file
-		var fileStr:String = '';
-		for (values in list)
-		{
-			if(fileStr.length > 0) fileStr += '\n';
-			fileStr += values[0] + '|' + (values[1] ? '1' : '0');
-		}
-
-		File.saveContent('modsList.txt', fileStr);
+		#if sys
+		var content:String = '';
+		for (mod in list.available)
+			content += '$mod|${list.enabled.contains(mod) ? 1 : 0}\n';
+		
+		File.saveContent('modsList.txt', content);
+		#end
+		
 		updatedOnState = true;
-		//trace('Saved modsList.txt');
 		#end
 	}
 	
 	private static function directoryIsMod(dir:String):Bool {
-		if (ignoreModFolders.contains(dir.toLowerCase())) return false;
+		if (dir.trim().length == 0 || ignoreModFolders.contains(dir.toLowerCase())) return false;
 		
-		if (FileSystem.isDirectory(dir)) {
+		dir = Paths.mods(dir);
+		
+		if (FileSystem.exists(dir) && FileSystem.isDirectory(dir)) {
 			if (FileSystem.exists('$dir/.notamod'))
 				return false;
+			
 			for (sub in ignoreModFolders) {
 				if (FileSystem.exists('$dir/$sub'))
 					return true;
@@ -247,9 +246,14 @@ class Mods
 		Mods.currentModDirectory = '';
 		
 		#if MODS_ALLOWED
-		var list:Array<String> = Mods.parseList().enabled;
-		if(list != null && list[0] != null)
-			Mods.currentModDirectory = list[0];
+		var list:ModsList = Mods.parseList();
+		
+		for (mod in list.available) {
+			if (list.enabled.contains(mod)) {
+				Mods.currentModDirectory = mod;
+				return;
+			}
+		}
 		#end
 	}
 }

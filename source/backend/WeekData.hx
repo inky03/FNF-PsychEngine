@@ -166,7 +166,7 @@ class WeekData {
 		var rawJson:String = null;
 		#if MODS_ALLOWED
 		if(FileSystem.exists(path)) {
-			rawJson = File.getContent(path);
+			rawJson = Paths.getTextFromFile(path);
 		}
 		#else
 		if(OpenFlAssets.exists(path)) {

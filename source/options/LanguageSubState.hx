@@ -46,7 +46,7 @@ class LanguageSubState extends ScriptedSubState
 					{
 						var path:String = '$directory/$file';
 						#if MODS_ALLOWED 
-						var txt:String = File.getContent(path);
+						var txt:String = Paths.getTextFromFile(path);
 						#else
 						var txt:String = Assets.getText(path);
 						#end

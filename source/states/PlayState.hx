@@ -2543,9 +2543,6 @@ class PlayState extends ScriptedState
 					if(!ClientPrefs.getGameplaySetting('practice') && !ClientPrefs.getGameplaySetting('botplay')) {
 						StoryMenuState.weekCompleted.set(WeekData.weeksList[storyWeek], true);
 						Highscore.saveWeekScore(WeekData.getWeekFileName(), campaignScore, storyDifficulty);
-
-						FlxG.save.data.weekCompleted = StoryMenuState.weekCompleted;
-						FlxG.save.flush();
 					}
 					changedDifficulty = false;
 				}
@@ -2581,6 +2578,10 @@ class PlayState extends ScriptedState
 			}
 			transitioning = true;
 		}
+		
+		Highscore.saveScores();
+		FlxG.save.flush();
+		
 		return true;
 	}
 

@@ -5,8 +5,6 @@ import flixel.input.gamepad.FlxGamepadInputID;
 
 import objects.Character;
 
-import options.Option.OptionType;
-
 class ModSettingsSubState extends BaseOptionsMenu
 {
 	var save:Map<String, Dynamic> = new Map<String, Dynamic>();
@@ -31,7 +29,7 @@ class ModSettingsSubState extends BaseOptionsMenu
 					option.name != null ? option.name : option.save,
 					option.description != null ? option.description : 'No description provided.',
 					option.save,
-					convertType(option.type),
+					Option.typeFromString(option.type),
 					option.options,
 					option.translation_key
 				);
@@ -147,27 +145,6 @@ class ModSettingsSubState extends BaseOptionsMenu
 		bg.alpha = 0.75;
 		bg.color = FlxColor.WHITE;
 		reloadCheckboxes();
-	}
-
-	private function convertType(str:String):OptionType
-	{
-		switch(str.toLowerCase().trim())
-		{
-			case 'bool':
-				return BOOL;
-			case 'int', 'integer':
-				return INT;
-			case 'float', 'fl':
-				return FLOAT;
-			case 'percent':
-				return PERCENT;
-			case 'string', 'str':
-				return STRING;
-			case 'keybind', 'key':
-				return KEYBIND;
-		}
-		FlxG.log.error("Could not find option type: " + str);
-		return BOOL;
 	}
 
 	override public function update(elapsed:Float)

@@ -5,8 +5,8 @@ import openfl.events.Event;
 import openfl.events.IOErrorEvent;
 import flash.net.FileFilter;
 
+#if sys import sys.io.File; #end
 import haxe.Exception;
-import sys.io.File;
 import lime.ui.*;
 
 import flixel.FlxBasic;
@@ -103,7 +103,7 @@ class FileDialogHandler extends FlxBasic
 	{
 		@:privateAccess
 		this.path = _fileRef.__path;
-		this.data = File.getContent(this.path);
+		this.data = #if sys File.getContent(this.path) #else _fileRef.data #end ;
 		this.completed = true;
 		trace('Loaded file from: $path');
 

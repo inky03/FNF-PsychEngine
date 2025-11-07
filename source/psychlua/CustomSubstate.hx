@@ -11,26 +11,8 @@ class CustomSubstate extends ScriptedSubState {
 	
 	#if LUA_ALLOWED
 	public static function implement() {
-		FunkinLua.registerFunction('openCustomSubstate', function(name:String, pauseGame:Bool = false, ?data:Dynamic) {
-			var st:Dynamic = FlxG.state;
-			
-			if (pauseGame) {
-				if (st.paused != null)
-					st.paused = true;
-				
-				FlxG.state.persistentDraw = true;
-				FlxG.state.persistentUpdate = false;
-			}
-			
-			FlxG.state.openSubState(new CustomSubstate(name, data));
-		});
-		FunkinLua.registerFunction('closeCustomSubstate', function() {
-			if (instance != null) {
-				FlxG.state.closeSubState();
-				return true;
-			}
-			return false;
-		});
+		FunkinLua.registerFunction('openCustomSubstate', openCustomSubstate);
+		FunkinLua.registerFunction('closeCustomSubstate', closeCustomSubstate);
 		FunkinLua.registerFunction('insertToCustomSubstate', function(tag:String, ?pos:Int = -1) {
 			if (instance != null) {
 				var object:Dynamic = LuaUtils.getObjectDirectly(tag);
@@ -55,6 +37,27 @@ class CustomSubstate extends ScriptedSubState {
 		});
 	}
 	#end
+	
+	public static function openCustomSubstate(name:String, pauseGame:Bool = false, ?data:Dynamic):Void {
+		var st:Dynamic = FlxG.state;
+		
+		if (pauseGame) {
+			if (st.paused != null)
+				st.paused = true;
+			
+			FlxG.state.persistentDraw = true;
+			FlxG.state.persistentUpdate = false;
+		}
+		
+		FlxG.state.openSubState(new CustomSubstate(name, data));
+	}
+	public static function closeCustomSubstate():Bool {
+		if (instance != null) {
+			FlxG.state.closeSubState();
+			return true;
+		}
+		return false;
+	}
 	
 	public override function create() {
 		CustomSubstate.name = stateName;
