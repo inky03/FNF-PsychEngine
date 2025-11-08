@@ -1617,7 +1617,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		isMovingNotes = true;
 		movingNotesLastY = lastY;
 		movingNotesLastData = noteData;
-		movingNotes.sort(cast PlayState.sortByTime);
+		movingNotes.sort(#if static (order, a, b) -> FlxSort.byValues(order, a.strumTime, b.strumTime) #else cast PlayState.sortByTime #end);
 		addUndoAction(MOVE_NOTE, {originalNotes: originalNotes, originalEvents: originalEvents, movedNotes: movedNotes, movedEvents: movedEvents});
 		softReloadNotes();
 	}
@@ -3394,7 +3394,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			}
 			
 			var eventsChart:SwagSong = PlayState.EVENTS;
-			if (autoLoadEvents) eventsChart = try { Song.getChart('events', cur); } catch (e) { eventsChart; }
+			if (autoLoadEvents) eventsChart = try { Song.getChart('events', cur); } catch (e) { null; }
 			
 			var func:Void->Void = function()
 			{
@@ -3542,7 +3542,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						Song.loadedSongName = cur;
 						
 						var eventsChart:SwagSong = PlayState.EVENTS;
-						if (autoLoadEvents) eventsChart = try { Song.getChart('events', cur); } catch (e) { eventsChart; }
+						if (autoLoadEvents) eventsChart = try { Song.getChart('events', cur); } catch (e) { null; }
 						
 						loadChart(loadedChart, eventsChart);
 						Song.chartPath = fileDialog.path;
@@ -3808,7 +3808,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						var reloadedChart:SwagSong = Song.parseJSON(Paths.getTextFromFile(Song.chartPath));
 						
 						var eventsChart:SwagSong = PlayState.EVENTS;
-						if (autoLoadEvents) eventsChart = try { Song.getChart('events', Song.chartPath); } catch (e) { eventsChart; }
+						if (autoLoadEvents) eventsChart = try { Song.getChart('events', Song.chartPath); } catch (e) { null; }
 						
 						loadChart(reloadedChart, eventsChart);
 						reloadNotesDropdowns();

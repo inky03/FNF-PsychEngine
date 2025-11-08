@@ -386,6 +386,8 @@ class LoadingState extends ScriptedState
 		#end
 
 		LoadingState.isIntrusive = intrusive;
+		_startPool();
+		loadNextDirectory();
 
 		if(intrusive)
 			return new LoadingState(target, stopMusic);
@@ -393,7 +395,19 @@ class LoadingState extends ScriptedState
 		if (stopMusic && FlxG.sound.music != null)
 			FlxG.sound.music.stop();
 
+		#if sys
+		while(true)
+		{
+			if(checkLoaded())
+			{
+				_loaded();
+				break;
+			}
+			else Sys.sleep(0.001);
+		}
+		#else
 		checkLoaded();
+		#end
 		
 		return target;
 	}
