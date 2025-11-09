@@ -494,13 +494,19 @@ class EventNoteGui extends FlxSpriteGroup {
 			fields.visible = desc.visible = true;
 			
 			var selection = Lambda.find(charter.selectedEvents, (e) -> e.event == events[closest.ID]);
-			var redM:Int = (selection == null ? 0 : -153);
+			var redM:Int = (selection == null || FlxG.keys.pressed.SHIFT ? 0 : -153);
 			var m:Int = (FlxG.mouse.pressed ? -64 : 128);
 			
 			closest.setColorTransform(1, 1, 1, alpha, m, m + redM, m + redM);
 			
 			if (FlxG.mouse.justReleased) {
 				if (selection != null) { // snipe
+					if (FlxG.keys.pressed.SHIFT) {
+						charter.selectedEvents.remove(selection);
+						
+						return;
+					}
+					
 					if (eventNote.events.length > 1) {
 						events.remove(events[closest.ID]);
 						eventNote.updateEventInfo();
@@ -512,17 +518,19 @@ class EventNoteGui extends FlxSpriteGroup {
 						charter.selectedNotes.remove(eventNote);
 						charter.events.remove(eventNote);
 						charter.curRenderedNotes.remove(eventNote, true);
-						// charter.addUndoAction(DELETE_NOTE, {events: [eventNote]}); TODO UNDO ACTIONS
 					}
 					
+					charter.addUndoAction(DELETE_EVENT, {events: [selection]});
+					
+					charter.updateSelectedEvents();
 					charter.resetSelectedNotes();
 					selectedEventSprite = null;
 					
 					return;
 				} else {
-					if (!FlxG.keys.pressed.SHIFT && !FlxG.keys.pressed.ALT) charter.resetSelectedNotes();
+					if (!FlxG.keys.pressed.SHIFT) charter.resetSelectedNotes();
 					
-					if (!charter.selectedNotes.contains(eventNote)) charter.selectedNotes.push(eventNote);
+					// if (!charter.selectedNotes.contains(eventNote)) charter.selectedNotes.push(eventNote);
 					charter.selectedEvents.push({event: events[closest.ID], note: eventNote});
 					charter.updateSelectedEventText();
 				}
