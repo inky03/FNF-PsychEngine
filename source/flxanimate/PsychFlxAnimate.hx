@@ -1,70 +1,57 @@
 package flxanimate;
 
+import flixel.math.FlxRect;
 import flixel.util.FlxDestroyUtil;
+import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flxanimate.frames.FlxAnimateFrames;
+import flxanimate.data.SpriteMapData;
 import flxanimate.data.AnimationData;
 import flxanimate.FlxAnimate as OriginalFlxAnimate;
 
 class PsychFlxAnimate extends OriginalFlxAnimate
 {
-	public function loadAtlasEx(img:FlxGraphicAsset, pathOrStr:String = null, myJson:Dynamic = null)
-	{
-		var animJson:AnimAtlas = null;
-		if(myJson is String)
-		{
-			var trimmed:String = pathOrStr.trim();
-			trimmed = trimmed.substr(trimmed.length - 5).toLowerCase();
-
-			if(trimmed == '.json') myJson = Paths.getTextFromFile(myJson); //is a path
-			animJson = cast haxe.Json.parse(_removeBOM(myJson));
+	public function loadAtlasEx(img:FlxGraphicAsset, ?pathOrStr:String, ?myJson:Dynamic) {
+		if (myJson is String) {
+			var data:String = myJson;
+			var ext:String = data.trim();
+			ext = ext.substr(ext.length - 5).toLowerCase();
+			
+			if (ext == '.json') data = Paths.getTextFromFile(data); //is a path
+			anim._loadAtlas(haxe.Json.parse(_removeBOM(data)));
+		} else {
+			anim._loadAtlas(myJson);
 		}
-		else animJson = cast myJson;
-
-		var isXml:Null<Bool> = null;
-		var myData:Dynamic = pathOrStr;
-
-		var trimmed:String = pathOrStr.trim();
-		trimmed = trimmed.substr(trimmed.length - 5).toLowerCase();
-
-		if(trimmed == '.json') //Path is json
-		{
-			myData = Paths.getTextFromFile(pathOrStr);
-			isXml = false;
+		
+		var data:String = pathOrStr;
+		
+		var ext:String = pathOrStr.trim();
+		ext = ext.substr(ext.length - 5).toLowerCase();
+		
+		if (ext == '.json') {
+			frames = spriteMapFrames(haxe.Json.parse(_removeBOM(Paths.getTextFromFile(data))), img);
+		} else if (ext.substr(1) == '.xml') {
+			frames = FlxAnimateFrames.fromSparrow(Xml.parse(_removeBOM(Paths.getTextFromFile(data))), img);
+		} else {
+			frames = try spriteMapFrames(haxe.Json.parse(_removeBOM(data)), img)
+				catch (e:Dynamic) FlxAnimateFrames.fromSparrow(Xml.parse(_removeBOM(data)), img);
 		}
-		else if (trimmed.substr(1) == '.xml') //Path is xml
-		{
-			myData = Paths.getTextFromFile(pathOrStr);
-			isXml = true;
-		}
-		myData = _removeBOM(myData);
-
-		// Automatic if everything else fails
-		switch(isXml)
-		{
-			case true:
-				myData = Xml.parse(myData);
-			case false:
-				myData = haxe.Json.parse(myData);
-			case null:
-				try
-				{
-					myData = haxe.Json.parse(myData);
-					isXml = false;
-					//trace('JSON parsed successfully!');
-				}
-				catch(e)
-				{
-					myData = Xml.parse(myData);
-					isXml = true;
-					//trace('XML parsed successfully!');
-				}
-		}
-
-		anim._loadAtlas(animJson);
-		if(!isXml) frames = FlxAnimateFrames.fromSpriteMap(cast myData, img);
-		else frames = FlxAnimateFrames.fromSparrow(cast myData, img);
+		
 		origin = anim.curInstance.symbol.transformationPoint;
+	}
+	
+	public static function spriteMapFrames(atlas:AnimateAtlas, graphic:FlxGraphicAsset):FlxAtlasFrames {
+		var frames = new FlxAtlasFrames(FlxG.bitmap.add(graphic));
+		
+		for (sprite in atlas.ATLAS.SPRITES) {
+			var limb = sprite.SPRITE;
+			var rect = FlxRect.get(limb.x, limb.y, limb.w, limb.h);
+			if (limb.rotated) rect.setSize(rect.height, rect.width);
+			
+			FlxAnimateFrames.sliceFrame(limb.name, limb.rotated, rect, frames);
+		}
+		
+		return frames;
 	}
 
 	override function draw()
