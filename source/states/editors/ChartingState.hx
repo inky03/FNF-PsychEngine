@@ -4994,6 +4994,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		setSongPlaying(false);
 		updateChartData();
 		StageData.loadDirectory(PlayState.SONG);
+		LoadingState.prepareToSong();
 		LoadingState.loadAndSwitchState(new PlayState());
 		ClientPrefs.toggleVolumeKeys(true);
 	}

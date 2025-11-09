@@ -343,7 +343,8 @@ class LoadingState extends ScriptedState
 		loadMax = 0;
 		initialThreadCompleted = true;
 		isIntrusive = false;
-
+		
+		StageData.forceNextDirectory = null;
 		FlxTransitionableState.skipNextTransIn = true;
 		
 		#if (target.threaded)
@@ -370,7 +371,6 @@ class LoadingState extends ScriptedState
 	{
 		var directory:String = 'shared';
 		var weekDir:String = StageData.forceNextDirectory;
-		StageData.forceNextDirectory = null;
 
 		if (weekDir != null && weekDir.length > 0 && weekDir != '') directory = weekDir;
 
@@ -387,7 +387,6 @@ class LoadingState extends ScriptedState
 
 		LoadingState.isIntrusive = intrusive;
 		_startPool();
-		loadNextDirectory();
 
 		if(intrusive)
 			return new LoadingState(target, stopMusic);
@@ -423,8 +422,8 @@ class LoadingState extends ScriptedState
 	{
 		maxJobs = 10;
 		
-		#if (target.threaded) if (threaded) {
-			var multiThreaded:Bool = #if (MULTITHREADED_LOADING && (cpp || hl)) true #else false #end ;
+		#if (target.threaded) if (threaded && threadPool == null) {
+			var multiThreaded:Bool = #if (MULTITHREADED_LOADING && sys) true #else false #end ;
 			maxJobs = (multiThreaded ? Std.int(Math.max(1, getCPUThreadsCount() - #if DISCORD_ALLOWED 2 #else 1 #end)) : 1 );
 			threadPool = new FixedThreadPool(maxJobs);
 		} #end
@@ -549,6 +548,8 @@ class LoadingState extends ScriptedState
 								imagesToPrepare.push(sprite.image);
 					}
 				}
+				
+				StageData.forceNextDirectory = stageData.directory;
 			}
 			
 			loadNextDirectory();
@@ -661,8 +662,8 @@ class LoadingState extends ScriptedState
 	{
 		#if (target.threaded) if (threaded) mutex = new Mutex(); #end
 		
-		trace('${imagesToPrepare.length} images');
-		trace('${soundsToPrepare.length + musicToPrepare.length + songsToPrepare.length} sounds');
+		// trace('${imagesToPrepare.length} images');
+		// trace('${soundsToPrepare.length + musicToPrepare.length + songsToPrepare.length} sounds');
 		loadMax = imagesToPrepare.length + soundsToPrepare.length + musicToPrepare.length + songsToPrepare.length;
 		loaded = 0;
 
