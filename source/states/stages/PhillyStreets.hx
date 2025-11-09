@@ -379,7 +379,7 @@ class PhillyStreets extends BaseStage
 			gf?.animation.onFinish.removeAll();
 			dad.animation.onFinish.removeAll();
 			
-			game.moveCameraSection();
+			moveCameraSection();
 			game.cameraSpeed = 1;
 			FlxTween.cancelTweensOf(FlxG.camera);
 			FlxTween.cancelTweensOf(FlxG.camera.scroll);
@@ -859,9 +859,9 @@ class PhillyStreets extends BaseStage
 				dad.specialAnim = true;
 				lightCanSnd.play(true, sndTime - 65);
 				
+				moveCamera(true, false);
 				game.isCameraOnForcedPos = true;
 				game.defaultCamZoom += 0.1;
-				game.moveCamera(true);
 				game.cameraSpeed = 2;
 				camFollow.x -= 100;
 			case 'weekend-1-kickcan':
@@ -876,8 +876,8 @@ class PhillyStreets extends BaseStage
 				
 				new FlxTimer().start(1.1, function(_) {
 					game.isCameraOnForcedPos = false;
-					game.moveCameraSection();
 					game.cameraSpeed = 1;
+					moveCameraSection();
 				});
 			case 'weekend-1-kneecan':
 				dad.holdTimer = 0;
