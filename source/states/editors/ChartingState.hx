@@ -1359,11 +1359,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 									
 									selectedNotes.remove(closest);
 									closest.setColorTransform();
-								} else if (!closest.isEvent) {
-									for (note in selectedNotes) {
-										if (!note.isEvent)
-											note.dragging = true;
-									}
+								} else {
+									for (note in selectedNotes)
+										note.dragging = true;
 								}
 							} else {
 								if (!FlxG.keys.pressed.SHIFT) resetSelectedNotes();
@@ -1443,7 +1441,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 							if(!holdingAlt)
 								resetSelectedNotes();
-
+							
+							eventAdded.dragging = true;
 							selectedNotes.push(eventAdded);
 							addUndoAction(ADD_NOTE, {events: [eventAdded]});
 						}
@@ -1517,6 +1516,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				if (note.dragging) {
 					if (!FlxG.mouse.pressed) {
 						note.dragging = false;
+					} else if (note.isEvent) {
+						continue; // lol
 					} else {
 						var shift:Bool = FlxG.keys.pressed.SHIFT;
 						
@@ -4589,6 +4590,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		tab_group.add(toysButton);
 		
 		btnY++;
+		#if lime_cffi
 		btnY += 20;
 		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Waveform...', function()
 		{
@@ -4658,6 +4660,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}, btnWid);
 		btn.text.alignment = LEFT;
 		tab_group.add(btn);
+		#end
 
 		btnY += 20;
 		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Go to...', function()
