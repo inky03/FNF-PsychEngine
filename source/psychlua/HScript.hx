@@ -456,6 +456,17 @@ class HScript extends Iris {
 		set('Function_StopLua', LuaUtils.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
 		set('Function_StopHScript', LuaUtils.Function_StopHScript);
 		set('Function_StopAll', LuaUtils.Function_StopAll);
+		
+		#if hscriptPos
+		set('trace', Reflect.makeVarArgs(function(x:Array<Dynamic>) { // fix static target
+			var pos = (this.interp?.posInfos() ?? Iris.getDefaultPos(origin));
+			
+			var v = x.shift();
+			if (x.length > 0) pos.customParams = x;
+			
+			Iris.print(Std.string(v), pos);
+		}));
+		#end
 	}
 	
 	public function getParent():Dynamic {
