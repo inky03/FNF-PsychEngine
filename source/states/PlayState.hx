@@ -602,36 +602,36 @@ class PlayState extends ScriptedState
 			for (event in eventNotes) event.strumTime -= eventEarlyTrigger(event);
 			eventNotes.sort(sortByTime);
 		}
-
+		
+		//PRECACHING THINGS THAT GET USED FREQUENTLY TO AVOID LAGSPIKES
+		var splash:NoteSplash = new NoteSplash();
+		grpNoteSplashes.add(splash);
+		splash.alpha = 0.0001; //cant make it invisible or it won't allow precaching
+		
+		if (ClientPrefs.data.hitsoundVolume > 0) Paths.sound('hitsound');
+		if (!ghostTapping) for (i in 1...4) Paths.sound('missnote$i');	
+		Paths.image('alphabet');
+		
+		cacheCountdown();
+		cachePopUpScore();
+		
 		startCallback();
 		RecalculateRating(false, false);
-
+		
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
-
-		//PRECACHING THINGS THAT GET USED FREQUENTLY TO AVOID LAGSPIKES
-		if(ClientPrefs.data.hitsoundVolume > 0) Paths.sound('hitsound');
-		if(ghostTapping) for (i in 1...4) Paths.sound('missnote$i');
-		Paths.image('alphabet');
-
+		
 		if (PauseSubState.songName != null)
 			Paths.music(PauseSubState.songName);
 		else if(Paths.formatToSongPath(ClientPrefs.data.pauseMusic) != 'none')
 			Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic));
-
-		resetRPC();
 		
-		var splash:NoteSplash = new NoteSplash();
-		grpNoteSplashes.add(splash);
-		splash.alpha = 0.000001; //cant make it invisible or it won't allow precaching
+		resetRPC();
 		
 		stagesFunc(function(stage:BaseStage) stage.createPost());
 		super.create();
 		Paths.clearUnusedMemory();
-
-		cacheCountdown();
-		cachePopUpScore();
-
+		
 		if(eventNotes.length < 1) checkEventNote();
 	}
 	
@@ -1085,7 +1085,7 @@ class PlayState extends ScriptedState
 			}
 
 			startedCountdown = true;
-			Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
+			Conductor.songPosition = -Conductor.crochet * 5;
 			setOnScripts('startedCountdown', true);
 			callOnScripts('onCountdownStarted');
 
@@ -1186,7 +1186,7 @@ class PlayState extends ScriptedState
 		var i:Int = unspawnNotes.length - 1;
 		while (i >= 0) {
 			var daNote:Note = unspawnNotes[i];
-			if(daNote.strumTime < time - 1)
+			if(daNote.strumTime - ClientPrefs.data.noteOffset < time - 1)
 			{
 				daNote.active = false;
 				daNote.visible = false;
@@ -1202,7 +1202,7 @@ class PlayState extends ScriptedState
 		i = notes.length - 1;
 		while (i >= 0) {
 			var daNote:Note = notes.members[i];
-			if(daNote.strumTime < time - 1)
+			if(daNote.strumTime - ClientPrefs.data.noteOffset < time - 1)
 			{
 				daNote.active = false;
 				daNote.visible = false;
@@ -1281,20 +1281,20 @@ class PlayState extends ScriptedState
 		});
 	}
 
-	public function setSongTime(time:Float)
+	public function setSongTime(time:Float, offset:Bool = true)
 	{
 		FlxG.sound.music.pause();
 		vocals.pause();
 		opponentVocals.pause();
 		
 		if (time >= 0) {
-			FlxG.sound.music.time = time - Conductor.offset;
+			FlxG.sound.music.time = (time - (offset ? 0 : Conductor.offset));
 			#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
 			FlxG.sound.music.play();
 
 			if (Conductor.songPosition < vocals.length)
 			{
-				vocals.time = time - Conductor.offset;
+				vocals.time = FlxG.sound.music.time;
 				#if FLX_PITCH vocals.pitch = playbackRate; #end
 				vocals.play();
 			}
@@ -1302,14 +1302,14 @@ class PlayState extends ScriptedState
 
 			if (Conductor.songPosition < opponentVocals.length)
 			{
-				opponentVocals.time = time - Conductor.offset;
+				opponentVocals.time = FlxG.sound.music.time;
 				#if FLX_PITCH opponentVocals.pitch = playbackRate; #end
 				opponentVocals.play();
 			}
 			else opponentVocals.pause();
 		}
 		
-		Conductor.songPosition = time;
+		Conductor.songPosition = (time + (offset ? Conductor.offset : 0));
 	}
 
 	public function startNextDialogue() {
@@ -1332,8 +1332,8 @@ class PlayState extends ScriptedState
 		vocals.play();
 		opponentVocals.play();
 		
-		var startPos:Float = Math.max(0, startOnTime - 500);
-		setSongTime(startPos + Conductor.offset);
+		var startPos:Float = Math.max(0, startOnTime - 700);
+		setSongTime(startPos, startOnTime <= 0);
 		startOnTime = 0;
 
 		if(paused) {
@@ -1808,7 +1808,7 @@ class PlayState extends ScriptedState
 		if (startedCountdown && !paused)
 		{
 			Conductor.songPosition += elapsed * 1000 * playbackRate;
-			if (Conductor.songPosition >= Conductor.offset)
+			if (FlxG.sound.music != null && FlxG.sound.music.playing)
 			{
 				Conductor.songPosition = FlxMath.lerp(FlxG.sound.music.time + Conductor.offset, Conductor.songPosition, Math.exp(-elapsed * 5));
 				var timeDiff:Float = Math.abs((FlxG.sound.music.time + Conductor.offset) - Conductor.songPosition);
@@ -1822,7 +1822,7 @@ class PlayState extends ScriptedState
 			if (startedCountdown && Conductor.songPosition >= Conductor.offset)
 				startSong();
 			else if(!startedCountdown)
-				Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
+				Conductor.songPosition = -Conductor.crochet * 5;
 		}
 		else if (!paused && updateTime)
 		{

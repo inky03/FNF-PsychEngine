@@ -481,11 +481,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		loadMusic();
 		reloadNotesDropdowns();
 		
-		vocals.time = opponentVocals.time = FlxG.sound.music.time = Math.max(Math.min(ChartingState.startOnTime - Conductor.offset, FlxG.sound.music.length), 0);
-		if(FlxG.sound.music.time >= vocals.length)
-			vocals.pause();
-		if(FlxG.sound.music.time >= opponentVocals.length)
-			opponentVocals.pause();
+		Conductor.songPosition = Math.max(Math.min(ChartingState.startOnTime, FlxG.sound.music.length + Conductor.offset), 0);
+		opponentVocals.pause();
+		vocals.pause();
 
 		reloadNotes();
 		updateGridVisibility();
@@ -693,7 +691,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		
 		autoSaveTime = 0;
 		Conductor.songPosition = 0;
-		if(FlxG.sound.music != null) FlxG.sound.music.time = 0;
+		if (FlxG.sound.music != null) FlxG.sound.music.time = 0;
 		curSec = 0;
 		loadSection();
 		forceDataUpdate = true;
@@ -912,13 +910,13 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				if(FlxG.keys.justPressed.HOME)
 				{
 					setSongPlaying(false);
-					Conductor.songPosition = FlxG.sound.music.time = 0;
+					Conductor.songPosition = 0;
 					loadSection(0);
 				}
 				else if(FlxG.keys.justPressed.END)
 				{
 					setSongPlaying(false);
-					Conductor.songPosition = FlxG.sound.music.time = FlxG.sound.music.length - 1;
+					Conductor.songPosition = (FlxG.sound.music.length + Conductor.offset - 1);
 					loadSection(PlayState.SONG.notes.length - 1);
 				}
 				else if(FlxG.keys.justPressed.R)
@@ -926,21 +924,13 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					var timeToGoBack:Float = 0;
 					if(!FlxG.keys.pressed.SHIFT) timeToGoBack = cachedSectionTimes[curSec] + (curSec > 0 ? 0.000001 : 0);
 					else loadSection(0);
-					Conductor.songPosition = FlxG.sound.music.time = vocals.time = opponentVocals.time = timeToGoBack;
-				}
-				else if (FlxG.keys.justPressed.HOME)
-				{
-					loadSection(0);
-					Conductor.songPosition = FlxG.sound.music.time = vocals.time = opponentVocals.time = 0;
-				}
-				else if (FlxG.keys.justPressed.END)
-				{
-					loadSection(cachedSectionTimes.length - 1);
-					Conductor.songPosition = FlxG.sound.music.time = vocals.time = opponentVocals.time = FlxG.sound.music.length;
+					
+					Conductor.songPosition = timeToGoBack;
+					setSongPlaying(songPlaying);
 				}
 				else if(FlxG.keys.pressed.W != FlxG.keys.pressed.S || FlxG.mouse.wheel != 0)
 				{
-					if(FlxG.sound.music.playing)
+					if (FlxG.sound.music.playing)
 						setSongPlaying(false);
 					
 					var downScrollMult:Int = (downScroll ? -1 : 1);
@@ -950,19 +940,18 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						var timeAdd:Float = (FlxG.keys.pressed.SHIFT ? 4 : 1) / (holdingAlt ? 4 : 1) * FlxG.mouse.wheel * downScrollMult * snap;
 						var time:Float = Math.round((FlxG.sound.music.time - timeAdd) / snap) * snap;
 						if(time > 0) time += 0.000001; //goes at the start of a section more properly
-						FlxG.sound.music.time = time;
+						Conductor.songPosition = time;
 					}
 					else
 					{
 						var speedMult:Float = (FlxG.keys.pressed.SHIFT ? 4 : 1) * (FlxG.mouse.wheel != 0 ? 4 : 1) / (holdingAlt ? 4 : 1) * downScrollMult;
-						if(FlxG.keys.pressed.W || FlxG.mouse.wheel > 0)
-							FlxG.sound.music.time -= Conductor.crochet * speedMult * 1.5 * elapsed / curZoom;
-						else if(FlxG.keys.pressed.S || FlxG.mouse.wheel < 0)
-							FlxG.sound.music.time += Conductor.crochet * speedMult * 1.5 * elapsed / curZoom;
+						if (FlxG.keys.pressed.W || FlxG.mouse.wheel > 0)
+							Conductor.songPosition -= Conductor.crochet * speedMult * 1.5 * elapsed / curZoom;
+						else if (FlxG.keys.pressed.S || FlxG.mouse.wheel < 0)
+							Conductor.songPosition += Conductor.crochet * speedMult * 1.5 * elapsed / curZoom;
 					}
 
-					FlxG.sound.music.time = FlxMath.bound(FlxG.sound.music.time, 0, FlxG.sound.music.length - 1);
-					if(FlxG.sound.music.playing) setSongPlaying(!FlxG.sound.music.playing);
+					Conductor.songPosition = FlxMath.bound(Conductor.songPosition, 0, FlxG.sound.music.length + Conductor.offset - 1);
 				}
 				if(FlxG.keys.justPressed.SPACE)
 				{
@@ -970,7 +959,15 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				}
 			}
 
-			if(!songFinished) Conductor.songPosition = FlxMath.bound(FlxG.sound.music.time + Conductor.offset, 0, FlxG.sound.music.length - 1);
+			if (!songFinished && songPlaying) {
+				if (FlxG.sound.music.playing) {
+					Conductor.songPosition = FlxMath.bound(FlxG.sound.music.time + Conductor.offset, 0, FlxG.sound.music.length + Conductor.offset - 1);
+				} else {
+					Conductor.songPosition += (elapsed * 1000);
+					
+					if (Conductor.songPosition >= Conductor.offset) playMusic();
+				}
+			}
 			updateScrollY();
 		}
 
@@ -1895,7 +1892,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		{
 			FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 0);
 			FlxG.sound.music.pause();
-			FlxG.sound.music.time = time;
+			Conductor.songPosition = time;
 			FlxG.sound.music.onComplete = (function() songFinished = true);
 		}
 		catch(e:Exception)
@@ -1947,7 +1944,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	{
 		trace('song completed');
 		setSongPlaying(false);
-		Conductor.songPosition = FlxG.sound.music.time = vocals.time = opponentVocals.time = FlxG.sound.music.length - 1;
+		FlxG.sound.music.time = vocals.time = opponentVocals.time = (FlxG.sound.music.length - 1);
+		Conductor.songPosition = (FlxG.sound.music.time + Conductor.offset);
 		curSec = PlayState.SONG.notes.length - 1;
 		forceDataUpdate = true;
 	}
@@ -1972,7 +1970,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		opponentVocals.pitch = value;
 		#end
 	}
-
+	
+	var songPlaying:Bool = false;
 	function setSongPlaying(doPlay:Bool)
 	{
 		if(FlxG.sound.music == null) return;
@@ -1980,20 +1979,18 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		forceDataUpdate = true;
 		vocals.time = FlxG.sound.music.time;
 		opponentVocals.time = FlxG.sound.music.time;
-
-		if(doPlay)
-		{
-			FlxG.sound.music.play();
-			if(FlxG.sound.music.time < vocals.length) vocals.play(true, FlxG.sound.music.time);
-			if(FlxG.sound.music.time < opponentVocals.length) opponentVocals.play(true, FlxG.sound.music.time);
-			updateAudioVolume();
-		}
-		else
-		{
-			for (toy in toyGroup) toy.holdSingTimer = 0;
-			FlxG.sound.music.pause();
-			vocals.pause();
-			opponentVocals.pause();
+		
+		FlxG.sound.music.pause();
+		vocals.pause();
+		opponentVocals.pause();
+		
+		songPlaying = doPlay;
+		
+		if (doPlay) {
+			FlxG.sound.music.time = vocals.time = opponentVocals.time = (Conductor.songPosition - Conductor.offset);
+		} else {
+			for (toy in toyGroup)
+				toy.holdSingTimer = 0;
 		}
 
 		for (note in strumLineNotes)
@@ -2005,6 +2002,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				note.resetAnim = 0;
 			}
 		}
+	}
+	
+	function playMusic():Void {
+		FlxG.sound.music.play();
+		if (FlxG.sound.music.time < vocals.length) vocals.play(true, FlxG.sound.music.time);
+		if (FlxG.sound.music.time < opponentVocals.length) opponentVocals.play(true, FlxG.sound.music.time);
+		
+		updateAudioVolume();
 	}
 
 	function reloadNotes()
@@ -4646,7 +4651,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					var btn:PsychUIButton = new PsychUIButton(0, timeTxt.y + 30, 'Go To', function()
 					{
 						curSec = currentSec;
-						FlxG.sound.music.time = FlxMath.bound(curTime, 0, FlxG.sound.music.length - 1);
+						Conductor.songPosition = FlxMath.bound(curTime, 0, FlxG.sound.music.length + Conductor.offset - 1);
+						setSongPlaying(true);
 						loadSection();
 						state.close();
 					});
@@ -5032,16 +5038,16 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 	function goToPlayState()
 	{
-		ChartingState.startOnTime = FlxG.sound.music.time;
+		ChartingState.startOnTime = Conductor.songPosition;
 		
 		if (FlxG.keys.pressed.SHIFT)
-			PlayState.startOnTime = FlxG.sound.music.time;
+			PlayState.startOnTime = Conductor.songPosition;
 		
+		setSongPlaying(false);
 		persistentUpdate = false;
 		FlxG.mouse.visible = false;
 		chartEditorSave.flush();
-
-		setSongPlaying(false);
+		
 		updateChartData();
 		StageData.loadDirectory(PlayState.SONG);
 		LoadingState.prepareToSong();
@@ -5251,14 +5257,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						if (shiftAdd > 0)
 							loadSection(curSec - shiftAdd);
 						
-						Conductor.songPosition = FlxG.sound.music.time = cachedSectionTimes[curSec] - Conductor.offset + 0.0001;
+						Conductor.songPosition = (cachedSectionTimes[curSec] + 0.0001);
 					} else {
 						if (curSec + shiftAdd >= PlayState.SONG.notes.length) shiftAdd = PlayState.SONG.notes.length - curSec - 1;
 						
 						if (shiftAdd > 0)
 							loadSection(curSec + shiftAdd);
 						
-						Conductor.songPosition = FlxG.sound.music.time = Math.min(FlxG.sound.music.length - 1, cachedSectionTimes[curSec] - Conductor.offset + 0.0001);
+						Conductor.songPosition = Math.min(FlxG.sound.music.length - 1, cachedSectionTimes[curSec] + 0.0001);
 					}
 					
 					vortexShifted = true;
@@ -5292,7 +5298,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					} else {
 						nextTime += secStartTime;
 					}
-					Conductor.songPosition = FlxG.sound.music.time = Math.max(0, Math.min(nextTime + .0001, FlxG.sound.music.length)) - Conductor.offset + 0.0001;
+					Conductor.songPosition = (Math.max(0, Math.min(nextTime + .0001, FlxG.sound.music.length)) + 0.0001);
 					if (curSec < cachedSectionTimes.length - 1 && Conductor.songPosition >= cachedSectionTimes[curSec + 1])
 						loadSection(curSec + 1);
 					
@@ -5714,11 +5720,11 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}, width, height);
 		
 		if (waveformTarget == EVERYTHING) {
-			drawOnWaveform(vocals, width, height, -.25, .75);
+			drawOnWaveform(vocals, width, height, -.25, .5);
 			if (opponentVocals.length <= 0) {
-				drawOnWaveform(vocals, width, height, .25, .75);
+				drawOnWaveform(vocals, width, height, .25, .5);
 			} else {
-				drawOnWaveform(opponentVocals, width, height, .25, .75);
+				drawOnWaveform(opponentVocals, width, height, .25, .5);
 			}
 			drawOnWaveform(FlxG.sound.music, width, height, 0, .5);
 		}
@@ -5761,8 +5767,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			var rmin:Float = FlxMath.bound(((index < wavData[1][0].length && index >= 0) ? wavData[1][0][index] : 0) * (gSize / 1.12), -hSize, hSize) / 2;
 			var rmax:Float = FlxMath.bound(((index < wavData[1][1].length && index >= 0) ? wavData[1][1][index] : 0) * (gSize / 1.12), -hSize, hSize) / 2;
 			
-			var ww:Float = ((lmin + rmin) + (lmax + rmax)) * amp;
-			var xx:Float = /*Math.max(0, Math.min(gSize - ww, */hSize - ww * .5 + (gSize * offset);//));
+			var ww:Float = ((lmin + rmin + lmax + rmax) * amp);
+			var xx:Float = (hSize - ww * .5 + gSize * offset);
 			waveformSprite.pixels.fillRect(new Rectangle(xx, index * size, ww, size), FlxColor.WHITE);
 		}
 	}

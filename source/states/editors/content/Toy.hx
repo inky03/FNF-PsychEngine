@@ -103,6 +103,11 @@ class Toy extends objects.Character {
 		
 		playAnim(anim, true);
 	}
+	
+	public override function destroy():Void {
+		super.destroy();
+		dropdown.destroy();
+	}
 }
 
 typedef ToyHoldData = {
