@@ -1359,7 +1359,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 									
 									selectedNotes.remove(closest);
 									closest.setColorTransform();
-								} else if (closest.isEvent) {
+								} else if (!closest.isEvent) {
 									for (note in selectedNotes) {
 										if (!note.isEvent)
 											note.dragging = true;
