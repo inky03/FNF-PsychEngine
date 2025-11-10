@@ -580,14 +580,15 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	function createToys() {
 		var centerX:Float = gridBg.x * .5;
 		
-		bfToy = createToy('bf', centerX + 110, FlxG.height - 50);
-		gfToy = createToy('gf-nospeak', centerX, FlxG.height - 50);
-		dadToy = createToy('bf-pixel-opponent', centerX - 110, FlxG.height - 50);
+		bfToy = new Toy(centerX + 110, FlxG.height - 50, 'bf', PLAYER);
+		gfToy = new Toy(centerX, FlxG.height - 50, 'gf-nospeak', GF);
+		dadToy = new Toy(centerX - 110, FlxG.height - 50, 'bf-pixel-opponent', OPPONENT);
 		
-		bfToy.flipX = !bfToy.flipX;
-		
-		for (toy in [gfToy, bfToy, dadToy])
+		for (toy in [gfToy, bfToy, dadToy]) {
 			toyGroup.add(toy);
+			
+			toy.dropdown.cameras = [camUI];
+		}
 	}
 	
 	function updateToys() {
@@ -596,24 +597,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		} else {
 			remove(toyGroup, true);
 		}
-	}
-
-	function createToy(?name:String, x:Float = 0, y:Float = 0) {
-		var toy:Toy = new Toy(x, y, name, false);
-		toy.scale.set(toy.scale.x * .35, toy.scale.y * .35);
-		toy.updateHitbox();
-		toy.origin.set();
-		
-		toy.x -= toy.width * .5;
-		toy.y -= toy.height;
-
-		for (anim in toy.animOffsets.keys()) {
-			toy.animOffsets[anim][0] *= toy.scale.x;
-			toy.animOffsets[anim][1] *= toy.scale.y;
-		}
-		toy.dance();
-		
-		return toy;
 	}
 	
 	var texturedSustains:Bool;
@@ -706,6 +689,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		reloadNotes();
 		onChartLoaded();
 		updateHeads(true);
+		refreshToys();
 		
 		autoSaveTime = 0;
 		Conductor.songPosition = 0;
@@ -779,9 +763,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		if (FlxG.mouse.justReleased)
 			draggingToy = null;
 		
-		var selectedToy:Character = null;
+		var selectedToy:Toy = null;
 		for (i in 0 ... toyGroup.length) {
-			var toy:Character = toyGroup.members[toyGroup.length - i - 1];
+			var toy:Toy = toyGroup.members[toyGroup.length - i - 1];
 			
 			toy.setColorTransform();
 			if (draggingToy != null) {
@@ -796,6 +780,11 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				
 				if (FlxG.mouse.justPressed)
 					draggingToy = toy;
+				
+				if (FlxG.mouse.justPressedRight) {
+					PsychUIInputText.focusOn = toy.dropdown;
+					toy.showDropDown();
+				}
 			}
 		}
 		
@@ -2450,6 +2439,11 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		_lastGfSection = isGfSection;
 		_lastSec = curSec;
 	}
+	
+	function refreshToys():Void {
+		for (toy in toyGroup)
+			toy.changeCharacter(toy.curCharacter);
+	}
 
 	var playbackSlider:PsychUISlider;
 
@@ -3500,6 +3494,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		playerDropDown = new PsychUIDropDownMenu(objX, objY, [''], function(id:Int, character:String)
 		{
 			PlayState.SONG.player1 = character;
+			refreshToys();
 			updateJsonData();
 			updateHeads(true);
 			loadMusic();
@@ -3515,6 +3510,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		opponentDropDown = new PsychUIDropDownMenu(objX, objY + 40, [''], function(id:Int, character:String)
 		{
 			PlayState.SONG.player2 = character;
+			refreshToys();
 			updateJsonData();
 			updateHeads(true);
 			loadMusic();
@@ -3524,6 +3520,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		girlfriendDropDown = new PsychUIDropDownMenu(objX, objY + 80, [''], function(id:Int, character:String)
 		{
 			PlayState.SONG.gfVersion = character;
+			refreshToys();
 			trace('selected $character');
 		});
 		
