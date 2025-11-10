@@ -174,7 +174,7 @@ class ExtraFunctions {
 				return Paths.getTextFromFile(path, ignoreModFolders);
 			
 			if (FileSystem.exists(path))
-				return File.getContent(path);
+				return Paths.getTextFromFile(path);
 			
 			return null;
 		});

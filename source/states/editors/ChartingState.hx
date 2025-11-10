@@ -1243,7 +1243,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				noteDiffY = gridBg.height - diffY - GRID_SIZE;
 
 			var noteData:Int = Math.floor(diffX / GRID_SIZE);
-			dummyArrow.visible = !selectionBox.visible;
+			dummyArrow.visible = (!selectionBox.visible && !FlxG.mouse.pressed);
 			dummyArrow.x = gridBg.x + noteData * GRID_SIZE;
 			if(SHOW_EVENT_COLUMN)
 				noteData--;
@@ -1527,7 +1527,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						if (downScroll) noteDiffY = (gridBg.height - diffY - (shift ? 0 : GRID_SIZE));
 						noteDiffY -= (note.chartY * GRID_SIZE * curZoom);
 						
-						var stepLength:Float = Math.max(noteDiffY / GRID_SIZE, 0);
+						var stepLength:Float = Math.max(noteDiffY / GRID_SIZE / curZoom, 0);
 						var endMs:Float = Conductor.stepToSeconds(Conductor.getStep(note.strumTime) + stepLength);
 						
 						note.setSustainLength(endMs - note.strumTime, curZoom);

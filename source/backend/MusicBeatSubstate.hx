@@ -275,12 +275,12 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 			var vert:String = '$folder/$name.vert';
 			
 			if (FileSystem.exists(frag)) {
-				frag = File.getContent(frag);
+				frag = Paths.getTextFromFile(frag);
 			} else {
 				frag = null;
 			}
 			if (FileSystem.exists(vert)) {
-				vert = File.getContent(vert);
+				vert = Paths.getTextFromFile(vert);
 			} else {
 				vert = null;
 			}
