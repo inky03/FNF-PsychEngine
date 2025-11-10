@@ -746,6 +746,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	var draggingToy:Character = null;
 	
 	var toyPadding:Float = -25;
+	
+	var closestNote:MetaNote = null;
 	override function update(elapsed:Float)
 	{
 		preUpdate(elapsed);
@@ -1180,7 +1182,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 							if(holdingAlt && selectedNotes.contains(note))
 							{
 								selectedNotes.remove(note);
-								note.colorTransform.redMultiplier = note.colorTransform.greenMultiplier = note.colorTransform.blueMultiplier = 1;
+								note.setColorTransform();
 								if(note.animation.curAnim != null) note.animation.curAnim.curFrame = 0;
 							}
 							else selectedNotes.push(note);
@@ -1218,6 +1220,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		if(isMovingNotes && FlxG.mouse.justReleased)
 			stopMovingNotes();
 
+		var prevNote = closestNote;
+		closestNote = null;
+		
 		if(FlxG.mouse.x >= minX && FlxG.mouse.x < gridBg.x + gridBg.width)
 		{
 			var diffX:Float = FlxG.mouse.x - gridBg.x;
@@ -1251,7 +1256,20 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				if(FlxG.mouse.y >= gridBg.y) t *= curZoom;
 				dummyArrow.y = gridBg.y + t;
 			}
-
+			
+			var mouseInGrid:Bool = (FlxG.mouse.x >= gridBg.x && FlxG.mouse.x < gridBg.x + gridBg.width);
+			
+			if (!isMovingNotes && mouseInGrid) {
+				for (note in curRenderedNotes) {
+					var chartY:Float = (FlxG.mouse.y - calculateY(note));
+					
+					if (!((note.isEvent && noteData < 0) || (!note.isEvent && note.songData[1] == noteData)) || chartY < 0 || chartY >= GRID_SIZE) continue;
+					
+					if (closestNote == null || Math.abs(chartY - GRID_SIZE * .5) < Math.abs(FlxG.mouse.y - calculateY(closestNote) - GRID_SIZE * .5))
+						closestNote = note;
+				}
+			}
+			
 			if(isMovingNotes)
 			{
 				// Move note data
@@ -1320,16 +1338,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					else
 						showOutput('You must select notes to move them!', true);
 				}
-				else if(FlxG.mouse.x >= gridBg.x && FlxG.mouse.x < gridBg.x + gridBg.width)
+				else if(mouseInGrid)
 				{
-					var closeNotes:Array<MetaNote> = curRenderedNotes.members.filter(function(note:MetaNote)
-					{
-						var chartY:Float = FlxG.mouse.y - calculateY(note);
-						return ((note.isEvent && noteData < 0) || (!note.isEvent && note.songData[1] == noteData)) && chartY >= 0 && chartY < GRID_SIZE;
-					});
-					closeNotes.sort(function(a:MetaNote, b:MetaNote) return Math.abs(a.strumTime - FlxG.mouse.y) < Math.abs(b.strumTime - FlxG.mouse.y) ? 1 : -1);
-
-					var closest = closeNotes[0];
+					var closest = closestNote;
 					if(closest != null && (!closest.isEvent || !lockedEvents))
 					{
 						if (holdingAlt || FlxG.keys.pressed.SHIFT) // Select Note/Event
@@ -1339,6 +1350,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 							if (!FlxG.keys.pressed.SHIFT) resetSelectedNotes();
 							if (selectedNotes.contains(closest)) {
 								selectedNotes.remove(closest);
+								closest.setColorTransform();
 							} else {
 								selectedNotes.push(closest);
 							}
@@ -1466,7 +1478,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		}
 		
 		lastSongTime = Conductor.songPosition;
-
+		
 		if(selectedNotes.length > 0 || selectedEvents.length > 0)
 		{
 			noteSelectionSine += elapsed;
@@ -1496,10 +1508,22 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					}
 					note.animation.update(elapsed); //let selected notes be animated for better visibility
 				}
-				note.colorTransform.redMultiplier = note.colorTransform.greenMultiplier = note.colorTransform.blueMultiplier = sineValue;
+				note.setColorTransform(sineValue, sineValue, sineValue, 1, -32, 64, 0);
 			}
 		}
 		else noteSelectionSine = 0;
+		
+		if (prevNote != null && !selectedNotes.contains(prevNote)) {
+			prevNote.setColorTransform();
+		}
+		if (closestNote != null) {
+			var selected:Bool = selectedNotes.contains(closestNote);
+			
+			var m:Int = (FlxG.mouse.pressed ? -64 : 128);
+			var redM:Int = (FlxG.keys.pressed.SHIFT ? 0 : -153);
+			
+			closestNote.setColorTransform(1, 1, 1, 1, (selected ? -32 : 0) + m, (selected ? 64 : 0) + m + redM, m + redM);
+		}
 
 		outputTxt.alpha = outputAlpha;
 		outputTxt.visible = (outputAlpha > 0);
@@ -1715,7 +1739,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		{
 			if(note == null || !note.exists) continue;
 
-			note.colorTransform.redMultiplier = note.colorTransform.greenMultiplier = note.colorTransform.blueMultiplier = 1;
+			note.setColorTransform();
 			if(note.animation.curAnim != null) note.animation.curAnim.curFrame = 0;
 		}
 		selectedEvents.resize(0);
@@ -5644,7 +5668,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 					if(note.exists)
 					{
-						note.colorTransform.redMultiplier = note.colorTransform.greenMultiplier = note.colorTransform.blueMultiplier = 1;
+						note.setColorTransform();
 						if(note.animation.curAnim != null) note.animation.curAnim.curFrame = 0;
 					}
 				}
@@ -5662,7 +5686,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 					if(event.exists)
 					{
-						event.colorTransform.redMultiplier = event.colorTransform.greenMultiplier = event.colorTransform.blueMultiplier = 1;
+						event.setColorTransform();
 						if(event.animation.curAnim != null) event.animation.curAnim.curFrame = 0;
 					}
 				}

@@ -473,7 +473,7 @@ class EventNoteGui extends FlxSpriteGroup {
 			if (!event.alive) continue;
 			
 			if (Lambda.exists(charter.selectedEvents, (e) -> e.event == events[event.ID])) {
-				event.setColorTransform(sine, sine, sine, alpha, -64, 64, -32);
+				event.setColorTransform(sine, sine, sine, alpha, -32, 64, 0);
 			} else {
 				event.setColorTransform(1, 1, 1, alpha);
 			}
@@ -497,7 +497,11 @@ class EventNoteGui extends FlxSpriteGroup {
 			var redM:Int = (selection == null || FlxG.keys.pressed.SHIFT ? 0 : -153);
 			var m:Int = (FlxG.mouse.pressed ? -64 : 128);
 			
-			closest.setColorTransform(1, 1, 1, alpha, m, m + redM, m + redM);
+			if (selection != null && FlxG.keys.pressed.SHIFT) {
+				closest.setColorTransform(1, 1, 1, alpha, m - 32, m + redM + 64, m + redM);
+			} else {
+				closest.setColorTransform(1, 1, 1, alpha, m, m + redM, m + redM);
+			}
 			
 			if (FlxG.mouse.justReleased) {
 				if (selection != null) { // snipe
