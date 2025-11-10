@@ -543,8 +543,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			"Shift + Enter - Playtest Chart at Current Time",
 			"Space - Stop/Resume Song",
 			"",
-			"Alt + Click - Select Note(s)",
-			"Shift + Click - Select/Unselect Note(s)",
+			"Alt + Click - Select & Resize Note Sustains",
+			"Shift + Click - Select/Unselect",
 			"Right Click - Selection Box",
 			"",
 			"R - Jump to Start of current Section",
@@ -1331,7 +1331,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			}
 			else if (!ignoreClickForThisFrame && FlxG.mouse.justPressed)
 			{
-				if(FlxG.keys.pressed.CONTROL && FlxG.mouse.justPressed)
+				if(FlxG.keys.pressed.CONTROL)
 				{
 					if(selectedNotes.length > 0)
 						moveSelectedNotes(noteData, dummyArrow.y);
@@ -1347,11 +1347,27 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						{
 							var sel = selectedNotes.copy();
 							
-							if (!FlxG.keys.pressed.SHIFT) resetSelectedNotes();
 							if (selectedNotes.contains(closest)) {
-								selectedNotes.remove(closest);
-								closest.setColorTransform();
+								if (FlxG.keys.pressed.SHIFT) {
+									if (closest.isEvent) {
+										var i:Int = selectedEvents.length;
+										while (-- i >= 0) {
+											var data:SelectedEventData = selectedEvents[i];
+											if (data.note == closest) selectedEvents.remove(data);
+										}
+									}
+									
+									selectedNotes.remove(closest);
+									closest.setColorTransform();
+								} else if (closest.isEvent) {
+									for (note in selectedNotes) {
+										if (!note.isEvent)
+											note.dragging = true;
+									}
+								}
 							} else {
+								if (!FlxG.keys.pressed.SHIFT) resetSelectedNotes();
+								
 								selectedNotes.push(closest);
 							}
 							
@@ -1402,7 +1418,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 							if(!holdingAlt)
 								resetSelectedNotes();
-
+							
+							noteAdded.dragging = true;
 							selectedNotes.push(noteAdded);
 							addUndoAction(ADD_NOTE, {notes: [noteAdded]});
 						}
@@ -1494,6 +1511,31 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			for (note in selectedNotes)
 			{
 				if(note == null || !note.exists) continue;
+				
+				note.animation.update(elapsed); //let selected notes be animated for better visibility
+				
+				if (note.dragging) {
+					if (!FlxG.mouse.pressed) {
+						note.dragging = false;
+					} else {
+						var shift:Bool = FlxG.keys.pressed.SHIFT;
+						
+						var diffY:Float = (FlxG.mouse.y - gridBg.y);
+						if (!shift) diffY -= (diffY % (GRID_SIZE / (curQuant / 16)));
+						
+						var noteDiffY:Float = diffY;
+						if (downScroll) noteDiffY = (gridBg.height - diffY - (shift ? 0 : GRID_SIZE));
+						noteDiffY -= (note.chartY * GRID_SIZE * curZoom);
+						
+						var stepLength:Float = Math.max(noteDiffY / GRID_SIZE, 0);
+						var endMs:Float = Conductor.stepToSeconds(Conductor.getStep(note.strumTime) + stepLength);
+						
+						note.setSustainLength(endMs - note.strumTime, curZoom);
+						note.setColorTransform(1, 1, 1, note.alpha, -32 - 64, 64 - 64, 0 - 64);
+						
+						continue;
+					}
+				}
 
 				if(!note.isEvent)
 				{
@@ -1506,23 +1548,24 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						if (selectedNotes.length == 1)
 							susLengthStepper.value = note.sustainLength;
 					}
-					note.animation.update(elapsed); //let selected notes be animated for better visibility
 				}
-				note.setColorTransform(sineValue, sineValue, sineValue, 1, -32, 64, 0);
+				
+				note.setColorTransform(sineValue, sineValue, sineValue, note.alpha, -32, 64, 0);
 			}
 		}
 		else noteSelectionSine = 0;
 		
 		if (prevNote != null && !selectedNotes.contains(prevNote)) {
-			prevNote.setColorTransform();
+			prevNote.setColorTransform(1, 1, 1, prevNote.alpha);
 		}
 		if (closestNote != null) {
 			var selected:Bool = selectedNotes.contains(closestNote);
 			
-			var m:Int = (FlxG.mouse.pressed ? -64 : 128);
-			var redM:Int = (FlxG.keys.pressed.SHIFT ? 0 : -153);
+			var deleting:Bool = (!FlxG.keys.pressed.SHIFT && !holdingAlt && !closestNote.dragging);
+			var m:Int = (FlxG.mouse.pressed || closestNote.dragging ? -64 : 128);
+			var redM:Int = (deleting ? -153 : 0);
 			
-			closestNote.setColorTransform(1, 1, 1, 1, (selected ? -32 : 0) + m, (selected ? 64 : 0) + m + redM, m + redM);
+			closestNote.setColorTransform(1, 1, 1, closestNote.alpha, (selected && !deleting ? -32 : 0) + m, (selected && !deleting ? 64 : 0) + m + redM, m + redM);
 		}
 
 		outputTxt.alpha = outputAlpha;

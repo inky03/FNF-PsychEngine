@@ -17,6 +17,8 @@ class MetaNote extends Note
 	public var chartNoteData:Int = 0;
 	public var chartingState:ChartingState;
 	public var useBlandSustains(default, set):Bool = false;
+	
+	public var dragging:Bool = false;
 
 	public function new(time:Float, data:Int, songData:Array<Dynamic>, state:ChartingState)
 	{
@@ -138,13 +140,13 @@ class MetaNote extends Note
 		if(sustainSprite != null && sustainSprite.exists && sustainSprite.visible && sustainLength > 0)
 		{
 			if (sustainSprite.shader != shader) sustainSprite.shader = shader;
-			sustainSprite.setColorTransform(colorTransform.redMultiplier, sustainSprite.colorTransform.blueMultiplier, colorTransform.redMultiplier);
+			sustainSprite.setColorTransform();
+			sustainSprite.colorTransform.concat(colorTransform);
 			sustainSprite.scale.copyFrom(this.scale);
 			sustainSprite.updateHitbox();
 			sustainSprite.y = this.y + this.height / 2 - (downScroll ? sustainSprite.sustainHeight : 0);
 			sustainSprite.x = this.x + (this.width - sustainSprite.width) / 2;
 			sustainSprite.downScroll = downScroll;
-			sustainSprite.alpha = this.alpha;
 			sustainSprite.draw();
 		}
 		super.draw();
@@ -200,6 +202,8 @@ class EditorSustain extends Note {
 		if (!visible) return;
 		
 		if (useBlandSustains) {
+			basicSustainTile.setColorTransform();
+			basicSustainTile.colorTransform.concat(colorTransform);
 			basicSustainTile.scale.set(8, sustainHeight);
 			basicSustainTile.updateHitbox();
 			basicSustainTile.alpha = alpha;
@@ -210,7 +214,8 @@ class EditorSustain extends Note {
 			flipY = sustainTile.flipY = downScroll;
 			
 			if (sustainTile.shader != shader) sustainTile.shader = shader;
-			sustainTile.setColorTransform(colorTransform.redMultiplier, colorTransform.blueMultiplier, colorTransform.redMultiplier);
+			sustainTile.setColorTransform();
+			sustainTile.colorTransform.concat(colorTransform);
 			sustainTile.scale.copyFrom(scale);
 			sustainTile.updateHitbox();
 			sustainTile.alpha = alpha;
