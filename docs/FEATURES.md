@@ -18,9 +18,7 @@ To start you off, disabling *Video Cutscenes* should be simple, simply delete th
 Same goes for *Scripts*, comment out or delete the lines with `LUA_ALLOWED` and `HSCRIPT_ALLOWED`, this and other customization options are all available within the `Project.xml` file.
 
 ## Softcoding (.lua/.hx)
-For this you can head over to [the wiki](https://shadowmario.github.io/psychengine.lua)
-
-There you can learn how to use the 212 PlayState funcions in your mod!
+You can head over to [the wiki](https://shadowmario.github.io/psychengine.lua) to learn more about Psych Engine's Lua API.
 
 ## Credits:
 * Shadow Mario - Main Programmer and Head of Psych Engine.
@@ -55,12 +53,12 @@ There you can learn how to use the 212 PlayState funcions in your mod!
 ![Main Menu](img/MainMenu.png)
 
 ## Mod Support
-* Probably one of the main points of this engine, you can code in .lua files outside of the source code, making your own weeks without even messing with the source!
+* Probably one of the main points of this engine, you can code in .lua and .hx files, making your own weeks without having to build a whole executable!
 * Comes with a Mod Organizing/Disabling Menu.
 ![Mod Support](img/ModsMenu.png)
 
 
-## Atleast one change to every week:
+## Changes to most weeks:
 ### Week 1:
   * New Dad Left sing sprite
   * Unused stage lights are now used
@@ -105,7 +103,7 @@ There you can learn how to use the 212 PlayState funcions in your mod!
 
 ## Credits menu
 ![Credits Menu](img/credits.png)
-* You can add a head icon, name, description and a Redirect link for when the player presses Enter while the item is currently selected.
+* You can add a head icon, name, description and a link that the player can visit by pressing Enter.
 
 ## Awards/Achievements
 * The engine comes with 16 example achievements that you can mess with and learn how it works (Check Achievements.hx and search for "checkForAchievement" on PlayState.hx)
@@ -127,4 +125,4 @@ There you can learn how to use the 212 PlayState funcions in your mod!
 
 #### Psych Engine by ShadowMario, Friday Night Funkin' by ninjamuffin99
 
-#### emimod by emi3, Moonlight_Catalyst, BobbyDX
+#### Psych Engine Mint by emi3, Moonlight_Catalyst, BobbyDX

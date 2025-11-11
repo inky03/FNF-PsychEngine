@@ -1,15 +1,25 @@
 # List of differences
 
-The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) are as follows:
+The current list of differences from this fork (0.0.5) to Psych Engine (1.0.4) are as follows:
 
 ## Engine changes
 
 ### Chart Editor
 
-- Re-implemented vortex editor functionality that was in versions previous to 1.0
-	- The Vortex Editor option has been moved back to the Charting tab
-	- Press the up and down arrow keys to scroll with the beat snap constraint
-	- Press the keypad digits 1-7 to place notes (also with the beat snap constraint)
+- Huge Functionality revamps
+	- Re-implemented vortex editor functionality that was in versions previous to 1.0
+		- The Vortex Editor option has been moved back to the Charting tab
+		- Press the up and down arrow keys to scroll with the beat snap constraint
+		- Press the keypad digits 1-7 to place notes (also with the beat snap constraint)
+	- Events have been mostly overhauled in the editor
+		- Can now have custom icons, visible in the editor grid
+		- Each event can now be selected individually from the event notes, making them easier to change in bulk
+		- A tooltip will now appear for every event with it's individual information, by hovering on it
+		- Events will now be automatically loaded by opening a chart from a file
+			- This can be toggled off in the Charting tab
+	- You can now resize notes' lengths with Alt + dragging the mouse (also when you place the note initially)
+	- Shift + Click can now additionally deselect currently selected notes
+- The layout for some tabs has been adjusted, to make them easier to use
 - Sustain notes can now be textured instead of using white lines
 	- This can be toggled off (Textured Hold Notes checkbox) in the View > Theme menu
 - View Menu
@@ -17,6 +27,8 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 	- "Toys" (based on MoonlightCatalyst's pull request) can be toggled in this menu
 		- Like the Buddies in the FPS Plus engine Chart Editor, they play sing animations on notes
 		- You can drag them around (doesn't save currently)
+		- Right click to change their display character (also doesn't save currently)
+			- NOTE: Automatic character doesn't (currently?) support Change Character events
 - Fixed some bugs
 	- Inconsistencies / inaccuracies related to note and hold note timing (related to BPM changes)
 	- Ignore notetypes will not play hitsounds and will not make the strums glow
@@ -64,7 +76,7 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 ### Lua
 
 - EXTENDED Scripting (VERY EXPERIMENTAL)
-	- Lua scripting unsupported on Global scripts (and will probably remain this way because of its shortcomings)
+	- NOTE: Global scripts are HScript (.hx) only (and may remain this way because of Lua script shortcomings)
 - New functions
 	- Switch to a custom state in Lua with `openCustomState('stateName', customData)` (custom data optional)
 	- Switch or open substates in Lua with `switchState('states.StateClass', {arguments})` and `openSubstate('states.SubStateClass', {arguments})` (arguments optional, whenever applicable)
@@ -247,6 +259,7 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 	- HScript
 		- `callOnScriptsEx` (to provide diff. arguments for Lua and HScript function calls)
 - Character
+	- Change Character event now preserves shaders (courtesy of BobbyDX)
 	- Combo and combo drop animations (from base game)
 	- ERROR text on invalid characters considers alpha now
 - Notes
@@ -259,12 +272,15 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 	- `Note.isSustainEnd` to check if a sustain marks the end of a note
 	- `Note.followStrumNote` second argument "fakeCrochet" has been removed (as it was useless)
 	- Strum **press** animation is now strictly only played on a ghost tap
+	- Strums are now created before countdown start
 - States
 	- GameplayChangersSubState
 		- Renamed from GameplayChangersSubstate (not that different but, still)
 		- Unified behavior with the other options menus (now extends BaseOptionsMenu as well)
 	- PlayState
+		- Countdown now played on beat hit instead of with a timer
 		- Added variable `ghostTapping`, so it can be modified without having to change user preferences
+		- `bf` variable as a shorthand for `boyfriend`
 		- `stageUI`, `uiPrefix` and `uiPostfix` behavior has been adjusted (this also affects note textures)
 		- `addTextToDebug` function now has an argument for size and returns the text itself
 		- `storyVariables` for static variables useful for scripting - will remain intact until next week played
@@ -272,7 +288,9 @@ The current list of differences from this fork (0.0.4) to Psych Engine (1.0.4) a
 	- BaseStage
 		- Added `onMoveCamera` and `onGameOver [Loop / Start / Confirm]` functions
 - Other
-	- Engine can now compile to HashLink
+	- Updated Crash handler to be somewhat more descriptive
+	- Engine can now compile to HashLink and HTML5
+		- NOTE: HTML5 is EXTREMELY experimental and unsupported right now, use unrecommended
 		- Videos and Lua scripts are not supported due to limitations (HScript is, though)
 	- Changed all libraries to use their latest versions (that previously weren't)
 		- HScript Iris (1.1.3 used in release -> git used in fork)
