@@ -73,22 +73,22 @@
 
 	<!-- Assets -->
 	<assets path="assets/fonts" />
-	<assets path="assets/shared" />
-	<assets path="assets/songs" 		exclude="*.mp3"/>
+	<assets path="assets/shared"        exclude="*.mp3"/>
+	<assets path="assets/songs"         exclude="*.mp3"/>
 	<assets path="assets/embed"         embed="true"/>
 	<assets path="assets/videos"        if="VIDEOS_ALLOWED"/>
-	<assets path="assets/week_assets"   rename="assets"/>
+	<assets path="assets/week_assets"   rename="assets" exclude="*.mp3"/>
 	
 	<section if="TITLE_SCREEN_EASTER_EGG">
 		<assets path="assets/secrets" rename="assets/shared"/>
 	</section>
 
 	<section if="TRANSLATIONS_ALLOWED">
-		<assets path="assets/translations" rename="assets"/>
+		<assets path="assets/translations" rename="assets" exclude="*.mp3"/>
 	</section>
 
 	<section if="BASE_GAME_FILES" unless="html5"> <!-- currently not very functional under html5. seriously . Dont Try it. -->
-		<assets path="assets/base_game" rename="assets"/>
+		<assets path="assets/base_game" rename="assets" exclude="*.mp3"/>
 	</section>
 	
 	<section if="MODS_ALLOWED">
