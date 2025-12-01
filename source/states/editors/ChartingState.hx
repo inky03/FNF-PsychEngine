@@ -918,7 +918,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				else if(FlxG.keys.justPressed.END)
 				{
 					setSongPlaying(false);
-					Conductor.songPosition = (FlxG.sound.music.length + Conductor.offset - 1);
+					Conductor.songPosition = (FlxG.sound.music.length + Conductor.offset + delay - 1);
 					loadSection(PlayState.SONG.notes.length - 1);
 				}
 				else if(FlxG.keys.justPressed.R)
@@ -940,7 +940,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					{
 						var snap:Float = Conductor.stepCrochet / (curQuant/16) / curZoom;
 						var timeAdd:Float = (FlxG.keys.pressed.SHIFT ? 4 : 1) / (holdingAlt ? 4 : 1) * FlxG.mouse.wheel * downScrollMult * snap;
-						var time:Float = Math.round((FlxG.sound.music.time - timeAdd) / snap) * snap;
+						var time:Float = Math.round((Conductor.songPosition - timeAdd) / snap) * snap;
 						if(time > 0) time += 0.000001; //goes at the start of a section more properly
 						Conductor.songPosition = time;
 					}
@@ -953,7 +953,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 							Conductor.songPosition += Conductor.crochet * speedMult * 1.5 * elapsed / curZoom;
 					}
 
-					Conductor.songPosition = FlxMath.bound(Conductor.songPosition, 0, FlxG.sound.music.length + Conductor.offset - 1);
+					Conductor.songPosition = FlxMath.bound(Conductor.songPosition, 0, FlxG.sound.music.length + Conductor.offset + delay - 1);
 				}
 				if(FlxG.keys.justPressed.SPACE)
 				{
@@ -963,11 +963,11 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 			if (!songFinished && songPlaying) {
 				if (FlxG.sound.music.playing) {
-					Conductor.songPosition = FlxMath.bound(FlxG.sound.music.time + Conductor.offset, 0, FlxG.sound.music.length + Conductor.offset - 1);
+					Conductor.songPosition = FlxMath.bound(FlxG.sound.music.time + Conductor.offset + delay, 0, FlxG.sound.music.length + Conductor.offset + delay - 1);
 				} else {
 					Conductor.songPosition += (elapsed * 1000);
 					
-					if (Conductor.songPosition >= Conductor.offset) playMusic();
+					if (Conductor.songPosition >= Conductor.offset + delay) playMusic();
 				}
 			}
 			updateScrollY();
@@ -1493,8 +1493,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			forceDataUpdate = false;
 		}
 		
-		lastSongTime = Conductor.songPosition;
-		
 		if(selectedNotes.length > 0 || selectedEvents.length > 0)
 		{
 			noteSelectionSine += elapsed;
@@ -1574,6 +1572,13 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		FlxG.camera.scroll.y = scrollY;
 		lastFocus = PsychUIInputText.focusOn;
 		
+		if (metronomeStepper.value > 0 && FlxG.sound.music?.playing) { // sync metronome with audio delay
+			if (Std.int(Conductor.getBeat(lastSongTime - delay)) != Std.int(Conductor.getBeat(Conductor.songPosition - delay)))
+				FlxG.sound.play(Paths.sound('Metronome_Tick'), metronomeStepper.value);
+		}
+		
+		lastSongTime = Conductor.songPosition;
+		
 		postUpdate(elapsed);
 	}
 	
@@ -1626,9 +1631,6 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 
 	public override function beatHit(beat:Int):Void {
 		super.beatHit(beat);
-		
-		if (metronomeStepper.value > 0 && FlxG.sound.music != null && FlxG.sound.music.playing)
-			FlxG.sound.play(Paths.sound('Metronome_Tick'), metronomeStepper.value);
 		
 		for (toy in toyGroup) {
 			if (beat % toy.danceEveryNumBeats == 0 && !toy.getAnimationName().startsWith('sing'))
@@ -2013,7 +2015,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		trace('song completed');
 		setSongPlaying(false);
 		FlxG.sound.music.time = vocals.time = opponentVocals.time = (FlxG.sound.music.length - 1);
-		Conductor.songPosition = (FlxG.sound.music.time + Conductor.offset);
+		Conductor.songPosition = (FlxG.sound.music.time + Conductor.offset + delay);
 		curSec = PlayState.SONG.notes.length - 1;
 		forceDataUpdate = true;
 	}
@@ -2055,7 +2057,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		songPlaying = doPlay;
 		
 		if (doPlay) {
-			FlxG.sound.music.time = vocals.time = opponentVocals.time = (Conductor.songPosition - Conductor.offset);
+			FlxG.sound.music.time = vocals.time = opponentVocals.time = (Conductor.songPosition - Conductor.offset - delay);
 		} else {
 			for (toy in toyGroup)
 				toy.holdSingTimer = 0;
@@ -4721,7 +4723,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 					var btn:PsychUIButton = new PsychUIButton(0, timeTxt.y + 30, 'Go To', function()
 					{
 						curSec = currentSec;
-						Conductor.songPosition = FlxMath.bound(curTime, 0, FlxG.sound.music.length + Conductor.offset - 1);
+						Conductor.songPosition = FlxMath.bound(curTime, 0, FlxG.sound.music.length + Conductor.offset + delay - 1);
 						setSongPlaying(true);
 						loadSection();
 						state.close();
@@ -5412,7 +5414,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				while (cachedSectionTimes.length > noteSec + 1 && cachedSectionTimes[noteSec + 1] <= note.strumTime)
 					noteSec++;
 				
-				var targetTime:Float = Conductor.getStep(Conductor.songPosition + Conductor.offset);
+				var targetTime:Float = Conductor.getStep(Conductor.songPosition + Conductor.offset + delay);
 				targetTime = Math.floor(targetTime * snap) / snap;
 				
 				note.setSustainLength(Conductor.stepToSeconds(targetTime) - note.strumTime, curZoom);

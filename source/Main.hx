@@ -63,11 +63,6 @@ class Main extends Sprite
 	
 	// You can pretty much ignore everything from here on - your code should go in your states.
 	
-	public static function main():Void
-	{
-		Lib.current.addChild(new Main());
-	}
-	
 	public function new()
 	{
 		super();
@@ -97,6 +92,7 @@ class Main extends Sprite
 		#end
 		Mods.loadTopMod();
 		
+		FlxG.save.bind('funkin', CoolUtil.getSavePath());
 		Controls.instance = new Controls();
 		Language.reloadPhrases();
 		Difficulty.resetList();
@@ -108,7 +104,6 @@ class Main extends Sprite
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
 		addChild(new #if UNHOLYWANDERER04 UnholyGame #else FlxGame #end(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
 		
-		FlxG.save.bind('funkin', CoolUtil.getSavePath());
 		ClientPrefs.loadPrefs();
 		Highscore.load();
 		

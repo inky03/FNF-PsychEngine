@@ -1064,10 +1064,8 @@ class PlayState extends ScriptedState
 		
 		inCutscene = false;
 		seenCutscene = true;
-		if (!skipArrowStartTween && !isStoryMode && !skipCountdown && startOnTime <= 0) {
-			for (strum in strumLineNotes)
-				strum.alpha = 0;
-		}
+		if (!skipArrowStartTween && !isStoryMode && !skipCountdown && startOnTime <= 0)
+			tweenInArrows();
 		
 		var ret:Dynamic = callOnScripts('onStartCountdown', null, true);
 		if(ret != LuaUtils.Function_Stop) {
@@ -1118,9 +1116,6 @@ class PlayState extends ScriptedState
 		
 		var counter:Int = switch (tick) {
 			case THREE:
-				if (!skipArrowStartTween && !isStoryMode)
-					tweenInArrows();
-				
 				FlxG.sound.play(Paths.sound('intro3$introSoundsSuffix'), .6);
 				0;
 			case TWO:
@@ -1475,7 +1470,7 @@ class PlayState extends ScriptedState
 	
 				swagNote.scrollFactor.set();
 				unspawnNotes.push(swagNote);
-
+				
 				var curStepCrochet:Float = 60 / daBpm * 1000 / 4.0;
 				final roundSus:Int = Math.round(swagNote.sustainLength / curStepCrochet);
 				if(roundSus > 0)
@@ -1610,23 +1605,24 @@ class PlayState extends ScriptedState
 		eventPushed(subEvent);
 		callOnScripts('onEventPushed', [subEvent.event, subEvent.value1 != null ? subEvent.value1 : '', subEvent.value2 != null ? subEvent.value2 : '', subEvent.strumTime]);
 	}
-
+	
 	public var skipArrowStartTween:Bool = false; //for lua
 	private function generateStaticArrows(player:Bool):Void
 	{
 		var strumLineX:Float = ClientPrefs.data.middleScroll ? STRUM_X_MIDDLESCROLL : STRUM_X;
-		var strumLineY:Float = ClientPrefs.data.downScroll ? (FlxG.height - 150) : 50;
-		for (i in 0...4)
-		{
+		var strumLineY:Float = 50;
+		
+		for (i in 0 ... 4) {
 			var babyArrow:StrumNote = new StrumNote(strumLineX, strumLineY, i, player ? 1 : 0);
 			babyArrow.downScroll = ClientPrefs.data.downScroll;
 			
-			var targetAlpha:Float = 1;
+			if (babyArrow.downScroll)
+				babyArrow.y = (FlxG.height - babyArrow.height - babyArrow.y);
+			
 			if (!player) {
-				if (!ClientPrefs.data.opponentStrums) targetAlpha = 0;
-				else if (ClientPrefs.data.middleScroll) targetAlpha = 0.35;
+				if (!ClientPrefs.data.opponentStrums) babyArrow.alpha = 0;
+				else if (ClientPrefs.data.middleScroll) babyArrow.alpha = 0.35;
 			}
-			babyArrow.alpha = targetAlpha;
 
 			if (player) {
 				playerStrums.add(babyArrow);
@@ -1647,14 +1643,11 @@ class PlayState extends ScriptedState
 	function tweenInArrows():Void {
 		for (group in [playerStrums, opponentStrums]) {
 			for (i => strum in group.members) {
+				
 				var targetY:Float = strum.y;
+				var targetAlpha:Float = strum.alpha;
 				
-				var targetAlpha:Float = 1;
-				if (group == opponentStrums) {
-					if (!ClientPrefs.data.opponentStrums) targetAlpha = 0;
-					else if (ClientPrefs.data.middleScroll) targetAlpha = 0.35;
-				}
-				
+				strum.revive();
 				strum.alpha = 0;
 				strum.y += (ClientPrefs.data.downScroll ? 10 : -10);
 				FlxTween.tween(strum, {y: targetY, alpha: targetAlpha}, 1, {ease: FlxEase.circOut, startDelay: .5 + .2 * i});
@@ -1826,7 +1819,7 @@ class PlayState extends ScriptedState
 		}
 		else if (!paused && updateTime)
 		{
-			var curTime:Float = Math.max(0, Conductor.songPosition - ClientPrefs.data.noteOffset);
+			var curTime:Float = Math.max(0, Conductor.songPosition- ClientPrefs.data.noteOffset);
 			songPercent = (curTime / songLength);
 
 			var songCalc:Float = (songLength - curTime);

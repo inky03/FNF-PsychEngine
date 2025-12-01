@@ -501,8 +501,8 @@ class NoteOffsetState extends ScriptedState
 
 	function updateNoteDelay()
 	{
-		ClientPrefs.data.noteOffset = Math.round(barPercent);
-		timeTxt.text = Language.getPhrase('delay_current_offset', 'Current offset: {1} ms', [Std.string(Math.floor(barPercent))]);
+		delay = ClientPrefs.data.noteOffset = Math.round(barPercent);
+		timeTxt.text = Language.getPhrase('delay_current_offset', 'Current offset: {1} ms', [Std.string(Math.round(barPercent))]);
 	}
 
 	function updateMode()
