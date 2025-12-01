@@ -17,6 +17,8 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	public var curDecStep:Float = 0;
 	public var curDecBeat:Float = 0;
 	
+	public var delay:Float = ClientPrefs.data.noteOffset;
+	
 	public var keepUp:Bool = false;
 	
 	var _pre:Bool = false;
@@ -166,7 +168,7 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	function updateStep():Void {
 		var lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
 
-		var shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
+		var shit = ((Conductor.songPosition - delay) - lastChange.songTime) / lastChange.stepCrochet;
 		curDecStep = lastChange.stepTime + shit;
 		curStep = Math.floor(curDecStep);
 	}
@@ -184,13 +186,13 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 			curCrochet = Conductor.getBPMFromSeconds(lastSectionTime).stepCrochet * 4;
 			var nextSectionTime = lastSectionTime + getBeatsOnSection(i) * curCrochet;
 			
-			if (nextSectionTime >= Conductor.songPosition - ClientPrefs.data.noteOffset)
+			if (nextSectionTime >= Conductor.songPosition - delay)
 				break;
 			
 			lastSectionTime = nextSectionTime;
 		}
 		
-		curDecSection = curSection + (Conductor.songPosition - ClientPrefs.data.noteOffset - lastSectionTime) / curCrochet / getBeatsOnSection(curSection);
+		curDecSection = curSection + (Conductor.songPosition - delay - lastSectionTime) / curCrochet / getBeatsOnSection(curSection);
 	}
 
 	public function stepHit(step:Int):Void {
