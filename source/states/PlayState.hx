@@ -163,10 +163,10 @@ class PlayState extends ScriptedState
 	public var camFollow:FlxObject;
 	private static var prevCamFollow:FlxObject;
 
-	public var strumLineNotes:FlxTypedGroup<StrumNote> = new FlxTypedGroup<StrumNote>();
-	public var opponentStrums:FlxTypedGroup<StrumNote> = new FlxTypedGroup<StrumNote>();
-	public var playerStrums:FlxTypedGroup<StrumNote> = new FlxTypedGroup<StrumNote>();
-	public var grpNoteSplashes:FlxTypedGroup<NoteSplash> = new FlxTypedGroup<NoteSplash>();
+	public var strumLineNotes:FlxTypedSpriteGroup<StrumNote> = new FlxTypedSpriteGroup<StrumNote>();
+	public var opponentStrums:FlxTypedSpriteGroup<StrumNote> = new FlxTypedSpriteGroup<StrumNote>();
+	public var playerStrums:FlxTypedSpriteGroup<StrumNote> = new FlxTypedSpriteGroup<StrumNote>();
+	public var grpNoteSplashes:FlxTypedSpriteGroup<NoteSplash> = new FlxTypedSpriteGroup<NoteSplash>();
 
 	public var camZooming:Bool = false;
 	public var camZoomingMult:Float = 1;
@@ -1440,23 +1440,18 @@ class PlayState extends ScriptedState
 
 				var gottaHitNote:Bool = (songNotes[1] < totalColumns);
 
-				if (i != 0) {
-					// CLEAR ANY POSSIBLE GHOST NOTES
+				if (i > 0) {
+					var matches:Bool = false;
 					for (evilNote in unspawnNotes) {
-						var matches: Bool = (noteColumn == evilNote.noteData && gottaHitNote == evilNote.mustPress && evilNote.noteType == noteType);
-						if (matches && Math.abs(spawnTime - evilNote.strumTime) < flixel.math.FlxMath.EPSILON) {
-							if (evilNote.tail.length > 0)
-								for (tail in evilNote.tail)
-								{
-									tail.destroy();
-									unspawnNotes.remove(tail);
-								}
-							evilNote.destroy();
-							unspawnNotes.remove(evilNote);
-							ghostNotesCaught++;
-							//continue;
+						if (noteColumn == evilNote.noteData && gottaHitNote == evilNote.mustPress && evilNote.noteType == noteType) {
+							if (Math.abs(spawnTime - evilNote.strumTime + delay) > FlxMath.EPSILON) continue;
+							ghostNotesCaught ++;
+							matches = true;
+							break;
 						}
 					}
+					if (matches)
+						continue;
 				}
 
 				var swagNote:Note = new Note(spawnTime, noteColumn, oldNote);
@@ -1520,7 +1515,7 @@ class PlayState extends ScriptedState
 		}
 		
 		if (ghostNotesCaught > 0)
-			trace('["${SONG.song.toUpperCase()}" CHART INFO]: Ghost Notes Cleared: $ghostNotesCaught');
+			trace('(${SONG.song}) $ghostNotesCaught duplicate notes ignored');
 		
 		for (event in songData.events) //Event Notes
 			for (i in 0...event[1].length)
@@ -1891,7 +1886,7 @@ class PlayState extends ScriptedState
 							if (daNote == null || !daNote.exists || !daNote.alive)
 								continue;
 							
-							var strumGroup:FlxTypedGroup<StrumNote> = playerStrums;
+							var strumGroup:FlxTypedSpriteGroup<StrumNote> = playerStrums;
 							if(!daNote.mustPress) strumGroup = opponentStrums;
 
 							var strum:StrumNote = strumGroup.members[daNote.noteData];
