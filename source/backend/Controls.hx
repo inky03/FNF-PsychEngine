@@ -5,6 +5,10 @@ import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.input.gamepad.mappings.FlxGamepadMapping;
 import flixel.input.keyboard.FlxKey;
 
+/**
+ * Used to retrieve keybinds and inputs.
+ * This class is designed to be a singleton, use `Controls.instance`!
+*/
 class Controls
 {
 	//Keeping same use cases on stuff for it to be easier to understand/use

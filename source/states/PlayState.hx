@@ -44,27 +44,30 @@ import psychlua.LuaUtils;
 import psychlua.HScript;
 #end
 
+/*here's some useful tips if you are making a mod in source:
+
+If you want to add your stage to the game, copy states/stages/Template.hx,
+and put your stage code there, then, on PlayState, search for
+"switch (curStage)", and add your stage to that list.
+
+If you want to code Events, you can either code it on a Stage file or on PlayState, if you're doing the latter, search for:
+
+"function eventPushed" - Only called *one time* when the game loads, use it for precaching events that use the same assets, no matter the values
+"function eventPushedUnique" - Called one time per event, use it for precaching events that uses different assets based on its values
+"function eventEarlyTrigger" - Used for making your event start a few MILLISECONDS earlier
+"function triggerEvent" - Called when the song hits your event's timestamp, this is probably what you were looking for*/
+
 /**
- * This is where all the Gameplay stuff happens and is managed
- *
- * here's some useful tips if you are making a mod in source:
- *
- * If you want to add your stage to the game, copy states/stages/Template.hx,
- * and put your stage code there, then, on PlayState, search for
- * "switch (curStage)", and add your stage to that list.
- *
- * If you want to code Events, you can either code it on a Stage file or on PlayState, if you're doing the latter, search for:
- *
- * "function eventPushed" - Only called *one time* when the game loads, use it for precaching events that use the same assets, no matter the values
- * "function eventPushedUnique" - Called one time per event, use it for precaching events that uses different assets based on its values
- * "function eventEarlyTrigger" - Used for making your event start a few MILLISECONDS earlier
- * "function triggerEvent" - Called when the song hits your event's timestamp, this is probably what you were looking for
-**/
+ * This is the main state of the game, where gameplay happens and is managed.
+*/
 class PlayState extends ScriptedState
 {
 	public static var STRUM_X = 42;
 	public static var STRUM_X_MIDDLESCROLL = -278;
 
+	/**
+	 * Rating names used on the score text.
+	*/
 	public static var ratingStuff:Array<Dynamic> = [
 		['You Suck!', 0.2], //From 0% to 19%
 		['Shit', 0.4], //From 20% to 39%
@@ -79,30 +82,75 @@ class PlayState extends ScriptedState
 	];
 
 	//event variables
+	/**
+	 * If set to true, the camera focus position won't change every measure.
+	*/
 	private var isCameraOnForcedPos:Bool = false;
 
+	/**
+	 * Map containing all precached characters the player character will change to (with the Change Character event).
+	*/
 	public var boyfriendMap:Map<String, Character> = new Map<String, Character>();
+	/**
+	 * Map containing all precached characters the opponent character will change to (with the Change Character event).
+	*/
 	public var dadMap:Map<String, Character> = new Map<String, Character>();
+	/**
+	 * Map containing all precached characters the speakers (middle) character will change to (with the Change Character event).
+	*/
 	public var gfMap:Map<String, Character> = new Map<String, Character>();
 
-	public var BF_X:Float = 770;
-	public var BF_Y:Float = 100;
-	public var DAD_X:Float = 100;
-	public var DAD_Y:Float = 100;
-	public var GF_X:Float = 400;
-	public var GF_Y:Float = 130;
+	var BF_X:Float = 770;
+	var BF_Y:Float = 100;
+	var DAD_X:Float = 100;
+	var DAD_Y:Float = 100;
+	var GF_X:Float = 400;
+	var GF_Y:Float = 130;
 
-	public var songSpeedTween:FlxTween;
+	/**
+	 * Scroll speed for the current song.
+	*/
 	public var songSpeed(default, set):Float = 1;
+	/**
+	 * Scroll speed type, used in Gameplay Modifiers.
+	*/
 	public var songSpeedType:String = "multiplicative";
+	/**
+	 * Time (in milliseconds) past a note's hit time at which it will despawn.
+	*/
 	public var noteKillOffset:Float = 350;
+	@:dox(hide) var songSpeedTween:FlxTween;
 
+	/**
+	 * The speed multiplier for the song and gameplay. 2x means 200% speed.
+	*/
 	public var playbackRate(default, set):Float = 1;
 
+	/**
+	 * Group containing all precached characters the player character will change to (with the Change Character event).
+	*/
 	public var boyfriendGroup:FlxSpriteGroup;
+	/**
+	 * Group containing all precached characters the player character will change to (with the Change Character event). Shorthand for `boyfriendGroup`.
+	*/
+	public var bfGroup(get, never):FlxSpriteGroup;
+	/**
+	 * Group containing all precached characters the opponent character will change to (with the Change Character event).
+	*/
 	public var dadGroup:FlxSpriteGroup;
+	/**
+	 * Group containing all precached characters the speakers (middle) character will change to (with the Change Character event).
+	*/
 	public var gfGroup:FlxSpriteGroup;
+	
+	/**
+	 * The name of the current stage, defined in the song's JSON.
+	*/
 	public static var curStage:String = '';
+	/**
+	 * The name of the current stage UI, defined in the stage's JSON.
+	 * This changes the image path of UI elements such as the notes and the rating pop ups.
+	*/
 	public static var stageUI(default, set):String = "normal";
 	public static var uiPrefix:String = "";
 	public static var uiPostfix:String = "";
@@ -131,97 +179,282 @@ class PlayState extends ScriptedState
 		return boyfriend;
 	@:noCompletion function get_bfGroup():FlxSpriteGroup
 		return boyfriendGroup;
-
-	public static var SONG:SwagSong = null;
-	public static var EVENTS:SwagSong = null;
 	
+	/**
+	 * Holds data of the current song chart.
+	*/
+	public static var SONG:SwagSong = null;
+	/**
+	 * Holds data of the current events chart (if available).
+	*/
+	public static var EVENTS:SwagSong = null;
+	/**
+	 * Name of the current song, as defined in the chart JSON.
+	*/
+	public var curSong:String = '';
+	/**
+	 * Name of the current song, as defined in the chart JSON, formatted to match the data folder.
+	*/
+	public var songName:String;
+	
+	/**
+	 * Whether this state was entered to from Story Mode.
+	*/
 	public static var isStoryMode:Bool = false;
-	public static var storyWeekData:WeekData = null;
-	public static var storyVariables:Map<String, Dynamic> = [];
+	/**
+	 * Whether this state was entered to from Story Mode.
+	*/
 	public static var storyPlaylist:Array<String> = [];
+	/**
+	 * Holds data of the current story week (if entered to from Story Mode).
+	*/
+	public static var storyWeekData:WeekData = null;
+	/**
+	 * Variables that will persist between Story Mode songs.
+	 * This map is cleared after a story week.
+	*/
+	public static var storyVariables:Map<String, Dynamic> = [];
+	/**
+	 * The ID of the current difficulty selected for this song.
+	*/
 	public static var storyDifficulty:Int = 1;
+	/**
+	 * The ID of the current story week (if entered to from Story Mode).
+	*/
 	public static var storyWeek:Int = 0;
-
+	
+	/**
+	 * The time (in milliseconds) a note can spawn earlier to it's hit time.
+	*/
 	public var spawnTime:Float = 2000;
+	/**
+	 * Whether missing notes should play a sound or not.
+	*/
 	public var playMissSound:Bool = true;
 
+	/**
+	 * The instrumental of the song.
+	*/
 	public var inst:FlxSound;
+	/**
+	 * The [player] vocals of the song.
+	*/
 	public var vocals:FlxSound;
+	/**
+	 * The opponent vocals of the song (if available).
+	*/
 	public var opponentVocals:FlxSound;
-
-	public var dad:Character = null;
-	public var gf:Character = null;
-	public var boyfriend:Character = null;
 	
-	public var bfGroup(get, never):FlxSpriteGroup;
+	/**
+	 * The player side character.
+	*/
+	public var boyfriend:Character = null;
+	/**
+	 * The player side character. Shorthand for `boyfriend`.
+	*/
 	public var bf(get, never):Character;
-
+	/**
+	 * The opponent side character.
+	*/
+	public var dad:Character = null;
+	/**
+	 * The speakers (middle) character.
+	*/
+	public var gf:Character = null;
+	
+	/**
+	 * Group containing all notes currently on-screen.
+	*/
 	public var notes:FlxTypedGroup<Note>;
+	/**
+	 * Array containing all notes queued to spawn later.
+	*/
 	public var unspawnNotes:Array<Note> = [];
+	/**
+	 * Array containing all events queued to be triggered later.
+	*/
 	public var eventNotes:Array<EventNote> = [];
 
+	/**
+	 * Acts as the camera focus. The game camera will follow this object.
+	*/
 	public var camFollow:FlxObject;
-	private static var prevCamFollow:FlxObject;
+	@:dox(hide) private static var prevCamFollow:FlxObject;
 
+	/**
+	 * Group containing all note receptors.
+	*/
 	public var strumLineNotes:FlxTypedSpriteGroup<StrumNote> = new FlxTypedSpriteGroup<StrumNote>();
-	public var opponentStrums:FlxTypedSpriteGroup<StrumNote> = new FlxTypedSpriteGroup<StrumNote>();
-	public var playerStrums:FlxTypedSpriteGroup<StrumNote> = new FlxTypedSpriteGroup<StrumNote>();
-	public var grpNoteSplashes:FlxTypedSpriteGroup<NoteSplash> = new FlxTypedSpriteGroup<NoteSplash>();
+	/**
+	 * Group containing the player's note receptors.
+	*/
+	public var playerStrums:FlxTypedGroup<StrumNote> = new FlxTypedGroup<StrumNote>();
+	/**
+	 * Group containing the opponent's note receptors.
+	*/
+	public var opponentStrums:FlxTypedGroup<StrumNote> = new FlxTypedGroup<StrumNote>();
+	/**
+	 * Group containing all note splashes.
+	*/
+	public var grpNoteSplashes:FlxTypedGroup<NoteSplash> = new FlxTypedGroup<NoteSplash>();
 
+	/**
+	 * Whether the camera should bop every measure or not.
+	 * This is set to true for every opponent note hit, if `camZoomingDisabled` is false.
+	*/
 	public var camZooming:Bool = false;
-	public var camZoomingMult:Float = 1;
-	public var camZoomingDecay:Float = 1;
+	/**
+	 * If true, opponent note hits will not set `camZooming` to true.
+	*/
 	public var camZoomingDisabled:Bool = false;
-	private var curSong:String = "";
+	/**
+	 * Multiplier for the camera bopping.
+	*/
+	public var camZoomingMult:Float = 1;
+	/**
+	 * Multiplier for the decay time of the camera bopping.
+	*/
+	public var camZoomingDecay:Float = 1;
 
+	/**
+	 * How frequently the speakers (middle) character should bop every beat.
+	 * 1 is every one beat, 2 is every two beats, and so on.
+	*/
 	public var gfSpeed:Int = 1;
+	/**
+	 * The health of the player.
+	 * 0 is 0% health, and 2 is 100% health.
+	*/
 	public var health(default, set):Float = 1;
+	/**
+	 * The note combo of the player.
+	*/
 	public var combo:Int = 0;
 
+	/**
+	 * The current song's length (in milliseconds).
+	*/
+	public var songLength:Float = 0;
+	/**
+	 * The current song's progress represented as a `Float`.
+	 * 0 is 0% progressed, and 1 is 100% progressed.
+	*/
+	var songPercent:Float = 0;
 	public var healthBar:Bar;
 	public var timeBar:Bar;
-	var songPercent:Float = 0;
 
+	/**
+	 * Data for the ratings, used to judge note hits.
+	*/
 	public var ratingsData:Array<Rating> = Rating.loadDefault();
 
+	/**
+	 * If the player changed difficulty in the Pause Menu.
+	*/
+	public static var changedDifficulty:Bool = false;
+	/**
+	 * If the player is in Charting Mode.
+	*/
+	public static var chartingMode:Bool = false;
 	public var generatedMusic:Bool = false;
 	public var endingSong:Bool = false;
 	public var startingSong:Bool = false;
-	private var updateTime:Bool = true;
-	public static var changedDifficulty:Bool = false;
-	public static var chartingMode:Bool = false;
+	public var updateTime:Bool = true;
 
 	//Gameplay settings
+	/**
+	 * Multiplier for the health gained by hitting a note successfully.
+	*/
 	public var healthGain:Float = 1;
+	/**
+	 * Multiplier for the health lost by missing a note.
+	*/
 	public var healthLoss:Float = 1;
 
+	/**
+	 * Whether or not Sustains as One Note is enabled.
+	*/
 	public var guitarHeroSustains:Bool = false;
+	/**
+	 * Whether or not the "Instakill on Miss" Gameplay modifier is enabled.
+	*/
 	public var instakillOnMiss:Bool = false;
+	/**
+	 * Whether or not Bot Play is enabled.
+	*/
 	public var cpuControlled:Bool = false;
+	/**
+	 * Whether or not Practice Mode is enabled.
+	*/
 	public var practiceMode:Bool = false;
+	/**
+	 * Whether or not Ghost Tapping is enabled.
+	*/
 	public var ghostTapping:Bool = false;
+	/**
+	 * The default damage caused by missing a note.
+	*/
 	public var pressMissDamage:Float = 0.05;
 
-	public var botplaySine:Float = 0;
 	public var botplayTxt:FlxText;
+	public var botplaySine:Float = 0;
 
+	/**
+	 * The player character's healthbar icon.
+	*/
 	public var iconP1:HealthIcon;
+	/**
+	 * The opponent character's healthbar icon.
+	*/
 	public var iconP2:HealthIcon;
+	/**
+	 * The camera used for the HUD.
+	*/
 	public var camHUD:FlxCamera;
+	/**
+	 * The camera used for the game.
+	*/
 	public var camGame:FlxCamera;
+	/**
+	 * Speed multiplier for the camera to shift towards its focus.
+	*/
 	public var cameraSpeed:Float = 1;
 
+	/**
+	 * The player's current score.
+	*/
 	public var songScore:Int = 0;
+	/**
+	 * How many notes have been successfully hit since the start of the song.
+	*/
 	public var songHits:Int = 0;
+	/**
+	 * How many notes have been missed since the start of the song.
+	*/
 	public var songMisses:Int = 0;
+	/**
+	 * The text that displays the player's current score and rating.
+	*/
 	public var scoreTxt:FlxText;
-	var timeTxt:FlxText;
+	public var timeTxt:FlxText;
 	var scoreTxtTween:FlxTween;
 
+	/**
+	 * The player's accumulated score since the start of the week (in Story Mode).
+	*/
 	public static var campaignScore:Int = 0;
+	/**
+	 * The player's accumulated miss count since the start of the week (in Story Mode).
+	*/
 	public static var campaignMisses:Int = 0;
-	public static var seenCutscene:Bool = false;
+	/**
+	 * The amount of times the player has died in this song.
+	*/
 	public static var deathCounter:Int = 0;
+	/**
+	 * Whether or not the player has seen the current song's cutscene.
+	*/
+	public static var seenCutscene:Bool = false;
 
 	public var defaultCamZoom:Float = 1.05;
 
@@ -229,12 +462,28 @@ class PlayState extends ScriptedState
 	public static var daPixelZoom:Float = 6;
 	private var singAnimations:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
 
+	/**
+	 * Whether or not the player is currently viewing a cutscene.
+	 * Setting to true pauses certain gameplay inputs and logic.
+	*/
 	public var inCutscene:Bool = false;
+	/**
+	 * Whether or not the game should skip the countdown sequence.
+	 * Only effective if changed during state creation!
+	*/
 	public var skipCountdown:Bool = false;
-	var songLength:Float = 0;
 
+	/**
+	 * The player character's camera offset, as defined in the stage JSON.
+	*/
 	public var boyfriendCameraOffset:Array<Float> = null;
+	/**
+	 * The opponent character's camera offset, as defined in the stage JSON.
+	*/
 	public var opponentCameraOffset:Array<Float> = null;
+	/**
+	 * The speakers (middle) character's camera offset, as defined in the stage JSON.
+	*/
 	public var girlfriendCameraOffset:Array<Float> = null;
 
 	#if DISCORD_ALLOWED
@@ -245,21 +494,32 @@ class PlayState extends ScriptedState
 	#end
 
 	//Achievement shit
-	var keysPressed:Array<Int> = [];
-	var boyfriendIdleTime:Float = 0.0;
-	var boyfriendIdled:Bool = false;
+	@:dox(hide) var keysPressed:Array<Int> = [];
+	@:dox(hide) var boyfriendIdleTime:Float = 0.0;
+	@:dox(hide) var boyfriendIdled:Bool = false;
 
 	// Lua shit
+	/**
+	 * The current PlayState instance.
+	*/
 	public static var instance:PlayState;
 	
+	/**
+	 * Suffix for the sounds played during the countdown.
+	*/
 	public var introSoundsSuffix:String = '';
 
 	// Less laggy controls
 	private var keysArray:Array<String>;
-	public var songName:String;
 
 	// Callbacks for stages
+	/**
+	 * Function called before the countdown starts.
+	*/
 	public var startCallback:Void->Void = null;
+	/**
+	 * Function called before the song finishes.
+	*/
 	public var endCallback:Void->Void = null;
 
 	private static var _lastLoadedModDirectory:String = '';
@@ -772,11 +1032,16 @@ class PlayState extends ScriptedState
 		return playbackRate;
 	}
 
-	public function reloadHealthBarColors() {
+	function reloadHealthBarColors() {
 		healthBar.setColors(FlxColor.fromRGB(dad.healthColorArray[0], dad.healthColorArray[1], dad.healthColorArray[2]),
 			FlxColor.fromRGB(boyfriend.healthColorArray[0], boyfriend.healthColorArray[1], boyfriend.healthColorArray[2]));
 	}
 
+	/**
+	 * Precaches a character.
+	 * 
+	 * @param 	type 	Side to precache the character on. 0: Player. 1: Opponent. 2: Speakers (middle)
+	*/
 	public function addCharacterToList(newCharacter:String, type:Int) {
 		switch(type) {
 			case 0:
@@ -812,7 +1077,7 @@ class PlayState extends ScriptedState
 		}
 	}
 
-	function startCharacterScripts(name:String)
+	@:dox(hide) function startCharacterScripts(name:String)
 	{
 		// Lua
 		#if LUA_ALLOWED
@@ -878,11 +1143,16 @@ class PlayState extends ScriptedState
 		}
 		#end
 	}
-
+	
+	/**
+	 * Gets an object defined in the `variables` map (ex. from Lua scripts)
+	 * 
+	 * @param 	tag 	`String` tag for this object.
+	*/
 	public function getLuaObject(tag:String):Dynamic
 		return variables.get(tag);
 
-	function startCharacterPos(char:Character, ?gfCheck:Bool = false) {
+	@:dox(hide) function startCharacterPos(char:Character, ?gfCheck:Bool = false) {
 		if(gfCheck && char.curCharacter.startsWith('gf')) { //IF DAD IS GIRLFRIEND, HE GOES TO HER POSITION
 			char.setPosition(GF_X, GF_Y);
 			char.scrollFactor.set(0.95, 0.95);
@@ -892,7 +1162,19 @@ class PlayState extends ScriptedState
 		char.y += char.positionArray[1];
 	}
 
+	/**
+	 * Video instance used when playing cutscenes.
+	*/
 	public var videoCutscene:VideoSprite = null;
+	/**
+	 * Starts a video cutscene.
+	 * 
+	 * @param 	name 		Name of the video to play (should be in the `videos/` folder)
+	 * @param 	forMidSong  Whether or not the game should be paused until the cutscene finishes.
+	 * @param 	canSkip 	Whether this cutscene can be skipped.
+	 * @param 	loop 		Whether the cutscene video should loop.
+	 * @param 	playOnLoad 	Whether or not the cutscene should be played instantly after loading.
+	*/
 	public function startVideo(name:String, forMidSong:Bool = false, canSkip:Bool = true, loop:Bool = false, playOnLoad:Bool = true)
 	{
 		#if VIDEOS_ALLOWED
@@ -951,7 +1233,7 @@ class PlayState extends ScriptedState
 		return null;
 	}
 
-	function startAndEnd() {
+	@:dox(hide) function startAndEnd() {
 		if (endingSong) {
 			endSong();
 		} else {
@@ -959,6 +1241,11 @@ class PlayState extends ScriptedState
 		}
 	}
 	
+	/**
+	 * Restarts this song.
+	 * 
+	 * @param 	skipTransition 	Whether the fade transition should be skipped when restarting.
+	*/
 	public static function restartSong(skipTransition:Bool = false):Void {
 		if (instance == null || instance.callOnScripts('onRestartSong', null, true) == LuaUtils.Function_Stop) return;
 		
@@ -972,6 +1259,12 @@ class PlayState extends ScriptedState
 		}
 		MusicBeatState.resetState();
 	}
+	/**
+	 * Exits from this song to the menu.
+	 * Does not save highscore or any achievements obtained from completing the song.
+	 * 
+	 * @param 	skipTransition 	Whether the fade transition should be skipped when exiting.
+	*/
 	public static function exitSong(skipTransition:Bool = false):Void {
 		if (instance == null || instance.callOnScripts('onExitSong', null, true) == LuaUtils.Function_Stop) return;
 		
@@ -1002,6 +1295,12 @@ class PlayState extends ScriptedState
 	var dialogueCount:Int = 0;
 	public var psychDialogue:DialogueBoxPsych;
 	//You don't have to add a song, just saying. You can just do "startDialogue(DialogueBoxPsych.parseDialogue(Paths.json(songName + '/dialogue')))" and it should load dialogue.json
+	/**
+	 * Starts a dialogue cutscene.
+	 * 
+	 * @param 	dialogueFile 	Dialogue file used to play the cutscene. Use `DialogueBoxPsych.parseDialogue(path)` to parse a file!
+	 * @param 	song 			If specified, plays music with this name. Should be in the `music/` folder.
+	*/
 	public function startDialogue(dialogueFile:DialogueFile, ?song:String = null):Void
 	{
 		// TO DO: Make this more flexible, maybe?
@@ -1036,12 +1335,24 @@ class PlayState extends ScriptedState
 	var finishTimer:FlxTimer = null;
 
 	// For being able to mess with the sprites on Lua
+	/**
+	 * Countdown "Ready" sprite. Useful for Lua scripts.
+	*/
 	public var countdownReady:FlxSprite;
+	/**
+	 * Countdown "Set" sprite. Useful for Lua scripts.
+	*/
 	public var countdownSet:FlxSprite;
+	/**
+	 * Countdown "Go" sprite. Useful for Lua scripts.
+	*/
 	public var countdownGo:FlxSprite;
+	/**
+	 * Time (in milliseconds) for the song to start at. Useful for playtesting.
+	*/
 	public static var startOnTime:Float = 0;
 
-	function cacheCountdown()
+	@:dox(hide) function cacheCountdown()
 	{
 		var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
 		var introImagesArray:Array<String> = [formatUI('ready'), formatUI('set'), formatUI('go')];
@@ -1055,6 +1366,9 @@ class PlayState extends ScriptedState
 		Paths.sound('introGo' + introSoundsSuffix);
 	}
 
+	/**
+	 * Prepares the game and starts the countdown.
+	*/
 	public function startCountdown()
 	{
 		if (startedCountdown) {
@@ -1104,7 +1418,7 @@ class PlayState extends ScriptedState
 		return true;
 	}
 	
-	static var introAssets:Map<String, Array<String>> = [];
+	@:dox(hide) static var introAssets:Map<String, Array<String>> = [];
 	public function countdownTick(tick:Countdown):Void {
 		if (skipCountdown) return;
 		
@@ -1163,19 +1477,39 @@ class PlayState extends ScriptedState
 		return spr;
 	}
 
+	/**
+	 * Adds a sprite behind `gfGroup`.
+	 * 
+	 * @param 	obj 	The object to add.
+	*/
 	public function addBehindGF(obj:FlxBasic)
 	{
 		insert(members.indexOf(gfGroup), obj);
 	}
+	/**
+	 * Adds a sprite behind `boyfriendGroup`.
+	 * 
+	 * @param 	obj 	The object to add.
+	*/
 	public function addBehindBF(obj:FlxBasic)
 	{
 		insert(members.indexOf(boyfriendGroup), obj);
 	}
+	/**
+	 * Adds a sprite behind `dadGroup`.
+	 * 
+	 * @param 	obj 	The object to add.
+	*/
 	public function addBehindDad(obj:FlxBasic)
 	{
 		insert(members.indexOf(dadGroup), obj);
 	}
 
+	/**
+	 * Clears all notes before the specified time (in milliseconds).
+	 * 
+	 * @param 	time 	The time to clear all notes until.
+	*/
 	public function clearNotesBefore(time:Float)
 	{
 		var i:Int = unspawnNotes.length - 1;
@@ -1212,6 +1546,12 @@ class PlayState extends ScriptedState
 	// `updateScore = function(miss:Bool = false) { ... }
 	// its like if it was a variable but its just a function!
 	// cool right? -Crow
+	/**
+	 * Updates the score and calls `preUpdateScore` and `onUpdateScore` on Lua.
+	 * 
+	 * @param 	miss 		Whether or not the score was updated from a note miss.
+	 * @param 	scoreBop 	Whether or not the score text should have a bopping animation.
+	*/
 	public dynamic function updateScore(miss:Bool = false, scoreBop:Bool = true)
 	{
 		var ret:Dynamic = callOnScripts('preUpdateScore', [miss], true);
@@ -1225,6 +1565,9 @@ class PlayState extends ScriptedState
 		callOnScripts('onUpdateScore', [miss]);
 	}
 
+	/**
+	 * Updates the score text.
+	*/
 	public dynamic function updateScoreText()
 	{
 		var str:String = Language.getPhrase('rating_$ratingName', ratingName);
@@ -1240,12 +1583,15 @@ class PlayState extends ScriptedState
 		scoreTxt.text = tempScore;
 	}
 
+	/**
+	 * Updates the FC status and saves it in the `ratingFC` variable.
+	*/
 	public dynamic function fullComboFunction()
 	{
 		var sicks:Int = ratingsData[0].hits;
-		var goods:Int = ratingsData[1].hits;
-		var bads:Int = ratingsData[2].hits;
-		var shits:Int = ratingsData[3].hits;
+		var goods:Int = (ratingsData[1]?.hits ?? 0);
+		var bads:Int = (ratingsData[2]?.hits ?? 0);
+		var shits:Int = (ratingsData[3]?.hits ?? 0);
 
 		ratingFC = "";
 		if(songMisses == 0)
@@ -1260,6 +1606,9 @@ class PlayState extends ScriptedState
 		}
 	}
 
+	/**
+	 * Makes the score text do a bopping animation.
+	*/
 	public function doScoreBop():Void {
 		if(!ClientPrefs.data.scoreZoom)
 			return;
@@ -1276,6 +1625,12 @@ class PlayState extends ScriptedState
 		});
 	}
 
+	/**
+	 * Changes the song time.
+	 * 
+	 * @param 	time 	The time (in milliseconds) to change the song time to.
+	 * @param 	offset 	Whether or not the time should consider the Conductor offset.
+	*/
 	public function setSongTime(time:Float, offset:Bool = true)
 	{
 		FlxG.sound.music.pause();
@@ -1353,11 +1708,20 @@ class PlayState extends ScriptedState
 		callOnScripts('onSongStart', [startPos]);
 	}
 
-	private var noteTypes:Array<String> = [];
-	private var eventsPushed:Array<String> = [];
-	private var totalColumns: Int = 4;
+	/**
+	 * Array containing all unique note types found in the chart.
+	*/
+	public var noteTypes:Array<String> = [];
+	/**
+	 * Array containing all unique events found in the chart.
+	*/
+	public var eventsPushed:Array<String> = [];
+	/**
+	 * The total amount of columns per strumline.
+	*/
+	public var totalColumns: Int = 4;
 
-	private function generateSong():Void
+	@:dox(hide) private function generateSong():Void
 	{
 		// FlxG.log.add(ChartParser.parse());
 		songSpeed = PlayState.SONG.speed;
@@ -1537,6 +1901,11 @@ class PlayState extends ScriptedState
 	}
 
 	// called only once per different event (Used for precaching)
+	/**
+	 * Called once every time an event is found in the chart.
+	 * 
+	 * @param 	event 	The `EventNote` of the found event.
+	*/
 	function eventPushed(event:EventNote) {
 		eventPushedUnique(event);
 		if(eventsPushed.contains(event.event)) {
@@ -1548,6 +1917,11 @@ class PlayState extends ScriptedState
 	}
 
 	// called by every event with the same name
+	/**
+	 * Called every time an event is found in the chart.
+	 * 
+	 * @param 	event 	The `EventNote` of the found event.
+	*/
 	function eventPushedUnique(event:EventNote) {
 		switch(event.event) {
 			case "Change Character":
@@ -1572,6 +1946,13 @@ class PlayState extends ScriptedState
 		stagesFunc(function(stage:BaseStage) stage.eventPushedUnique(event));
 	}
 
+	/**
+	 * Called every time an event is found in the chart.
+	 * 
+	 * @param 	event 	The `EventNote` of the found event.
+	 * 
+	 * @return 	The time (in milliseconds) of how early the event should play to it's chart time.
+	*/
 	function eventEarlyTrigger(event:EventNote):Float {
 		var returnedValue:Dynamic = callOnScripts('eventEarlyTrigger', [event.event, event.value1, event.value2, event.strumTime], true);
 		if (returnedValue != null && Std.isOfType(returnedValue, Float) && returnedValue != 0) {
@@ -1585,10 +1966,18 @@ class PlayState extends ScriptedState
 		return 0;
 	}
 
-	public static function sortByTime(Obj1:Dynamic, Obj2:Dynamic):Int
-		return FlxSort.byValues(FlxSort.ASCENDING, Obj1.strumTime, Obj2.strumTime);
+	/**
+	 * Sorts two objects by their `strumTime` in ascending order.
+	 * 
+	 * @param 	a 	First object to sort.
+	 * @param 	b 	Second object to sort.
+	 * 
+	 * @return 	Sort order.
+	*/
+	public static function sortByTime(a:Dynamic, b:Dynamic):Int
+		return FlxSort.byValues(FlxSort.ASCENDING, a.strumTime, b.strumTime);
 
-	function makeEvent(event:Array<Dynamic>, i:Int)
+	@:dox(hide) function makeEvent(event:Array<Dynamic>, i:Int)
 	{
 		var subEvent:EventNote = {
 			strumTime: event[0] + ClientPrefs.data.noteOffset,
@@ -1601,6 +1990,9 @@ class PlayState extends ScriptedState
 		callOnScripts('onEventPushed', [subEvent.event, subEvent.value1 != null ? subEvent.value1 : '', subEvent.value2 != null ? subEvent.value2 : '', subEvent.strumTime]);
 	}
 	
+	/**
+	 * Whether or not the note fade-in animation should be skipped at the start of a song. Ignored in Story Mode or when `skipCountdown` is true.
+	*/
 	public var skipArrowStartTween:Bool = false; //for lua
 	private function generateStaticArrows(player:Bool):Void
 	{
@@ -1744,11 +2136,29 @@ class PlayState extends ScriptedState
 		}
 	}
 
+	/**
+	 * Whether or not the game is paused.
+	*/
 	public var paused:Bool = false;
+	/**
+	 * Whether or not the player can use the Reset button to die.
+	*/
 	public var canReset:Bool = true;
+	/**
+	 * Whether or not the countdown has started.
+	*/
 	public var startedCountdown:Bool = false;
+	/**
+	 * Whether or not the player can pause.
+	*/
 	public var canPause:Bool = true;
+	/**
+	 * Whether or not the camera should be frozen.
+	*/
 	public var freezeCamera:Bool = false;
+	/**
+	 * Whether or not the player can use the Debug keys to go to the Chart or Character editors.
+	*/
 	public var allowDebugKeys:Bool = true;
 
 	override public function update(elapsed:Float)
@@ -1886,7 +2296,7 @@ class PlayState extends ScriptedState
 							if (daNote == null || !daNote.exists || !daNote.alive)
 								continue;
 							
-							var strumGroup:FlxTypedSpriteGroup<StrumNote> = playerStrums;
+							var strumGroup:FlxTypedGroup<StrumNote> = playerStrums;
 							if(!daNote.mustPress) strumGroup = opponentStrums;
 
 							var strum:StrumNote = strumGroup.members[daNote.noteData];
@@ -1949,6 +2359,11 @@ class PlayState extends ScriptedState
 	}
 
 	// Health icon updaters
+	/**
+	 * Updates the scale of the icons.
+	 * 
+	 * @param 	elapsed 	Elapsed time (in seconds) since last frame.
+	*/
 	public dynamic function updateIconsScale(elapsed:Float)
 	{
 		var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Math.exp(-elapsed * 9 * playbackRate));
@@ -1960,6 +2375,9 @@ class PlayState extends ScriptedState
 		iconP2.updateHitbox();
 	}
 
+	/**
+	 * Updates the position of the icons.
+	*/
 	public dynamic function updateIconsPosition()
 	{
 		var iconOffset:Int = 26;
@@ -1967,6 +2385,9 @@ class PlayState extends ScriptedState
 		iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x) / 2 - iconOffset * 2;
 	}
 
+	/**
+	 * Whether or not the icons can change their animation frame when setting health.
+	*/
 	var iconsAnimations:Bool = true;
 	function set_health(value:Float):Float // You can alter how icon animations work here
 	{
@@ -1987,6 +2408,9 @@ class PlayState extends ScriptedState
 		return health;
 	}
 
+	/**
+	 * Pauses the game and opens the Pause menu.
+	*/
 	function openPauseMenu()
 	{
 		FlxG.camera.followLerp = 0;
@@ -2010,6 +2434,9 @@ class PlayState extends ScriptedState
 		#end
 	}
 
+	/**
+	 * Opens the Chart Editor.
+	*/
 	function openChartEditor()
 	{
 		canResync = false;
@@ -2033,6 +2460,9 @@ class PlayState extends ScriptedState
 		MusicBeatState.switchState(new ChartingState());
 	}
 
+	/**
+	 * Opens the Character Editor.
+	*/
 	function openCharacterEditor()
 	{
 		canResync = false;
@@ -2051,8 +2481,11 @@ class PlayState extends ScriptedState
 		MusicBeatState.switchState(new CharacterEditorState(SONG.player2));
 	}
 
+	/**
+	 * Whether or not the player is dead.
+	*/
 	public var isDead:Bool = false; //Don't mess with this on Lua!!!
-	public var gameOverTimer:FlxTimer;
+	@:dox(hide) var gameOverTimer:FlxTimer;
 	function doDeathCheck(?skipHealthCheck:Bool = false) {
 		if (((skipHealthCheck && instakillOnMiss) || health <= 0) && !practiceMode && !isDead && gameOverTimer == null)
 		{
@@ -2113,7 +2546,7 @@ class PlayState extends ScriptedState
 		return false;
 	}
 
-	public function checkEventNote() {
+	function checkEventNote() {
 		while(eventNotes.length > 0) {
 			var leStrumTime:Float = eventNotes[0].strumTime;
 			if(Conductor.songPosition < leStrumTime) {
@@ -2133,6 +2566,14 @@ class PlayState extends ScriptedState
 		}
 	}
 
+	/**
+	 * Triggers an event.
+	 * 
+	 * @param 	eventName 	The name of the event.
+	 * @param 	value1 		The first value of the event.
+	 * @param 	value2 		The second value of the event.
+	 * @param 	strumTime 	The time (in milliseconds) this event is triggered on.
+	*/
 	public function triggerEvent(eventName:String, value1:String, value2:String, strumTime:Float) {
 		var flValue1:Null<Float> = Std.parseFloat(value1);
 		var flValue2:Null<Float> = Std.parseFloat(value2);
@@ -2401,10 +2842,19 @@ class PlayState extends ScriptedState
 		}
 	}
 	
+	/**
+	 * Focuses the camera on `gf`.
+	*/
 	public function moveCameraToGirlfriend() {
 		moveCamera(false, true);
 	}
 	
+	/**
+	 * Focuses the camera on a character.
+	 * 
+	 * @param 	isDad 	If the camera should be focused on the opponent character.
+	 * @param 	isGf 	If the camera should be focused on the speakers (middle) character.
+	*/
 	public function moveCamera(isDad:Bool, isGf:Bool = false) {
 		var character:String;
 		if (isGf) {
@@ -2437,6 +2887,11 @@ class PlayState extends ScriptedState
 		callOnScripts('onMoveCamera', [character]);
 	}
 
+	/**
+	 * Finishes the song.
+	 * 
+	 * @param 	ignoreNoteOffset 	Whether or not to ignore the note delay.
+	*/
 	public function finishSong(?ignoreNoteOffset:Bool = false):Void
 	{
 		updateTime = false;
@@ -2455,9 +2910,8 @@ class PlayState extends ScriptedState
 			});
 		}
 	}
-
-
-	public var transitioning = false;
+	
+	var transitioning = false;
 	public function endSong()
 	{
 		//Should kill you if you tried to cheat
@@ -2572,7 +3026,7 @@ class PlayState extends ScriptedState
 		
 		return true;
 	}
-
+	
 	public function KillNotes() {
 		while(notes.length > 0) {
 			var daNote:Note = notes.members[0];
@@ -2583,22 +3037,46 @@ class PlayState extends ScriptedState
 		unspawnNotes = [];
 		eventNotes = [];
 	}
-
+	
+	/**
+	 * The total amount of notes hit or missed since the start of the song.
+	*/
 	public var totalPlayed:Int = 0;
+	/**
+	 * The rating factor for all notes hit since the start of the song.
+	*/
 	public var totalNotesHit:Float = 0.0;
 
+	/**
+	 * Whether the combo graphic should be shown on combo pop-ups.
+	*/
 	public var showCombo:Bool = false;
+	/**
+	 * Whether the combo numbers should be shown on combo pop-ups.
+	*/
 	public var showComboNum:Bool = true;
+	/**
+	 * Whether the rating graphic should be shown on combo pop-ups.
+	*/
 	public var showRating:Bool = true;
 
 	// Stores Ratings and Combo Sprites in a group
+	/**
+	 * Group containing the combo sprites.
+	*/
 	public var comboGroup:FlxSpriteGroup;
 	// Stores HUD Objects in a Group
+	/**
+	 * Group containing the UI sprites.
+	*/
 	public var uiGroup:FlxSpriteGroup;
 	// Stores Note Objects in a Group
+	/**
+	 * Group containing the notes sprites, including the strumlines.
+	*/
 	public var noteGroup:FlxTypedGroup<FlxBasic>;
 
-	private function cachePopUpScore()
+	@:dox(hide) private function cachePopUpScore()
 	{
 		for (rating in ratingsData)
 			Paths.image(formatUI(rating.image));
@@ -2897,6 +3375,11 @@ class PlayState extends ScriptedState
 					keyReleased(i);
 	}
 
+	/**
+	 * Called whenever a note is missed.
+	 * 
+	 * @param 	daNote 	The missed note.
+	*/
 	function noteMiss(daNote:Note):Void { //You didn't hit the key and let it go offscreen, also used by Hurt Notes
 		var result:Dynamic = callOnLuas('noteMissPre', [notes.members.indexOf(daNote), daNote.noteData, daNote.noteType, daNote.isSustainNote]);
 		if (result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) result = callOnHScript('noteMissPre', [daNote]);
@@ -2915,7 +3398,12 @@ class PlayState extends ScriptedState
 		if (result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) callOnHScript('noteMiss', [daNote]);
 	}
 
-	function noteMissPress(direction:Int = 1):Void //You pressed a key when there was no notes to press for this key
+	/**
+	 * Called whenever a miss happens by ghost tapping (a key was pressed when there was no notes to hit).
+	 * 
+	 * @param 	direction 	The direction ID of the miss.
+	*/
+	function noteMissPress(direction:Int = 1):Void
 	{
 		if (ghostTapping) return; //fuck it
 
@@ -3009,6 +3497,11 @@ class PlayState extends ScriptedState
 		vocals.volume = 0;
 	}
 
+	/**
+	 * Called whenever a note is hit by the opponent.
+	 * 
+	 * @param 	note 	The note that was hit.
+	*/
 	function opponentNoteHit(note:Note):Void
 	{
 		var result:Dynamic = callOnLuas('opponentNoteHitPre', [notes.members.indexOf(note), Math.abs(note.noteData), note.noteType, note.isSustainNote]);
@@ -3055,6 +3548,11 @@ class PlayState extends ScriptedState
 		if (!note.isSustainNote) invalidateNote(note);
 	}
 
+	/**
+	 * Called whenever a note is hit by the player.
+	 * 
+	 * @param 	note 	The note that was hit.
+	*/
 	public function goodNoteHit(note:Note):Void
 	{
 		if(note.wasGoodHit) return;
@@ -3153,6 +3651,14 @@ class PlayState extends ScriptedState
 		if(!note.isSustainNote) invalidateNote(note);
 	}
 	
+	/**
+	 * Gets the character assigned to a note.
+	 * 
+	 * @param 	note 				The note to check.
+	 * @param 	defaultCharacter	The character to fall back to if none is assigned.
+	 * 
+	 * @return 	The `Character` assigned to a note.
+	*/
 	public function getNoteCharacter(?note:Note, ?defaultCharacter:Character):Character {
 		if (note == null) return defaultCharacter;
 		
@@ -3162,6 +3668,11 @@ class PlayState extends ScriptedState
 		return note.character;
 	}
 
+	/**
+	 * Destroys a note. Also calls `onDestroyNote` in Lua.
+	 * 
+	 * @param 	note 	The note to destroy.
+	*/
 	public function invalidateNote(note:Note):Void {
 		// i dont think preventing the note from being destroyed would do the game any good
 		callOnLuas('onDestroyNote', [notes.members.indexOf(note), note.noteData, note.noteType, note.isSustainNote]);
@@ -3172,6 +3683,11 @@ class PlayState extends ScriptedState
 		note.destroy();
 	}
 
+	/**
+	 * Spawns a note splash on the note's receptor (strum).
+	 * 
+	 * @param 	note 	The note to use.
+	*/
 	public function spawnNoteSplashOnNote(note:Note):NoteSplash {
 		if(note != null) {
 			var strum:StrumNote = playerStrums.members[note.noteData];
@@ -3181,6 +3697,17 @@ class PlayState extends ScriptedState
 		return null;
 	}
 
+	/**
+	 * Spawns a note splash.
+	 * 
+	 * @param 	x 		The x position of the note splash.
+	 * @param 	y 		The y position of the note splash.
+	 * @param 	data 	The note data ID of the note splash.
+	 * @param 	note 	The note assigned to the note splash.
+	 * @param 	strum 	The note receptor (strum) assigned to the note splash.
+	 * 
+	 * @return 	A new `NoteSplash` instance.
+	*/
 	public function spawnNoteSplash(x:Float = 0, y:Float = 0, ?data:Int = 0, ?note:Note, ?strum:StrumNote):NoteSplash {
 		var splash:NoteSplash = grpNoteSplashes.recycle(NoteSplash);
 		splash.babyArrow = strum;
@@ -3258,6 +3785,11 @@ class PlayState extends ScriptedState
 		lastBeatHit = beat;
 	}
 
+	/**
+	 * Handles the character bopping.
+	 * 
+	 * @param 	beat 	The current beat.
+	*/
 	public function characterBopper(beat:Int):Void {
 		if (gf != null && beat % Math.round(gfSpeed * gf.danceEveryNumBeats) == 0 && !gf.getAnimationName().startsWith('sing') && !gf.stunned)
 			gf.dance();
@@ -3267,7 +3799,7 @@ class PlayState extends ScriptedState
 			dad.dance();
 	}
 
-	public function playerDance():Void {
+	function playerDance():Void {
 		var anim:String = boyfriend.getAnimationName();
 		if(boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 #if FLX_PITCH / FlxG.sound.music.pitch #end) * boyfriend.singDuration && anim.startsWith('sing') && !anim.endsWith('miss'))
 			boyfriend.dance();
@@ -3297,6 +3829,13 @@ class PlayState extends ScriptedState
 		super.sectionHit(section);
 	}
 
+	/**
+	 * Plays the confirm animation on a note receptor (strum).
+	 * 
+	 * @param 	isDad 	Whether the strumline should be the opponent's or the player's.
+	 * @param 	id 		The ID of the note receptor in the strumline.
+	 * @param 	time 	The time (in seconds) until the animation resets.
+	*/
 	function strumPlayAnim(isDad:Bool, id:Int, time:Float) {
 		var spr:StrumNote = null;
 		if(isDad) {
@@ -3311,9 +3850,25 @@ class PlayState extends ScriptedState
 		}
 	}
 
+	/**
+	 * The name of the current rating.
+	*/
 	public var ratingName:String = '?';
+	/**
+	 * The player's accuracy, represented as a `Float`.
+	 * 0 is 0% accuracy, and 1 is 100% accuracy.
+	*/
 	public var ratingPercent:Float;
+	/**
+	 * The player's FC status.
+	*/
 	public var ratingFC:String;
+	/**
+	 * Recalculates the rating and updates the score.
+	 * 
+	 * @param 	badHit 		Whether or not the rating was updated from a note miss.
+	 * @param 	scoreBop 	Whether or not the score text should have a bopping animation.
+	*/
 	public function RecalculateRating(badHit:Bool = false, scoreBop:Bool = true) {
 		setOnScripts('score', songScore);
 		setOnScripts('misses', songMisses);
@@ -3351,7 +3906,7 @@ class PlayState extends ScriptedState
 	}
 
 	#if ACHIEVEMENTS_ALLOWED
-	private function checkForAchievement(achievesToCheck:Array<String> = null)
+	@:dox(hide) private function checkForAchievement(achievesToCheck:Array<String> = null)
 	{
 		if(chartingMode || cpuControlled) return;
 

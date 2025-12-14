@@ -11,6 +11,15 @@ import psychlua.GlobalScriptHandler;
 class ScriptedState extends ScriptedSubState {
 	public var camOther:FlxCamera = null;
 	
+	@:dox(hide) var _psychCameraInitialized:Bool = false;
+	
+	/**
+	 * Shows a text string at the top-left of the game screen. Useful for debugging.
+	 * 
+	 * @param 	text 	The text to add.
+	 * @param 	color 	The color of the text to add.
+	 * @param 	size 	Optional parameter for the size of the text to add.
+	*/
 	public static function debugPrint(text:String, ?color:FlxColor, ?size:Int):Void {
 		Log.print(text, (color == null ? NONE : CUSTOM(color)), size);
 	}

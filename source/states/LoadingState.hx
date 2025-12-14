@@ -881,7 +881,7 @@ class LoadingState extends ScriptedState
     #end
 }
 
-enum LoaderJob {
+@:dox(hide) enum LoaderJob {
 	SOUND(key:String, ?path:String, ?ignoreMods:Bool);
 	BMD(key:String);
 }

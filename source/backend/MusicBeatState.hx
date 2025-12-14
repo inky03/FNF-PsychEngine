@@ -11,14 +11,25 @@ import psychlua.GlobalScriptHandler;
 class MusicBeatState extends MusicBeatSubstate {
 	public var camOther:FlxCamera = null;
 	public static var timePassedOnState:Float = 0;
+	@:dox(hide) var _psychCameraInitialized:Bool = false;
 	
 	public function new() {
 		super();
 	}
 	
-	public static function getState():MusicBeatSubstate {
-		return cast (FlxG.state, MusicBeatSubstate);
+	/**
+	 * Gets the current state.
+	 * 
+	 * @return 	The current `MusicBeatState`.
+	*/
+	public static function getState():MusicBeatState {
+		return cast (FlxG.state, MusicBeatState);
 	}
+	/**
+	 * Retrieves the current state's custom variables map.
+	 * 
+	 * @return 	The custom variables map.
+	*/
 	public static function getVariables():Map<String, Dynamic> {
 		return FlxG.state.extraData;
 	}
@@ -34,7 +45,7 @@ class MusicBeatState extends MusicBeatSubstate {
 		
 		timePassedOnState = 0;
 	}
-	public override function preCreate():Void {
+	override function preCreate():Void {
 		#if GLOBAL_SCRIPTS GlobalScriptHandler.refreshScripts(); #end
 		
 		if (camOther == null) {
@@ -48,13 +59,18 @@ class MusicBeatState extends MusicBeatSubstate {
 		
 		super.preCreate();
 	}
-	override function _preCreate():Void {
+	@:dox(hide) override function _preCreate():Void {
 		MusicBeatSubstate.callGlobal('onCreateState', [this, Type.getClass(this)]);
 	}
-	override function _postCreate():Void {
+	@:dox(hide) override function _postCreate():Void {
 		MusicBeatSubstate.callGlobal('onCreateStatePost', [this, Type.getClass(this)]);
 	}
 	
+	/**
+	 * Initializes a PsychCamera and makes it the default camera.
+	 * 
+	 * @return 	A new `PsychCamera`.
+	*/
 	public function initPsychCamera():PsychCamera {
 		var camera = new PsychCamera();
 		FlxG.cameras.reset(camera);
@@ -63,6 +79,11 @@ class MusicBeatState extends MusicBeatSubstate {
 		return camera;
 	}
 
+	/**
+	 * Switches to a new state, playing a transition. Calls `onSwitchState` on global scripts.
+	 * 
+	 * @param 	nextState 	The next state to switch to.
+	*/
 	public static function switchState(?nextState:FlxState):Void {
 		if (MusicBeatSubstate.callGlobal('onSwitchState', [nextState, Type.getClass(nextState)]) != psychlua.LuaUtils.Function_Stop) {
 			if (nextState == null)
@@ -78,6 +99,9 @@ class MusicBeatState extends MusicBeatSubstate {
 		}
 	}
 
+	/**
+	 * Resets the current state, playing a transition.
+	*/
 	public static function resetState():Void {
 		if (FlxTransitionableState.skipNextTransIn) {
 			FlxG.resetState();
@@ -89,6 +113,11 @@ class MusicBeatState extends MusicBeatSubstate {
 	}
 
 	// Custom made Trans in
+	/**
+	 * Starts a transition to a new state.
+	 * 
+	 * @param 	nextState 	The next state to switch to.
+	*/
 	public static function startTransition(?nextState:FlxState):Void {
 		FlxG.state.openSubState(new CustomFadeTransition(.5, false));
 		

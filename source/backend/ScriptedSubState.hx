@@ -17,6 +17,28 @@ import crowplexus.hscript.Printer;
 import psychlua.GlobalScriptHandler;
 #end
 
+/**
+ * ScriptedSubState is the base for scripted states and sub-states in the game.
+ * It automatically handles script initialization and most generic script calls.
+ * 
+ * ## Generic script calls
+ * ```haxe
+ * function onCreate() {}
+ * function onCreatePost() {}
+ * 
+ * function onUpdate(elapsed:Float) {}
+ * function onUpdatePost(elapsed:Float) {}
+ * 
+ * function onDraw() {}
+ * function onDrawPost() {}
+ * 
+ * function onStepHit(step:Int) {}
+ * function onBeatHit(beat:Int) {}
+ * function onSectionHit(measure:Int) {}
+ * 
+ * function onClose() {}
+ * ```
+*/
 class ScriptedSubState extends MusicBeatSubstate {
 	#if LUA_ALLOWED public var luaArray:Array<FunkinLua> = []; #end
 	#if HSCRIPT_ALLOWED public var hscriptArray:Array<HScript> = []; #end
@@ -122,6 +144,11 @@ class ScriptedSubState extends MusicBeatSubstate {
 		super.destroy();
 	}
 	
+	/**
+	 * Gets the name used in a [scripted] state to find and load scripts.
+	 * 
+	 * @return 	Custom state name.
+	*/
 	public static function getStateName(state:flixel.FlxState):String { // Used to load the appropriate substate script
 		if (state is ScriptedSubState) {
 			return cast(state, ScriptedSubState).customStateName();
@@ -130,6 +157,9 @@ class ScriptedSubState extends MusicBeatSubstate {
 			return clsName.substr(clsName.lastIndexOf('.') + 1);
 		}
 	}
+	/**
+	 * Used to find and load state scripts.
+	*/
 	public function customStateName():String { 
 		var clsName:String = Type.getClassName(Type.getClass(this));
 		return clsName.substr(clsName.lastIndexOf('.') + 1);
@@ -139,7 +169,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 	}
 	
 	#if SCRIPTS_ALLOWED
-	public function startStateScripts():Bool {
+	@:dox(hide) function startStateScripts():Bool {
 		loadedScripts = false;
 		
 		#if HSCRIPT_ALLOWED
@@ -153,7 +183,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 		return loadedScripts;
 	}
 	
-	public function destroyScripts():Void {
+	@:dox(hide) function destroyScripts():Void {
 		#if LUA_ALLOWED
 		for (lua in luaArray) {
 			lua.call('onDestroy');
@@ -175,7 +205,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 	#end
 	
 	#if LUA_ALLOWED
-	function startLuas():Bool {
+	@:dox(hide) function startLuas():Bool {
 		var loaded:Bool = false;
 		
 		if (multiScript) {
@@ -199,6 +229,13 @@ class ScriptedSubState extends MusicBeatSubstate {
 		
 		return loaded;
 	}
+	/**
+	 * Initializes Lua scripts with a matching name and adds them to the state.
+	 * 
+	 * @param 	file 	The mod folder path to the Lua scripts.
+	 * 
+	 * @return 	Whether or not any scripts of that name were found and initialized.
+	*/
 	public function startLuasNamed(luaFile:String) {
 		#if MODS_ALLOWED
 		var luaToLoad:String = Paths.modFolders(luaFile);
@@ -219,6 +256,13 @@ class ScriptedSubState extends MusicBeatSubstate {
 		}
 		return false;
 	}
+	/**
+	 * Initializes a Lua script and adds it to the state.
+	 * 
+	 * @param 	file 	The relative path to the Lua script.
+	 * 
+	 * @return 	A new `FunkinLua` instance if successful, otherwise `null`.
+	*/
 	public function initLuaScript(file:String):FunkinLua {
 		var lua:FunkinLua = FunkinLua.initFromFile(file, this);
 		if (lua != null) luaArray.push(lua);
@@ -226,6 +270,19 @@ class ScriptedSubState extends MusicBeatSubstate {
 		return lua;
 	}
 	
+	/**
+	 * Called when a Lua script is initialized in this state.
+	 * You can use this function to implement custom API functions or set custom variables per state.
+	 * 
+	 * ```haxe
+	 * public override function implementLua(lua:FunkinLua):Void {
+	 * 	lua.set("customVariable", 1234);
+	 * 	lua.addLocalCallback("customFunction", function() {
+	 * 		return "Hi!!";
+	 * 	});
+	 * }
+	 * ```
+	*/
 	public function implementLua(lua:FunkinLua):Void {}
 	#end
 	
@@ -279,6 +336,17 @@ class ScriptedSubState extends MusicBeatSubstate {
 	}
 	#end
 	
+	/**
+	 * Calls a function on all scripts.
+	 * 
+	 * @param 	func 			The name of the function to call.
+	 * @param 	args 			An `Array` with the parameters to use in the function call.
+	 * @param 	ignoreStops		Whether or not a `Function_Stop` should halt propagation in the remaining scripts.
+	 * @param 	exclusions 		An `Array` of scripts to exclude in the call.
+	 * @param 	excludeValues 	Values to exclude if the scripts have any return value.
+	 * 
+	 * @return 	Return value in last called script.
+	*/
 	public function callOnScripts(func:String, ?args:Array<Dynamic>, ignoreStops:Bool = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
 		excludeValues ??= [];
 		excludeValues.push(LuaUtils.Function_Continue);
@@ -289,6 +357,18 @@ class ScriptedSubState extends MusicBeatSubstate {
 		
 		return result;
 	}
+	/**
+	 * Calls a function on all scripts. Separates Lua and HScript arguments.
+	 * 
+	 * @param 	func 			The name of the function to call.
+	 * @param 	argsLua 		An `Array` with the parameters to use in the function call in Lua scripts.
+	 * @param 	argsHScript 	An `Array` with the parameters to use in the function call in HScript scripts.
+	 * @param 	ignoreStops		Whether or not a `Function_Stop` should halt propagation in the remaining scripts.
+	 * @param 	exclusions 		An `Array` of scripts to exclude in the call.
+	 * @param 	excludeValues 	Values to exclude if the scripts have any return value.
+	 * 
+	 * @return 	Return value in last called script.
+	*/
 	public function callOnScriptsExt(func:String, ?argsLua:Array<Dynamic>, ?argsHScript:Array<Dynamic>, ignoreStops:Bool = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
 		excludeValues ??= [];
 		excludeValues.push(LuaUtils.Function_Continue);
@@ -299,6 +379,17 @@ class ScriptedSubState extends MusicBeatSubstate {
 		
 		return result;
 	}
+	/**
+	 * Calls a function on all Lua scripts.
+	 * 
+	 * @param 	func 			The name of the function to call.
+	 * @param 	args 			An `Array` with the parameters to use in the function call.
+	 * @param 	ignoreStops		Whether or not a `Function_Stop` should halt propagation in the remaining scripts.
+	 * @param 	exclusions 		An `Array` of scripts to exclude in the call.
+	 * @param 	excludeValues 	Values to exclude if the scripts have any return value.
+	 * 
+	 * @return 	Return value in last called script.
+	*/
 	public function callOnLuas(func:String, ?args:Array<Dynamic>, ignoreStops:Bool = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
 		var returnVal:Dynamic = LuaUtils.Function_Continue;
 		#if LUA_ALLOWED
@@ -336,6 +427,17 @@ class ScriptedSubState extends MusicBeatSubstate {
 		#end
 		return returnVal;
 	}
+	/**
+	 * Calls a function on all HScript scripts.
+	 * 
+	 * @param 	func 			The name of the function to call.
+	 * @param 	args 			An `Array` with the parameters to use in the function call.
+	 * @param 	ignoreStops		Whether or not a `Function_Stop` should halt propagation in the remaining scripts.
+	 * @param 	exclusions 		An `Array` of scripts to exclude in the call.
+	 * @param 	excludeValues 	Values to exclude if the scripts have any return value.
+	 * 
+	 * @return 	Return value in last called script.
+	*/
 	public function callOnHScript(funcToCall:String, ?args:Array<Dynamic>, ?ignoreStops:Bool = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
 		var returnVal:Dynamic = LuaUtils.Function_Continue;
 
@@ -368,11 +470,25 @@ class ScriptedSubState extends MusicBeatSubstate {
 		return returnVal;
 	}
 	
-	public function setOnScripts(variable:String, args:Dynamic, ?exclusions:Array<String>):Void {
-		setOnLuas(variable, args, exclusions);
-		setOnHScript(variable, args, exclusions);
+	/**
+	 * Sets a variable on all scripts.
+	 * 
+	 * @param 	variable 		The name of the variable to set.
+	 * @param 	value 			The value of the variable.
+	 * @param 	exclusions 		An `Array` of scripts to exclude when setting.
+	*/
+	public function setOnScripts(variable:String, value:Dynamic, ?exclusions:Array<String>):Void {
+		setOnLuas(variable, value, exclusions);
+		setOnHScript(variable, value, exclusions);
 	}
-	public function setOnLuas(variable:String, args:Dynamic, ?exclusions:Array<String>):Void {
+	/**
+	 * Sets a variable on all Lua scripts.
+	 * 
+	 * @param 	variable 		The name of the variable to set.
+	 * @param 	value 			The value of the variable.
+	 * @param 	exclusions 		An `Array` of scripts to exclude when setting.
+	*/
+	public function setOnLuas(variable:String, value:Dynamic, ?exclusions:Array<String>):Void {
 		#if LUA_ALLOWED
 		if (luaArray == null) return;
 		
@@ -381,11 +497,18 @@ class ScriptedSubState extends MusicBeatSubstate {
 			if (script.closed || exclusions.contains(script.scriptName))
 				continue;
 
-			script.set(variable, args);
+			script.set(variable, value);
 		}
 		#end
 	}
-	public function setOnHScript(variable:String, args:Dynamic, ?exclusions:Array<String>):Void {
+	/**
+	 * Sets a variable on all HScript scripts.
+	 * 
+	 * @param 	variable 		The name of the variable to set.
+	 * @param 	value 			The value of the variable.
+	 * @param 	exclusions 		An `Array` of scripts to exclude when setting.
+	*/
+	public function setOnHScript(variable:String, value:Dynamic, ?exclusions:Array<String>):Void {
 		#if HSCRIPT_ALLOWED
 		if (hscriptArray == null) return;
 		
@@ -394,7 +517,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 			if (script.closed || exclusions.contains(script.origin))
 				continue;
 
-			script.set(variable, args);
+			script.set(variable, value);
 		}
 		#end
 	}
