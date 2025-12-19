@@ -1023,7 +1023,7 @@ class PlayState extends ScriptedState
 		Conductor.offset = Reflect.hasField(PlayState.SONG, 'offset') ? (PlayState.SONG.offset / value) : 0;
 		Conductor.safeZoneOffset = (ClientPrefs.data.safeFrames / 60) * 1000 * value;
 		#if VIDEOS_ALLOWED
-		if(videoCutscene != null && videoCutscene.videoSprite != null) videoCutscene.videoSprite.bitmap.rate = value;
+		if(videoCutscene != null && videoCutscene.videoSprite != null) #if hxvlc videoCutscene.videoSprite.bitmap.rate = value; #end
 		#end
 		setOnScripts('playbackRate', playbackRate);
 		#else
@@ -1190,12 +1190,12 @@ class PlayState extends ScriptedState
 		if (OpenFlAssets.exists(fileName))
 		#end
 		foundFile = true;
-
 		if (foundFile)
 		{
 			videoCutscene = new VideoSprite(fileName, forMidSong, canSkip, loop);
+			#if hxvlc
 			if(forMidSong) videoCutscene.videoSprite.bitmap.rate = playbackRate;
-
+			#end
 			// Finish callback
 			if (!forMidSong)
 			{
@@ -1216,9 +1216,10 @@ class PlayState extends ScriptedState
 			}
 			if (GameOverSubstate.instance != null && isDead) GameOverSubstate.instance.add(videoCutscene);
 			else add(videoCutscene);
-
+			#if hxvlc
 			if (playOnLoad)
 				videoCutscene.play();
+			#end
 			return videoCutscene;
 		}
 		#if (SCRIPTS_ALLOWED)
