@@ -1174,6 +1174,8 @@ class PlayState extends ScriptedState
 	 * @param 	canSkip 	Whether this cutscene can be skipped.
 	 * @param 	loop 		Whether the cutscene video should loop.
 	 * @param 	playOnLoad 	Whether or not the cutscene should be played instantly after loading.
+	 * 
+	 * @return 	The video cutscene.
 	*/
 	public function startVideo(name:String, forMidSong:Bool = false, canSkip:Bool = true, loop:Bool = false, playOnLoad:Bool = true)
 	{

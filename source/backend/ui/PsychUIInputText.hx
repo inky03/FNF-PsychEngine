@@ -623,6 +623,7 @@ class PsychUIInputText extends FlxSpriteGroup
 	function set_text(v:String)
 	{
 		for (i in 0..._boundaries.length) _boundaries.pop();
+		v = (v ?? '');
 		v = filter(v);
 
 		textObj.text = '';
@@ -644,8 +645,10 @@ class PsychUIInputText extends FlxSpriteGroup
 				_boundaries.push(textObj.textField.textWidth);
 			}
 		}
-		text = (v ?? '');
-		updateCaret();
+		text = v;
+		
+		caretIndex = Std.int(FlxMath.bound(caretIndex, 0, v.length));
+		
 		return text;
 	}
 
