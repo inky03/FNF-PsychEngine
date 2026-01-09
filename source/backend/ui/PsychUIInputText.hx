@@ -271,8 +271,8 @@ class PsychUIInputText extends FlxSpriteGroup
 				else
 				{
 					var lastText = text;
-					text = text.substring(0, caretIndex-1) + text.substring(caretIndex);
-					caretIndex--;
+					caretIndex --;
+					text = text.substring(0, caretIndex) + text.substring(caretIndex + 1);
 					if(onChange != null) onChange(lastText, text);
 					if(broadcastInputTextEvent) PsychUIEventHandler.event(CHANGE_EVENT, this);
 				}
@@ -646,8 +646,7 @@ class PsychUIInputText extends FlxSpriteGroup
 			}
 		}
 		text = v;
-		
-		caretIndex = Std.int(FlxMath.bound(caretIndex, 0, v.length));
+		updateCaret();
 		
 		return text;
 	}
