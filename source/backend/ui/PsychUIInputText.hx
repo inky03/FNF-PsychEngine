@@ -474,13 +474,27 @@ class PsychUIInputText extends FlxSpriteGroup
 		if(textObj == null || !textObj.exists) return;
 
 		var textField = textObj.textField;
-		textField.setSelection(caretIndex, caretIndex);
+		try {
+			var textLength:Int = Std.int(textField.length);
+			var safeCaretIndex:Int = (caretIndex < 0) ? 0 : ((caretIndex > textLength) ? textLength : caretIndex);
+			textField.setSelection(safeCaretIndex, safeCaretIndex);
+		} catch(e:Dynamic) {
+			trace('Error updating caret selection: $e');
+			caretIndex = 0;
+			try {
+				if(textField.length > 0) {
+					textField.setSelection(0, 0);
+				}
+			} catch(e2:Dynamic) {
+				// Just conitnue lil bro heh
+			}
+		}
 		_caretTime = 0;
 		if(caret != null && caret.exists)
 		{
 			caret.y = textObj.y + 2;
 			caret.x = textObj.x + 1 - textObj.textField.scrollH;
-			if(caretIndex > 0)
+			if(caretIndex > 0 && _boundaries.length > 0)
 				caret.x += _boundaries[Std.int(Math.max(0, Math.min(_boundaries.length-1, caretIndex-1)))];
 		}
 		
@@ -488,7 +502,7 @@ class PsychUIInputText extends FlxSpriteGroup
 		{
 			selection.y = textObj.y + 2;
 			selection.x = textObj.x + 1 - textObj.textField.scrollH;
-			if(selectIndex > 0)
+			if(selectIndex > 0 && _boundaries.length > 0)
 				selection.x += _boundaries[Std.int(Math.max(0, Math.min(_boundaries.length-1, selectIndex-1)))];
 
 			selection.scale.y = textField.textHeight;
