@@ -4,6 +4,12 @@ import flixel.addons.display.FlxPieDial;
 
 #if hxvlc
 import hxvlc.flixel.FlxVideoSprite;
+#else
+import openfl.events.NetStatusEvent;
+import openfl.media.SoundTransform;
+import openfl.media.Video;
+import openfl.net.NetConnection;
+import openfl.net.NetStream;
 #end
 
 class VideoSprite extends FlxSpriteGroup {
@@ -13,7 +19,6 @@ class VideoSprite extends FlxSpriteGroup {
 
 	final _timeToSkip:Float = 1;
 	public var holdingTime:Float = 0;
-	public var videoSprite:FlxVideoSprite;
 	public var skipSprite:FlxPieDial;
 	public var cover:FlxSprite;
 	public var canSkip(default, set):Bool = false;
@@ -21,7 +26,11 @@ class VideoSprite extends FlxSpriteGroup {
 	private var videoName:String;
 
 	public var waiting:Bool = false;
-
+	#if hxvlc
+	public var videoSprite:FlxVideoSprite;
+	#elseif js
+	public var videoSprite:FlxVideo;
+	#end
 	public function new(videoName:String, isWaiting:Bool, canSkip:Bool = false, shouldLoop:Dynamic = false) {
 		super();
 
@@ -40,14 +49,11 @@ class VideoSprite extends FlxSpriteGroup {
 		}
 
 		// initialize sprites
+		#if hxvlc
 		videoSprite = new FlxVideoSprite();
 		videoSprite.antialiasing = ClientPrefs.data.antialiasing;
-		add(videoSprite);
-		if(canSkip) this.canSkip = true;
-
-		// callbacks
 		if(!shouldLoop) videoSprite.bitmap.onEndReached.add(finishVideo);
-
+		videoSprite.load(videoName, shouldLoop ? ['input-repeat=65545'] : null);
 		videoSprite.bitmap.onFormatSetup.add(function()
 		{
 			/*
@@ -63,8 +69,15 @@ class VideoSprite extends FlxSpriteGroup {
 			videoSprite.screenCenter();
 		});
 
+		#elseif js
+		videoSprite = new FlxVideo(videoName);
+		videoSprite.finishCallback= finishVideo;
+		#end
+		// callbacks
+		add(videoSprite);
+		if(canSkip) this.canSkip = true;
+	
 		// start video and adjust resolution to screen size
-		videoSprite.load(videoName, shouldLoop ? ['input-repeat=65545'] : null);
 	}
 
 	var alreadyDestroyed:Bool = false;
@@ -123,7 +136,11 @@ class VideoSprite extends FlxSpriteGroup {
 			{
 				if(onSkip != null) onSkip();
 				finishCallback = null;
+				#if hxvlc
 				videoSprite.bitmap.onEndReached.dispatch();
+				#else
+				videoSprite.finishVideo();
+				#end
 				trace('Skipped video');
 				return;
 			}
@@ -162,9 +179,169 @@ class VideoSprite extends FlxSpriteGroup {
 		skipSprite.amount = Math.min(1, Math.max(0, (holdingTime / _timeToSkip) * 1.025));
 		skipSprite.alpha = FlxMath.remapToRange(skipSprite.amount, 0.025, 1, 0, 1);
 	}
-
+	#if hxvlc
 	public function play() videoSprite?.play();
 	public function resume() videoSprite?.resume();
 	public function pause() videoSprite?.pause();
+	#elseif js
+	public function resume() videoSprite?.resumeVideo();
+	public function pause() videoSprite?.pauseVideo();
 	#end
+	#end
+}
+/**
+ * Plays a video via a NetStream. Only works on HTML5.
+ * This does NOT replace hxvlc, nor does hxvlc replace this.
+ * hxvlc only works on desktop and does not work on HTML5!
+ * Ripped from Funkin'.
+ *  
+*/
+class FlxVideo extends FlxSprite
+{
+	#if html5
+	var video:Video;
+  	var netStream:NetStream;
+  	var videoPath:String;
+
+  	/**
+   	* A callback to execute when the video finishes.
+   	*/
+  	public var finishCallback:Void->Void;
+
+  	public function new(videoPath:String)
+  	{
+    super();
+
+    this.videoPath = videoPath;
+
+    makeGraphic(2, 2, FlxColor.TRANSPARENT);
+
+    video = new Video();
+    video.x = 0;
+    video.y = 0;
+    video.alpha = 0;
+
+    FlxG.game.addChild(video);
+
+    var netConnection:NetConnection = new NetConnection();
+    netConnection.connect(null);
+
+    netStream = new NetStream(netConnection);
+    netStream.client = {onMetaData: onClientMetaData};
+    netConnection.addEventListener(NetStatusEvent.NET_STATUS, onNetConnectionNetStatus);
+    netStream.play(videoPath);
+  }
+
+  /**
+   * Tell the FlxVideo to pause playback.
+   */
+  public function pauseVideo():Void
+  {
+    if (netStream != null)
+    {
+      netStream.pause();
+    }
+  }
+
+  /**
+   * Tell the FlxVideo to resume if it is paused.
+   */
+  public function resumeVideo():Void
+  {
+    // Resume playing the video.
+    if (netStream != null)
+    {
+      netStream.resume();
+    }
+  }
+
+  var videoAvailable:Bool = false;
+  var frameTimer:Float;
+
+  static final FRAME_RATE:Float = 60;
+
+  public override function update(elapsed:Float):Void
+  {
+    super.update(elapsed);
+
+    if (frameTimer >= (1 / FRAME_RATE))
+    {
+      frameTimer = 0;
+      // TODO: We just draw the video buffer to the sprite 60 times a second.
+      // Can we copy the video buffer instead somehow?
+      pixels.draw(video);
+    }
+
+    if (videoAvailable) frameTimer += elapsed;
+  }
+
+  /**
+   * Tell the FlxVideo to seek to the beginning.
+   */
+  public function restartVideo():Void
+  {
+    // Seek to the beginning of the video.
+    if (netStream != null)
+    {
+      netStream.seek(0);
+    }
+  }
+
+  /**
+   * Tell the FlxVideo to end.
+   */
+  public function finishVideo():Void
+  {
+    netStream.dispose();
+    FlxG.removeChild(video);
+
+    if (finishCallback != null) finishCallback();
+  }
+
+  public override function destroy():Void
+  {
+    if (netStream != null)
+    {
+      netStream.dispose();
+
+      if (FlxG.game.contains(video)) FlxG.game.removeChild(video);
+    }
+
+    super.destroy();
+  }
+
+  /**
+   * Callback executed when the video stream loads.
+   * @param metaData The metadata of the video
+   */
+  public function onClientMetaData(metaData:Dynamic):Void
+  {
+    video.attachNetStream(netStream);
+
+    onVideoReady();
+  }
+
+  function onVideoReady():Void
+  {
+    video.width = FlxG.width;
+    video.height = FlxG.height;
+
+    videoAvailable = true;
+
+    //FunkinSound.onVolumeChanged.add(onVolumeChanged);
+    onVolumeChanged(FlxG.sound.muted ? 0 : FlxG.sound.volume);
+
+    makeGraphic(Std.int(video.width), Std.int(video.height), FlxColor.TRANSPARENT);
+  }
+
+  function onVolumeChanged(volume:Float):Void
+  {
+    netStream.soundTransform = new SoundTransform(volume);
+  }
+
+  function onNetConnectionNetStatus(event:NetStatusEvent):Void
+  {
+    if (event.info.code == 'NetStream.Play.Complete') finishVideo();
+  }
+  #end
 }
