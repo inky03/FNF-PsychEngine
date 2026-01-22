@@ -181,7 +181,7 @@ class HScript extends Script {
 		return newScript;
 	}
 
-	var varsToBring(default, set):Any = null;
+	var varsToBring:Any = null;
 	override function setDefaults() {
 		super.setDefaults();
 		
@@ -426,6 +426,11 @@ class HScript extends Script {
 			
 			log(Std.string(v), posInfos());
 		}));
+		
+		if (varsToBring != null) {
+			for (field in Reflect.fields(varsToBring))
+				set(field, Reflect.field(varsToBring, field));
+		}
 	}
 	
 	public inline function get(field:String):Dynamic {
@@ -582,24 +587,6 @@ class HScript extends Script {
 		origin = null;
 		closed = true;
 		#if LUA_ALLOWED parentLua = null; #end
-	}
-
-	function set_varsToBring(values:Any) {
-		if (varsToBring != null)
-			for (key in Reflect.fields(varsToBring))
-				if (variables.exists(key.trim()))
-					variables.remove(key.trim());
-
-		if (values != null)
-		{
-			for (key in Reflect.fields(values))
-			{
-				key = key.trim();
-				set(key, Reflect.field(values, key));
-			}
-		}
-
-		return varsToBring = values;
 	}
 }
 
