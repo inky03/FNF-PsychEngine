@@ -230,8 +230,10 @@ class LuaUtils
 		return value;
 	}
 	
-	public static function getPropertyLoop(variable:String, allowMaps:Bool = false, ?base:Dynamic):Dynamic {
-		if (variable.indexOf('.') != -1) {
+	public static function getPropertyLoop(?variable:String, allowMaps:Bool = false, ?base:Dynamic):Dynamic {
+		if (variable == null) {
+			return base;
+		} else if (variable.indexOf('.') != -1) {
 			var obj:Dynamic = base;
 			for (id in variable.split('.'))
 				obj = getVariable(obj, id);
@@ -259,7 +261,7 @@ class LuaUtils
 		}
 	}
 	
-	public static function getObjectDirectly(objectName:String, allowMaps:Bool = false, ?state:flixel.FlxState):Dynamic {
+	public static function getObjectDirectly(?objectName:String, allowMaps:Bool = false, ?state:flixel.FlxState):Dynamic {
 		return getPropertyLoop(objectName, allowMaps, state ?? FlxG.state);
 	}
 	

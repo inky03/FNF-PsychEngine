@@ -126,9 +126,9 @@ class GlobalScriptHandler {
 }
 
 class HScriptGlobal extends HScript {
-	public override function preset():Void {
+	public override function setDefaults():Void {
 		parentState = null;
-		super.preset();
+		super.setDefaults();
 	}
 	
 	public override function getParent():Dynamic {

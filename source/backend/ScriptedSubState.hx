@@ -8,9 +8,6 @@ import psychlua.LuaUtils;
 
 #if HSCRIPT_ALLOWED
 import psychlua.HScript;
-import crowplexus.iris.Iris;
-import crowplexus.hscript.Expr.Error as IrisError;
-import crowplexus.hscript.Printer;
 #end
 
 #if SCRIPTS_ALLOWED
@@ -321,8 +318,6 @@ class ScriptedSubState extends MusicBeatSubstate {
 		#end
 
 		if(FileSystem.exists(scriptToLoad)) {
-			if (Iris.instances.exists(scriptToLoad)) return false;
-
 			initHScript(scriptToLoad);
 			return true;
 		}
@@ -454,7 +449,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 
 			var callValue = script.call(funcToCall, args);
 			if (callValue != null) {
-				var myValue:Dynamic = callValue.returnValue;
+				var myValue:Dynamic = callValue;
 
 				if((myValue == LuaUtils.Function_StopHScript || myValue == LuaUtils.Function_StopAll) && !excludeValues.contains(myValue) && !ignoreStops) {
 					returnVal = myValue;

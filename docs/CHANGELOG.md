@@ -96,6 +96,7 @@ The current list of differences from this fork (0.0.5) to Psych Engine (1.0.4) a
 
 ### HScript
 
+- Switched to [HscriptInsanity](https://github.com/inky03/hscript-insanity)
 - EXTENDED Scripting (EXPERIMENTAL)
 	- Global Scripts
 		- Run absolutely everywhere
@@ -293,8 +294,5 @@ The current list of differences from this fork (0.0.5) to Psych Engine (1.0.4) a
 		- NOTE: HTML5 is EXTREMELY experimental and unsupported right now, use unrecommended
 		- Videos and Lua scripts are not supported due to limitations (HScript is, though)
 	- Changed all libraries to use their latest versions (that previously weren't)
-		- HScript Iris (1.1.3 used in release -> git used in fork)
-			- Fixed increment / decrement operator `var ++` `var --`
-			- String concatenation (from yours truly I guess!)
 
 ...and more! i think...

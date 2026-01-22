@@ -117,6 +117,7 @@
 	</section>
 	
 	<haxeflag name="--macro" value="backend.macro.Init.init()" />
+	<haxeflag name="-xml docs/doc.xml" />
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
@@ -127,7 +128,7 @@
 	<!--Psych stuff needed-->
 	<haxelib name="hxvlc" unless = "html5" />
 	<haxelib name="linc_luajit" if="LUA_ALLOWED"/>
-	<haxelib name="hscript-iris" if="HSCRIPT_ALLOWED" />
+	<haxelib name="hscript-insanity" if="HSCRIPT_ALLOWED" />
 	<haxelib name="hxdiscord_rpc" if="DISCORD_ALLOWED" />
 	<haxelib name="flxanimate" />
 	

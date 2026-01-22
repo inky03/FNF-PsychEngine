@@ -1135,12 +1135,7 @@ class PlayState extends ScriptedState
 		}
 
 		if(doPush)
-		{
-			if(crowplexus.iris.Iris.instances.exists(scriptFile))
-				doPush = false;
-
-			if(doPush) initHScript(scriptFile);
-		}
+			initHScript(scriptFile);
 		#end
 	}
 	
