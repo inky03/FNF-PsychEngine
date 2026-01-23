@@ -1,5 +1,7 @@
 package psychlua.hscript;
 
+#if HSCRIPT_SCRIPTED_CLASSES
+
 import insanity.IScripted;
 
 class ScriptedFlxStrip extends flixel.FlxStrip implements IScripted {}
@@ -18,3 +20,5 @@ class ScriptedNote extends objects.Note implements IScripted {}
 class ScriptedCharacter extends objects.Character implements IScripted {}
 class ScriptedHealthIcon extends objects.HealthIcon implements IScripted {}
 class ScriptedMusicPlayer extends objects.MusicPlayer implements IScripted {}
+
+#end

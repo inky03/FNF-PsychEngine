@@ -24,7 +24,7 @@ import psychlua.GlobalScriptHandler;
 #end
 
 #if HSCRIPT_ALLOWED
-#if (!macro)
+#if (!macro && HSCRIPT_SCRIPTED_CLASSES)
 import psychlua.hscript.ScriptedClasses;
 #end
 import psychlua.HScript;

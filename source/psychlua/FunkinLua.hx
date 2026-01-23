@@ -697,7 +697,7 @@ class FunkinLua {
 							case TClass(Array): //Is Array
 								return groupOrArray.indexOf(leObj);
 							default: //Is Group
-								return Reflect.getProperty(groupOrArray, 'members').indexOf(leObj); //Has to use a Reflect here because of FlxTypedSpriteGroup
+								return CustomReflect.getProperty(groupOrArray, 'members').indexOf(leObj); //Has to use a Reflect here because of FlxTypedSpriteGroup
 						}
 					} else {
 						luaTrace('getObjectOrder: Group $group doesn\'t exist!', false, false, ERROR);

@@ -22,7 +22,7 @@ class MusicBeatState extends MusicBeatSubstate {
 	 * 
 	 * @return 	The current `MusicBeatState`.
 	*/
-	public static function getState():MusicBeatState {
+	public static inline function getState():MusicBeatState {
 		return cast (FlxG.state, MusicBeatState);
 	}
 	/**
@@ -30,7 +30,7 @@ class MusicBeatState extends MusicBeatSubstate {
 	 * 
 	 * @return 	The custom variables map.
 	*/
-	public static function getVariables():Map<String, Dynamic> {
+	public static inline function getVariables():Map<String, Dynamic> {
 		return FlxG.state.extraData;
 	}
 	

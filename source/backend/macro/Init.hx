@@ -5,7 +5,13 @@ import haxe.macro.Context;
 import haxe.macro.Compiler;
 
 class Init {
-	public static function includeClasses():Void {
+	public static var allowScriptedAbstracts:Array<String> = [
+		'flixel.input',
+		'flixel.util',
+		'flixel.math'
+	];
+	
+	public static macro function includeClasses():Void {
 		Compiler.include('flixel', true, ['flixel.addons.nape', 'flixel.addons.editors.spine', 'flixel.system.macros']);
 		Compiler.include('haxe', true, ['haxe.atomic', 'haxe.macro']);
 		Compiler.include('shaders', true);
@@ -17,12 +23,14 @@ class Init {
 				Compiler.include('sys', true);
 			}
 		}
-		
-		if (Context.defined('HSCRIPT_ALLOWED'))
-			Compiler.addMetadata('@:build(psychlua.HScript.HScriptMacro.buildInterp())', 'crowplexus.hscript.Interp');
 	}
 	
-	public static function init():Void {
+	public static macro function includeScriptedAbstracts():Void {
+		for (pack in allowScriptedAbstracts)
+			Compiler.addGlobalMetadata(pack, '@:build(insanity.backend.macro.AbstractMacro.build())');
+	}
+	
+	public static macro function init():Void {
 		Compiler.addMetadata('@:build(backend.macro.Scripting.ExtraDataMacro.build())', 'flixel.FlxBasic');
 		Compiler.addMetadata('@:build(backend.macro.Flixel.FlixelMacro.buildFlxText())', 'flixel.text.FlxText');
 	}

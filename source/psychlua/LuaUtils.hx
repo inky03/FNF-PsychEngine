@@ -130,7 +130,7 @@ class LuaUtils
 				return object.get(id);
 			if (object.hasVar != null && object.hasVar(id))
 				return object.getVar(id);
-			return Reflect.getProperty(object, id);
+			return CustomReflect.getProperty(object, id);
 		}
 		
 		if (id.indexOf('[') == -1) {
@@ -183,7 +183,7 @@ class LuaUtils
 			}
 			if (object.hasVar != null && object.hasVar(id))
 				return object.setVar(id, value);
-			Reflect.setProperty(object, id, value);
+			CustomReflect.setProperty(object, id, value);
 		} else { // array / map access
 			if (id.indexOf('[') == 0) {
 				throw 'Malformed variable "$id"';
@@ -269,7 +269,7 @@ class LuaUtils
 	public static function hasField(o:Dynamic, id:String):Bool {
 		if (o == null)
 			return false;
-		if (Reflect.hasField(o, id) || Reflect.field(o, id) != null || Type.typeof(o) == TObject)
+		if (CustomReflect.hasField(o, id) || CustomReflect.field(o, id) != null || Type.typeof(o) == TObject)
 			return true;
 		
 		var name:String;

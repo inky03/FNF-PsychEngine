@@ -1,28 +1,6 @@
 package psychlua.hscript;
 
-#if macro
-
-#if HSCRIPT_ALLOWED
-import haxe.macro.Expr;
-import haxe.macro.Type;
-import haxe.macro.Context;
-
-class HScriptMacro {
-	static macro function buildInterp():Array<Field> {
-		var pos:Position = Context.currentPos();
-		var fields:Array<Field> = Context.getBuildFields();
-		
-		for (field in fields) {
-			if (field.name == 'setVar' && field.access != null) // DE-INLINE METHOD
-				field.access.remove(Access.AInline);
-		}
-		
-		return fields;
-	}
-}
-#end
-
-#else
+#if (!macro)
 
 import flixel.FlxState;
 import flixel.FlxSubState;
@@ -54,6 +32,7 @@ typedef HScriptInfos = {
 	#end
 }
 
+@:access(insanity.backend.Interp)
 class FunkinHscript extends Script {
 	public var closed:Bool = false;
 	public var filePath:String;
@@ -103,7 +82,150 @@ class FunkinHscript extends Script {
 	public static function init():Void {
 		Config.typeProxy.set('options.GameplayChangersSubstate', options.GameplayChangersSubState); // lol
 		
+		// Some very commonly used classes
+		#if sys
+		Config.globalImports.set('sys.io.File', INormal);
+		Config.globalImports.set('sys.FileSystem', INormal);
+		#if (!flash)
+		Config.globalImports.set('flixel.addons.display.FlxRuntimeShader', INormal);
+		Config.globalImports.set('shaders.ErrorHandledRuntimeShader', INormal);
+		#end
+		#end
+		Config.globalImports.set('flixel.FlxG', INormal);
+		Config.globalImports.set('flixel.FlxSprite', INormal);
+		Config.globalImports.set('flixel.FlxCamera', INormal);
+		Config.globalImports.set('flixel.text.FlxText', INormal);
+		Config.globalImports.set('flixel.math.FlxMath', INormal);
+		Config.globalImports.set('backend.PsychCamera', INormal);
+		Config.globalImports.set('flixel.util.FlxTimer', INormal);
+		Config.globalImports.set('flixel.tweens.FlxTween', INormal);
+		Config.globalImports.set('flixel.tweens.FlxEase', INormal);
+		Config.globalImports.set('flixel.util.FlxColor', INormal);
+		Config.globalImports.set('backend.BaseStage.Countdown', INormal);
+		Config.globalImports.set('states.PlayState', INormal);
+		Config.globalImports.set('backend.Paths', INormal);
+		Config.globalImports.set('backend.Conductor', INormal);
+		Config.globalImports.set('backend.ClientPrefs', INormal);
+		#if ACHIEVEMENTS_ALLOWED
+		Config.globalImports.set('backend.Achievements', INormal);
+		#end
+		#if LUA_ALLOWED
+		Config.globalImports.set('psychlua.FunkinLua', INormal);
+		#end
+		Config.globalImports.set('objects.Character', INormal);
+		Config.globalImports.set('objects.Alphabet', INormal);
+		Config.globalImports.set('objects.Note', INormal);
+		Config.globalImports.set('psychlua.CustomState', INormal);
+		Config.globalImports.set('psychlua.CustomSubstate', INormal);
+		Config.globalImports.set('backend.MusicBeatState', INormal);
+		Config.globalImports.set('backend.MusicBeatSubstate', INormal);
+		Config.globalImports.set('openfl.filters.ShaderFilter', INormal);
+		Config.globalImports.set('StringTools', INormal);
+		#if flxanimate
+		Config.globalImports.set('flxanimate.FlxAnimate', INormal);
+		#end
+		#if (!HSCRIPT_SCRIPTED_ABSTRACTS)
+		Config.globalImports.set('psychlua.CustomFlxColor', IAsName('FlxColor'));
+		#end
 		
+		// Some useful variables
+		Config.globalVariables.set('globalStatic', FunkinHscript.globalStatic);
+		Config.globalVariables.set('debugPrint', function(text:String, color:FlxColor = FlxColor.WHITE) {
+			return ScriptedState.debugPrint(text, color);
+		});
+		
+		Config.globalVariables.set('setVar', function(name:String, value:Dynamic) return FlxG.state.setVar(name, value));
+		Config.globalVariables.set('getVar', function(name:String) return FlxG.state.getVar(name));
+		Config.globalVariables.set('hasVar', function(name:String) return FlxG.state.hasVar(name));
+		Config.globalVariables.set('removeVar', function(name:String) {
+			var has:Bool = FlxG.state.hasVar(name);
+			if (has) FlxG.state.removeVar(name);
+			return has;
+		});
+		
+		Config.globalVariables.set('version', MainMenuState.psychEngineVersion.trim());
+		Config.globalVariables.set('modVersion', MainMenuState.modVersion.trim());
+		Config.globalVariables.set('buildTarget', LuaUtils.getBuildTarget());
+		
+		Config.globalVariables.set('Function_Stop', LuaUtils.Function_Stop);
+		Config.globalVariables.set('Function_Continue', LuaUtils.Function_Continue);
+		Config.globalVariables.set('Function_StopLua', LuaUtils.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
+		Config.globalVariables.set('Function_StopHScript', LuaUtils.Function_StopHScript);
+		Config.globalVariables.set('Function_StopAll', LuaUtils.Function_StopAll);
+		
+		// Keyboard & Gamepads
+		Config.globalVariables.set('keyboardJustPressed', function(name:String) return Reflect.getProperty(FlxG.keys.justPressed, name));
+		Config.globalVariables.set('keyboardPressed', function(name:String) return Reflect.getProperty(FlxG.keys.pressed, name));
+		Config.globalVariables.set('keyboardReleased', function(name:String) return Reflect.getProperty(FlxG.keys.justReleased, name));
+
+		Config.globalVariables.set('anyGamepadJustPressed', function(name:String) return FlxG.gamepads.anyJustPressed(name));
+		Config.globalVariables.set('anyGamepadPressed', function(name:String) FlxG.gamepads.anyPressed(name));
+		Config.globalVariables.set('anyGamepadReleased', function(name:String) return FlxG.gamepads.anyJustReleased(name));
+
+		Config.globalVariables.set('gamepadAnalogX', function(id:Int, ?leftStick:Bool = true) {
+			var controller = FlxG.gamepads.getByID(id);
+			if (controller == null) return 0.0;
+
+			return controller.getXAxis(leftStick ? LEFT_ANALOG_STICK : RIGHT_ANALOG_STICK);
+		});
+		Config.globalVariables.set('gamepadAnalogY', function(id:Int, ?leftStick:Bool = true) {
+			var controller = FlxG.gamepads.getByID(id);
+			if (controller == null) return 0.0;
+
+			return controller.getYAxis(leftStick ? LEFT_ANALOG_STICK : RIGHT_ANALOG_STICK);
+		});
+		Config.globalVariables.set('gamepadJustPressed', function(id:Int, name:String) {
+			var controller = FlxG.gamepads.getByID(id);
+			if (controller == null) return false;
+
+			return Reflect.getProperty(controller.justPressed, name) == true;
+		});
+		Config.globalVariables.set('gamepadPressed', function(id:Int, name:String) {
+			var controller = FlxG.gamepads.getByID(id);
+			if (controller == null) return false;
+
+			return Reflect.getProperty(controller.pressed, name) == true;
+		});
+		Config.globalVariables.set('gamepadReleased', function(id:Int, name:String) {
+			var controller = FlxG.gamepads.getByID(id);
+			if (controller == null) return false;
+
+			return Reflect.getProperty(controller.justReleased, name) == true;
+		});
+
+		Config.globalVariables.set('keyJustPressed', function(name:String = '') {
+			name = name.toLowerCase();
+			switch(name) {
+				case 'left': return Controls.instance.NOTE_LEFT_P;
+				case 'down': return Controls.instance.NOTE_DOWN_P;
+				case 'up': return Controls.instance.NOTE_UP_P;
+				case 'right': return Controls.instance.NOTE_RIGHT_P;
+				default: return Controls.instance.justPressed(name);
+			}
+			return false;
+		});
+		Config.globalVariables.set('keyPressed', function(name:String = '') {
+			name = name.toLowerCase();
+			switch(name) {
+				case 'left': return Controls.instance.NOTE_LEFT;
+				case 'down': return Controls.instance.NOTE_DOWN;
+				case 'up': return Controls.instance.NOTE_UP;
+				case 'right': return Controls.instance.NOTE_RIGHT;
+				default: return Controls.instance.pressed(name);
+			}
+			return false;
+		});
+		Config.globalVariables.set('keyReleased', function(name:String = '') {
+			name = name.toLowerCase();
+			switch(name) {
+				case 'left': return Controls.instance.NOTE_LEFT_R;
+				case 'down': return Controls.instance.NOTE_DOWN_R;
+				case 'up': return Controls.instance.NOTE_UP_R;
+				case 'right': return Controls.instance.NOTE_RIGHT_R;
+				default: return Controls.instance.justReleased(name);
+			}
+			return false;
+		});
 	}
 	
 	public var origin:String;
@@ -185,51 +307,6 @@ class FunkinHscript extends Script {
 	override function setDefaults() {
 		super.setDefaults();
 		
-		var imports = interp.imports;
-		
-		// Some very commonly used classes
-		imports.set('Type', Type);
-		#if sys
-		imports.set('File', File);
-		imports.set('FileSystem', FileSystem);
-		#end
-		imports.set('FlxG', flixel.FlxG);
-		imports.set('FlxMath', flixel.math.FlxMath);
-		imports.set('FlxSprite', flixel.FlxSprite);
-		imports.set('FlxText', flixel.text.FlxText);
-		imports.set('FlxCamera', flixel.FlxCamera);
-		imports.set('PsychCamera', backend.PsychCamera);
-		imports.set('FlxTimer', flixel.util.FlxTimer);
-		imports.set('FlxTween', flixel.tweens.FlxTween);
-		imports.set('FlxEase', flixel.tweens.FlxEase);
-		imports.set('FlxColor', CustomFlxColor);
-		imports.set('Countdown', backend.BaseStage.Countdown);
-		imports.set('PlayState', PlayState);
-		imports.set('Paths', Paths);
-		imports.set('Conductor', Conductor);
-		imports.set('ClientPrefs', ClientPrefs);
-		#if ACHIEVEMENTS_ALLOWED
-		imports.set('Achievements', Achievements);
-		#end
-		#if LUA_ALLOWED
-		imports.set('FunkinLua', FunkinLua);
-		#end
-		imports.set('Character', objects.Character);
-		imports.set('Alphabet', Alphabet);
-		imports.set('Note', objects.Note);
-		imports.set('CustomState', CustomState);
-		imports.set('CustomSubstate', CustomSubstate);
-		imports.set('MusicBeatState', MusicBeatState);
-		imports.set('MusicBeatSubstate', MusicBeatSubstate);
-		#if (!flash && sys)
-		imports.set('FlxRuntimeShader', flixel.addons.display.FlxRuntimeShader);
-		imports.set('ErrorHandledRuntimeShader', shaders.ErrorHandledShader.ErrorHandledRuntimeShader);
-		#end
-		imports.set('ShaderFilter', openfl.filters.ShaderFilter);
-		imports.set('StringTools', StringTools);
-		#if flxanimate
-		imports.set('FlxAnimate', FlxAnimate);
-		#end
 		set('controls', Controls.instance);
 		
 		if (parentState != null && !(parentState is ScriptedSubState))
@@ -248,27 +325,6 @@ class FunkinHscript extends Script {
 		}
 		
 		set('global', variableMap);
-		set('globalStatic', HScript.globalStatic);
-		set('setVar', function(name:String, value:Dynamic) {
-			variableMap?.set(name, value);
-			return value;
-		});
-		set('getVar', function(name:String) {
-			return variableMap?.get(name);
-		});
-		set('hasVar', function(name:String) {
-			return variableMap?.exists(name);
-		});
-		set('removeVar', function(name:String) {
-			if (variableMap?.exists(name) ?? false) {
-				variableMap.remove(name);
-				return true;
-			}
-			return false;
-		});
-		set('debugPrint', function(text:String, color:FlxColor = FlxColor.WHITE) {
-			return ScriptedState.debugPrint(text, color);
-		});
 		set('getModSetting', function(saveTag:String, ?modName:String = null) {
 			if(modName == null)
 			{
@@ -283,94 +339,19 @@ class FunkinHscript extends Script {
 		});
 		set('luaDeprecatedWarnings', true);
 		set('luaDebugMode', true);
-
-		// Keyboard & Gamepads
-		set('keyboardJustPressed', function(name:String) return Reflect.getProperty(FlxG.keys.justPressed, name));
-		set('keyboardPressed', function(name:String) return Reflect.getProperty(FlxG.keys.pressed, name));
-		set('keyboardReleased', function(name:String) return Reflect.getProperty(FlxG.keys.justReleased, name));
-
-		set('anyGamepadJustPressed', function(name:String) return FlxG.gamepads.anyJustPressed(name));
-		set('anyGamepadPressed', function(name:String) FlxG.gamepads.anyPressed(name));
-		set('anyGamepadReleased', function(name:String) return FlxG.gamepads.anyJustReleased(name));
-
-		set('gamepadAnalogX', function(id:Int, ?leftStick:Bool = true) {
-			var controller = FlxG.gamepads.getByID(id);
-			if (controller == null) return 0.0;
-
-			return controller.getXAxis(leftStick ? LEFT_ANALOG_STICK : RIGHT_ANALOG_STICK);
-		});
-		set('gamepadAnalogY', function(id:Int, ?leftStick:Bool = true) {
-			var controller = FlxG.gamepads.getByID(id);
-			if (controller == null) return 0.0;
-
-			return controller.getYAxis(leftStick ? LEFT_ANALOG_STICK : RIGHT_ANALOG_STICK);
-		});
-		set('gamepadJustPressed', function(id:Int, name:String) {
-			var controller = FlxG.gamepads.getByID(id);
-			if (controller == null) return false;
-
-			return Reflect.getProperty(controller.justPressed, name) == true;
-		});
-		set('gamepadPressed', function(id:Int, name:String) {
-			var controller = FlxG.gamepads.getByID(id);
-			if (controller == null) return false;
-
-			return Reflect.getProperty(controller.pressed, name) == true;
-		});
-		set('gamepadReleased', function(id:Int, name:String) {
-			var controller = FlxG.gamepads.getByID(id);
-			if (controller == null) return false;
-
-			return Reflect.getProperty(controller.justReleased, name) == true;
-		});
-
-		set('keyJustPressed', function(name:String = '') {
-			name = name.toLowerCase();
-			switch(name) {
-				case 'left': return Controls.instance.NOTE_LEFT_P;
-				case 'down': return Controls.instance.NOTE_DOWN_P;
-				case 'up': return Controls.instance.NOTE_UP_P;
-				case 'right': return Controls.instance.NOTE_RIGHT_P;
-				default: return Controls.instance.justPressed(name);
-			}
-			return false;
-		});
-		set('keyPressed', function(name:String = '') {
-			name = name.toLowerCase();
-			switch(name) {
-				case 'left': return Controls.instance.NOTE_LEFT;
-				case 'down': return Controls.instance.NOTE_DOWN;
-				case 'up': return Controls.instance.NOTE_UP;
-				case 'right': return Controls.instance.NOTE_RIGHT;
-				default: return Controls.instance.pressed(name);
-			}
-			return false;
-		});
-		set('keyReleased', function(name:String = '') {
-			name = name.toLowerCase();
-			switch(name) {
-				case 'left': return Controls.instance.NOTE_LEFT_R;
-				case 'down': return Controls.instance.NOTE_DOWN_R;
-				case 'up': return Controls.instance.NOTE_UP_R;
-				case 'right': return Controls.instance.NOTE_RIGHT_R;
-				default: return Controls.instance.justReleased(name);
-			}
-			return false;
-		});
 		
 		set('parentLua', null);
 		
 		#if LUA_ALLOWED
 		set('parentLua', parentLua);
 		
-		set('createGlobalCallback', function(name:String, func:Dynamic)
-		{
+		set('createGlobalCallback', function(name:String, func:Dynamic) {
 			if (!Reflect.isFunction(func)) {
 				log('createGlobalCallback ($name): 2nd argument is not a function', posInfos(), ERROR);
 				return;
 			}
 			
-			for (script in PlayState.instance.luaArray) {
+			for (script in cast(FlxG.state, ScriptedSubState).luaArray) {
 				if(script != null && script.lua != null && !script.closed)
 					Lua_helper.add_callback(script.lua, name, func);
 			}
@@ -378,8 +359,7 @@ class FunkinHscript extends Script {
 			FunkinLua.customFunctions.set(name, func);
 		});
 		
-		set('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua = null)
-		{
+		set('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua = null) {
 			if (!Reflect.isFunction(func)) {
 				log('createCallback ($name): expected function', posInfos(), ERROR);
 				return;
@@ -391,32 +371,20 @@ class FunkinHscript extends Script {
 			else log('createCallback ($name): No Lua instance specified', posInfos(), ERROR);
 		});
 		
-		set('addHaxeLibrary', function(libName:String, ?libPackage:String = '') {
+		set('addHaxeLibrary', function(libName:String, libPackage:String = '') {
 			try {
-				var str:String = '';
-				if(libPackage.length > 0)
-					str = libPackage + '.';
-
-				imports.set(libName, Type.resolveClass(str + libName));
+				var path:Array<String> = (libPackage.length == 0 ? '$libName' : '$libPackage.$libName').split('.');
+				
+				interp.importPath(path, INormal);
 			} catch (e:haxe.Exception) {
 				catchError(this, e);
 			}
 		});
 		#end
 		
-		set('version', MainMenuState.psychEngineVersion.trim());
-		set('modVersion', MainMenuState.modVersion.trim());
-		set('modFolder', this.modFolder);
-
-		set('buildTarget', LuaUtils.getBuildTarget());
-		set('customSubstate', CustomSubstate.instance);
 		set('customSubstateName', CustomSubstate.name);
-
-		set('Function_Stop', LuaUtils.Function_Stop);
-		set('Function_Continue', LuaUtils.Function_Continue);
-		set('Function_StopLua', LuaUtils.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
-		set('Function_StopHScript', LuaUtils.Function_StopHScript);
-		set('Function_StopAll', LuaUtils.Function_StopAll);
+		set('customSubstate', CustomSubstate.instance);
+		set('modFolder', this.modFolder);
 		
 		set('trace', Reflect.makeVarArgs(function(x:Array<Dynamic>) { // fix static target
 			var pos = this.interp.posInfos();
@@ -588,46 +556,6 @@ class FunkinHscript extends Script {
 		closed = true;
 		#if LUA_ALLOWED parentLua = null; #end
 	}
-}
-
-class CustomFlxColor {
-	public static var TRANSPARENT(default, null):Int = FlxColor.TRANSPARENT;
-	public static var BLACK(default, null):Int = FlxColor.BLACK;
-	public static var WHITE(default, null):Int = FlxColor.WHITE;
-	public static var GRAY(default, null):Int = FlxColor.GRAY;
-
-	public static var GREEN(default, null):Int = FlxColor.GREEN;
-	public static var LIME(default, null):Int = FlxColor.LIME;
-	public static var YELLOW(default, null):Int = FlxColor.YELLOW;
-	public static var ORANGE(default, null):Int = FlxColor.ORANGE;
-	public static var RED(default, null):Int = FlxColor.RED;
-	public static var PURPLE(default, null):Int = FlxColor.PURPLE;
-	public static var BLUE(default, null):Int = FlxColor.BLUE;
-	public static var BROWN(default, null):Int = FlxColor.BROWN;
-	public static var PINK(default, null):Int = FlxColor.PINK;
-	public static var MAGENTA(default, null):Int = FlxColor.MAGENTA;
-	public static var CYAN(default, null):Int = FlxColor.CYAN;
-
-	public static function fromInt(Value:Int):Int 
-		return cast FlxColor.fromInt(Value);
-
-	public static function fromRGB(Red:Int, Green:Int, Blue:Int, Alpha:Int = 255):Int
-		return cast FlxColor.fromRGB(Red, Green, Blue, Alpha);
-
-	public static function fromRGBFloat(Red:Float, Green:Float, Blue:Float, Alpha:Float = 1):Int
-		return cast FlxColor.fromRGBFloat(Red, Green, Blue, Alpha);
-
-	public static inline function fromCMYK(Cyan:Float, Magenta:Float, Yellow:Float, Black:Float, Alpha:Float = 1):Int
-		return cast FlxColor.fromCMYK(Cyan, Magenta, Yellow, Black, Alpha);
-
-	public static function fromHSB(Hue:Float, Sat:Float, Brt:Float, Alpha:Float = 1):Int
-		return cast FlxColor.fromHSB(Hue, Sat, Brt, Alpha);
-
-	public static function fromHSL(Hue:Float, Sat:Float, Light:Float, Alpha:Float = 1):Int
-		return cast FlxColor.fromHSL(Hue, Sat, Light, Alpha);
-
-	public static function fromString(str:String):Int
-		return cast FlxColor.fromString(str);
 }
 
 class CustomInterp extends insanity.backend.Interp {

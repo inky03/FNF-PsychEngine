@@ -100,7 +100,7 @@ class ReflectionFunctions
 				if (groupOrArray is Array) {
 					return LuaUtils.getPropertyLoop(variable, allowMaps, groupOrArray[index]);
 				} else {
-					return LuaUtils.getPropertyLoop(variable, allowMaps, Reflect.getProperty(groupOrArray, 'members')[index]);
+					return LuaUtils.getPropertyLoop(variable, allowMaps, CustomReflect.getProperty(groupOrArray, 'members')[index]);
 				}
 			} else {
 				FunkinLua.luaTrace('getPropertyFromGroup: Object $group doesn\'t exist!', false, false, ERROR);
@@ -126,7 +126,7 @@ class ReflectionFunctions
 				if (groupOrArray is Array) {
 					LuaUtils.setPropertyLoop(variable, value, allowMaps, groupOrArray[index]);
 				} else {
-					LuaUtils.setPropertyLoop(variable, value, allowMaps, Reflect.getProperty(groupOrArray, 'members')[index]);
+					LuaUtils.setPropertyLoop(variable, value, allowMaps, CustomReflect.getProperty(groupOrArray, 'members')[index]);
 				}
 			} else {
 				FunkinLua.luaTrace('setPropertyFromGroup: Object $group doesn\'t exist!', false, false, ERROR);

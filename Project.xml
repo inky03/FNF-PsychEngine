@@ -110,10 +110,13 @@
 	<!-- __________________________________ Fun _________________________________ -->
 	
 	<define name="SCRIPTS_ALLOWED" if="HSCRIPT_ALLOWED || LUA_ALLOWED" />
+	<define name="HSCRIPT_SCRIPTED_ABSTRACTS" if="HSCRIPT_ALLOWED" />
+	<define name="HSCRIPT_SCRIPTED_CLASSES" if="HSCRIPT_ALLOWED" />
 	
-	<section if="INCLUDE_ALL_CLASSES SCRIPTS_ALLOWED">
-		<haxeflag name="-dce no" />
-		<haxeflag name="--macro" value="backend.macro.Init.includeClasses()" />
+	<section if="SCRIPTS_ALLOWED">
+		<haxeflag name="-dce no" if="INCLUDE_ALL_CLASSES" />
+		<haxeflag name="--macro" value="backend.macro.Init.includeClasses()" if="INCLUDE_ALL_CLASSES" />
+		<haxeflag name="--macro" value="backend.macro.Init.includeScriptedAbstracts()" if="HSCRIPT_SCRIPTED_ABSTRACTS" />
 	</section>
 	
 	<haxeflag name="--macro" value="backend.macro.Init.init()" />
