@@ -18,8 +18,17 @@ import openfl.events.Event;
 import openfl.display.StageScaleMode;
 import lime.app.Application;
 import states.TitleState;
+
+#if GLOBAL_SCRIPTS
 import psychlua.GlobalScriptHandler;
+#end
+
+#if HSCRIPT_ALLOWED
+#if (!macro)
+import psychlua.hscript.ScriptedClasses;
+#end
 import psychlua.HScript;
+#end
 
 #if (linux || mac)
 import lime.graphics.Image;
