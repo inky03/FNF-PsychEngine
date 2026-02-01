@@ -1,4 +1,4 @@
-package psychlua;
+package scripting.lua;
 
 import Type.ValueType;
 import haxe.Constraints;
@@ -14,7 +14,7 @@ class ReflectionFunctions
 	
 	public static function implement() {
 		FunkinLua.registerFunction("getPropertyFromClass", function(classVar:String, variable:String, allowMaps:Bool = false) {
-			var cls:Dynamic = Type.resolveClass(classVar);
+			var cls:Dynamic = CustomType.resolveClass(classVar);
 			if (cls == null) {
 				FunkinLua.luaTrace('getPropertyFromClass: Class $classVar not found', false, false, ERROR);
 				return null;
@@ -23,7 +23,7 @@ class ReflectionFunctions
 			return LuaUtils.getPropertyLoop(variable, allowMaps, cls);
 		});
 		FunkinLua.registerFunction("setPropertyFromClass", function(classVar:String, variable:String, value:Dynamic, allowMaps:Bool = false, allowInstances:Bool = false) {
-			var cls:Dynamic = Type.resolveClass(classVar);
+			var cls:Dynamic = CustomType.resolveClass(classVar);
 			if (cls == null) {
 				FunkinLua.luaTrace('getPropertyFromClass: Class $classVar not found', false, false, ERROR);
 				return null;
@@ -33,7 +33,7 @@ class ReflectionFunctions
 			return LuaUtils.setPropertyLoop(variable, value, allowMaps, cls);
 		});
 		FunkinLua.registerFunction("callMethodFromClass", function(className:String, funcToRun:String, ?args:Array<Dynamic>) {
-			return callMethodFromObject(Type.resolveClass(className), funcToRun, parseInstances(args ?? []));
+			return callMethodFromObject(CustomType.resolveClass(className), funcToRun, parseInstances(args ?? []));
 		});
 
 		FunkinLua.registerFunction("createInstance", function(variableToSave:String, className:String, ?args:Array<Dynamic>) {
@@ -42,7 +42,7 @@ class ReflectionFunctions
 			} else if (MusicBeatState.getVariables().get(variableToSave) != null) {
 				FunkinLua.luaTrace('createInstance: Variable $variableToSave is already being used and cannot be replaced!', false, false, ERROR);
 			} else {
-				var myType:Class<Dynamic> = Type.resolveClass(className);
+				var myType:Class<Dynamic> = CustomType.resolveClass(className);
 				
 				if (myType == null) {
 					FunkinLua.luaTrace('createInstance: Couldn\'t resolve class $className', false, false, ERROR);
@@ -50,7 +50,7 @@ class ReflectionFunctions
 				}
 				
 				try {
-					var obj:Dynamic = Type.createInstance(myType, parseInstances(args ?? []));
+					var obj:Dynamic = CustomType.createInstance(myType, parseInstances(args ?? []));
 					MusicBeatState.getVariables().set(variableToSave, obj);
 					return '$instanceStr::$variableToSave';
 				} catch(e:Dynamic) {
@@ -183,7 +183,7 @@ class ReflectionFunctions
 					}
 
 				default: //Is Group
-					if (obj == null) obj = groupOrArray.members[index];
+					if (obj == null) obj = CustomReflect.getProperty(groupOrArray, 'members')[index];
 					groupOrArray.remove(obj, true);
 					if (destroy) obj.destroy();
 			}

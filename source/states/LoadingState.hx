@@ -29,9 +29,6 @@ import objects.NoteSplash;
 import psychlua.FunkinLua;
 import psychlua.LuaUtils;
 #end
-#if SCRIPTS_ALLOWED
-import psychlua.GlobalScriptHandler;
-#end
 
 #if cpp
 @:headerCode('

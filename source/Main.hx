@@ -19,15 +19,14 @@ import openfl.display.StageScaleMode;
 import lime.app.Application;
 import states.TitleState;
 
-#if GLOBAL_SCRIPTS
-import psychlua.GlobalScriptHandler;
-#end
-
 #if HSCRIPT_ALLOWED
 #if (!macro && HSCRIPT_SCRIPTED_CLASSES)
-import psychlua.hscript.ScriptedClasses;
+import scripting.hscript.ScriptedClasses;
 #end
-import psychlua.HScript;
+import scripting.hscript.FunkinHscript;
+#end
+#if GLOBAL_SCRIPTS
+import scripting.GlobalScripts;
 #end
 
 #if (linux || mac)
@@ -107,9 +106,9 @@ class Main extends Sprite
 		Language.reloadPhrases();
 		Difficulty.resetList();
 		
-		#if HSCRIPT_ALLOWED HScript.init(); #end
-		#if GLOBAL_SCRIPTS GlobalScriptHandler.init(); #end
-		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
+		#if GLOBAL_SCRIPTS GlobalScripts.init(); #end
+		#if HSCRIPT_ALLOWED FunkinHscript.init(); #end
+		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(scripting.lua.CallbackHandler.call)); #end
 		
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
 		addChild(new #if UNHOLYWANDERER04 UnholyGame #else FlxGame #end(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));

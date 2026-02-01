@@ -5,12 +5,14 @@ import backend.PsychCamera;
 import psychlua.CustomState;
 
 #if GLOBAL_SCRIPTS
-import psychlua.GlobalScriptHandler;
+import scripting.hscript.FunkinModuleCollection;
+import scripting.GlobalScripts;
 #end
 
 class MusicBeatState extends MusicBeatSubstate {
 	public var camOther:FlxCamera = null;
 	public static var timePassedOnState:Float = 0;
+	public static var hardRefresh:Null<Bool> = null;
 	@:dox(hide) var _psychCameraInitialized:Bool = false;
 	
 	public function new() {
@@ -46,7 +48,12 @@ class MusicBeatState extends MusicBeatSubstate {
 		timePassedOnState = 0;
 	}
 	override function preCreate():Void {
-		#if GLOBAL_SCRIPTS GlobalScriptHandler.refreshScripts(); #end
+		#if GLOBAL_SCRIPTS
+			FunkinModuleCollection.refresh(hardRefresh);
+			GlobalScripts.refresh(hardRefresh);
+		#end
+		
+		hardRefresh = null;
 		
 		if (camOther == null) {
 			camOther = new FlxCamera();

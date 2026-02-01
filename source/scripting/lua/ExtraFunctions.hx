@@ -1,4 +1,4 @@
-package psychlua;
+package scripting.lua;
 
 import openfl.utils.Assets;
 import backend.Controls;

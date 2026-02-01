@@ -1,13 +1,20 @@
-package psychlua;
+package scripting;
 
 #if GLOBAL_SCRIPTS
 import flixel.FlxState;
 
-class GlobalScriptHandler {
+import insanity.Environment;
+
+import scripting.lua.LuaUtils;
+import scripting.hscript.FunkinHscript;
+
+class GlobalScripts {
 	public static var game(get, never):FlxState;
 	public static var subState(get, never):FlxState;
 	
 	public static var resetting:Bool = false;
+	
+	public static var environment:Environment = new Environment();
 	
 	static function get_game():FlxState {
 		return FlxG.state;
@@ -22,9 +29,9 @@ class GlobalScriptHandler {
 	}
 	
 	#if HSCRIPT_ALLOWED
-	public static var hscriptArray:Array<HScript> = []; // TODO: lua... also...
-	public static function initHScript(file:String):HScript {
-		var hs:HScript = HScript.initFromFile(file, null, HScriptGlobal);
+	public static var hscriptArray:Array<FunkinHscript> = []; // TODO: lua... also...
+	public static function initHScript(file:String):FunkinHscript {
+		var hs:FunkinHscript = FunkinHscript.initFromFile(file, null, FunkinGlobalHscript);
 		if (hs != null) hscriptArray.push(hs);
 		
 		return hs;
@@ -34,8 +41,10 @@ class GlobalScriptHandler {
 	public static function init():Void {
 		FlxG.signals.preUpdate.add(() -> call('onUpdate', [FlxG.elapsed]));
 		FlxG.signals.postUpdate.add(() -> call('onUpdatePost', [FlxG.elapsed]));
+		FlxG.signals.preDraw.add(() -> call('onDraw'));
+		FlxG.signals.postDraw.add(() -> call('onDrawPost'));
 	}
-	public static function refreshScripts(complete:Bool = false):Void {
+	public static function refresh(complete:Bool = false):Void {
 		var tracked:Array<String> = [];
 		resetting = true;
 		
@@ -53,7 +62,7 @@ class GlobalScriptHandler {
 			}
 		}
 		
-		var cleanup:Array<HScript> = [];
+		var cleanup:Array<FunkinHscript> = [];
 		for (hs in hscriptArray) {
 			if (!tracked.contains(hs.filePath)) {
 				destroyScript(hs);
@@ -71,10 +80,10 @@ class GlobalScriptHandler {
 		#end
 	}
 	
-	static function findScript(path:String):HScript {
-		return Lambda.find(hscriptArray, (hs:HScript) -> (hs.filePath == path));
+	static function findScript(path:String):FunkinHscript {
+		return Lambda.find(hscriptArray, (hs:FunkinHscript) -> (hs.filePath == path));
 	}
-	static function destroyScript(hs:HScript):Void {
+	static function destroyScript(hs:FunkinHscript):Void {
 		if (hs.exists('onDestroy'))
 			hs.call('onDestroy');
 		hs.destroy();
@@ -125,17 +134,17 @@ class GlobalScriptHandler {
 	}
 }
 
-class HScriptGlobal extends HScript {
+class FunkinGlobalHscript extends FunkinHscript {
 	public override function setDefaults():Void {
 		parentState = null;
 		super.setDefaults();
 	}
 	
 	public override function getParent():Dynamic {
-		return GlobalScriptHandler;
+		return GlobalScripts;
 	}
 	public override function getVariables():Map<String, Dynamic> {
-		return HScript.globalStatic;
+		return FunkinHscript.globalStatic;
 	}
 }
 #end

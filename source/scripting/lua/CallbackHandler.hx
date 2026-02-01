@@ -1,5 +1,5 @@
 #if LUA_ALLOWED
-package psychlua;
+package scripting.lua;
 
 class CallbackHandler {
 	public static inline function call(l:State, fname:String):Int {

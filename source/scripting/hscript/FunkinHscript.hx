@@ -1,4 +1,4 @@
-package psychlua.hscript;
+package scripting.hscript;
 
 #if (!macro)
 
@@ -32,8 +32,9 @@ typedef HScriptInfos = {
 	#end
 }
 
+@:access(insanity.backend.Parser)
 @:access(insanity.backend.Interp)
-class FunkinHscript extends Script {
+class FunkinHscript extends Script implements FunkinScript {
 	public var closed:Bool = false;
 	public var filePath:String;
 	public var modFolder:String;
@@ -47,16 +48,16 @@ class FunkinHscript extends Script {
 	public static function initHaxeModule(parent:FunkinLua) {
 		if (parent.hscript == null) {
 			trace('INIT HAXE INTERP FOR: ${parent.scriptName}');
-			parent.hscript = new HScript(parent, null, null, null, parent.parentState);
+			parent.hscript = new FunkinHscript(parent, null, null, null, parent.parentState);
 		}
 	}
 
 	public static function initHaxeModuleCode(parent:FunkinLua, code:String, ?varsToBring:Any = null) {
-		var hs:HScript = try parent.hscript catch (e) null;
+		var hs:FunkinHscript = try parent.hscript catch (e) null;
 		if (hs == null) {
 			trace('initializing haxe interp for: ${parent.scriptName}');
 			
-			parent.hscript = new HScript(parent, code, varsToBring, null, parent.parentState);
+			parent.hscript = new FunkinHscript(parent, code, varsToBring, null, parent.parentState);
 			
 			if (parent.hscript.program == null)
 				parent.hscript = null;
@@ -80,6 +81,7 @@ class FunkinHscript extends Script {
 	#end
 	
 	public static function init():Void {
+		Config.interpClass = CustomInterp;
 		Config.typeProxy.set('options.GameplayChangersSubstate', options.GameplayChangersSubState); // lol
 		
 		// Some very commonly used classes
@@ -149,7 +151,7 @@ class FunkinHscript extends Script {
 		
 		Config.globalVariables.set('Function_Stop', LuaUtils.Function_Stop);
 		Config.globalVariables.set('Function_Continue', LuaUtils.Function_Continue);
-		Config.globalVariables.set('Function_StopLua', LuaUtils.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
+		Config.globalVariables.set('Function_StopLua', LuaUtils.Function_StopLua); //doesnt do much cuz FunkinHscript has a lower priority than Lua
 		Config.globalVariables.set('Function_StopHScript', LuaUtils.Function_StopHScript);
 		Config.globalVariables.set('Function_StopAll', LuaUtils.Function_StopAll);
 		
@@ -261,11 +263,9 @@ class FunkinHscript extends Script {
 			scriptName = parent.scriptName;
 		#end
 		
-		super(scriptThing, scriptName);
-		var customInterp:CustomInterp = new CustomInterp();
-		customInterp.parentInstance = getParent();
-		customInterp.defineGlobals = true;
-		this.interp = customInterp;
+		super(scriptThing, scriptName, FunkinModuleCollection.instance);
+		cast(interp, CustomInterp).parentInstance = getParent();
+		
 		#if LUA_ALLOWED
 		parentLua = parent;
 		if (parent != null)
@@ -283,10 +283,10 @@ class FunkinHscript extends Script {
 			destroy();
 	}
 	
-	public static function initFromFile(file:String, ?parent:FlxState, ?base:Class<HScript>) {
-		var newScript:HScript = null;
+	public static function initFromFile(file:String, ?parent:FlxState, ?base:Class<FunkinHscript>) {
+		var newScript:FunkinHscript = null;
 		
-		newScript = Type.createInstance(base ?? HScript, [null, file, null, true, parent]);
+		newScript = Type.createInstance(base ?? FunkinHscript, [null, file, null, true, parent]);
 		newScript.unsafe = true;
 		newScript.start();
 		
@@ -382,18 +382,9 @@ class FunkinHscript extends Script {
 		});
 		#end
 		
-		set('customSubstateName', CustomSubstate.name);
-		set('customSubstate', CustomSubstate.instance);
+		set('customSubstateName', scripting.CustomSubState.name);
+		set('customSubstate', scripting.CustomSubState.instance);
 		set('modFolder', this.modFolder);
-		
-		set('trace', Reflect.makeVarArgs(function(x:Array<Dynamic>) { // fix static target
-			var pos = this.interp.posInfos();
-			
-			var v = x.shift();
-			if (x.length > 0) pos.customParams = x;
-			
-			log(Std.string(v), posInfos());
-		}));
 		
 		if (varsToBring != null) {
 			for (field in Reflect.fields(varsToBring))
@@ -401,14 +392,14 @@ class FunkinHscript extends Script {
 		}
 	}
 	
-	public inline function get(field:String):Dynamic {
+	public function get(field:String):Dynamic {
 		return variables.get(field);
 	}
-	public inline function set(field:String, v:Dynamic):Dynamic {
+	public function set(field:String, v:Dynamic):Dynamic {
 		variables.set(field, v);
 		return v;
 	}
-	public inline function exists(field:String):Bool {
+	public function exists(field:String):Bool {
 		return variables.exists(field);
 	}
 	
@@ -442,11 +433,11 @@ class FunkinHscript extends Script {
 			{
 				var pos:HScriptInfos = cast {fileName: funk.scriptName, showLine: false};
 				if (funk.lastCalledFunction != '') pos.funcName = funk.lastCalledFunction;
-				log('runHaxeFunction: HScript has not been initialized yet! Use "runHaxeCode" to initialize it', pos, ERROR);
+				log('runHaxeFunction: FunkinHscript has not been initialized yet! Use "runHaxeCode" to initialize it', pos, ERROR);
 			}
 			return null;
 		});
-		// This function is unnecessary because import already exists in HScript as a native feature
+		// This function is unnecessary because import already exists in FunkinHscript as a native feature
 		funk.addLocalCallback("addHaxeLibrary", function(libName:String, ?libPackage:String = '') {
 			var str:String = '';
 			if (libPackage.length > 0)
@@ -475,7 +466,7 @@ class FunkinHscript extends Script {
 			
 			FunkinLua.lastCalledScript = funk;
 			if (FunkinLua.getBool('luaDebugMode') && FunkinLua.getBool('luaDeprecatedWarnings'))
-				log('addHaxeLibrary is deprecated! Import classes through \"import\" in HScript!', pos, WARN);
+				log('addHaxeLibrary is deprecated! Import classes through \"import\" in FunkinHscript!', pos, WARN);
 		});
 	}
 	#end
@@ -500,7 +491,7 @@ class FunkinHscript extends Script {
 		return null;
 	}
 	
-	public static function catchError(hs:HScript, e:haxe.Exception, ?funcToRun:String):Void {
+	public static function catchError(hs:FunkinHscript, e:haxe.Exception, ?funcToRun:String):Void {
 		if (hs.unsafe) {
 			hs.onProgramError(e);
 			return;
@@ -527,7 +518,7 @@ class FunkinHscript extends Script {
 		
 		#if LUA_ALLOWED
 		if (newPos.isLua == true) {
-			msgInfo += 'HScript:';
+			msgInfo += 'FunkinHscript:';
 			newPos.showLine = false;
 		}
 		#end
@@ -548,7 +539,7 @@ class FunkinHscript extends Script {
 		log(Std.string(e), posInfos(), FATAL);
 	}
 	public override dynamic function onParsingError(e:haxe.Exception):Void {
-		log(Std.string(e), cast {fileName: name, showLine: false}, FATAL);
+		log(Std.string(e), cast {fileName: name, lineNumber: parser.line}, FATAL);
 	}
 
 	public function destroy() {
@@ -578,6 +569,19 @@ class CustomInterp extends insanity.backend.Interp {
 
 	public function new(?environment:Environment, ?parent:Dynamic) {
 		super(environment, parent);
+	}
+	
+	public override function setDefaults(wipe:Bool = true, includeConfig:Bool = true):Void {
+		super.setDefaults(wipe, includeConfig);
+		
+		variables.set('trace', Reflect.makeVarArgs(function(x:Array<Dynamic>) { // fix static target
+			var pos = posInfos();
+			
+			var v = x.shift();
+			if (x.length > 0) pos.customParams = x;
+			
+			FunkinHscript.log(Std.string(v), pos);
+		}));
 	}
 	
 	override function get(o:Dynamic, f:String, maybe:Bool = false):Dynamic {
@@ -709,15 +713,15 @@ class FunkinHscript
 	#if LUA_ALLOWED
 	public static function implement() {
 		FunkinLua.registerFunction("runHaxeCode", function(codeToRun:String, ?varsToBring:Any = null, ?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):Dynamic {
-			Log.print('HScript is not supported on this platform!', ERROR);
+			Log.print('FunkinHscript is not supported on this platform!', ERROR);
 			return null;
 		});
 		FunkinLua.registerFunction("runHaxeFunction", function(funcToRun:String, ?funcArgs:Array<Dynamic> = null) {
-			Log.print('HScript is not supported on this platform!', ERROR);
+			Log.print('FunkinHscript is not supported on this platform!', ERROR);
 			return null;
 		});
 		FunkinLua.registerFunction("addHaxeLibrary", function(libName:String, ?libPackage:String = '') {
-			Log.print('HScript is not supported on this platform!', ERROR);
+			Log.print('FunkinHscript is not supported on this platform!', ERROR);
 			return null;
 		});
 	}

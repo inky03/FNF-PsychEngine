@@ -1,4 +1,4 @@
-package psychlua;
+package scripting.lua;
 
 #if (HSCRIPT_ALLOWED && !HSCRIPT_SCRIPTED_ABSTRACTS)
 class CustomFlxColor {

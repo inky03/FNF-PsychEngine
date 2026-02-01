@@ -3,7 +3,8 @@ package backend;
 import shaders.ErrorHandledShader;
 
 #if GLOBAL_SCRIPTS
-import psychlua.GlobalScriptHandler;
+import scripting.hscript.FunkinModuleCollection;
+import scripting.GlobalScripts;
 #end
 
 /**
@@ -131,10 +132,10 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		if (subState == null) {
 			MusicBeatState.timePassedOnState += elapsed;
 			
-			if (FlxG.keys.justPressed.F5 #if GLOBAL_SCRIPTS && !GlobalScriptHandler.resetting #end) { // add keybind?
+			if (FlxG.keys.justPressed.F5 #if GLOBAL_SCRIPTS && !GlobalScripts.resetting #end) { // add keybind?
 				reset();
 			} #if GLOBAL_SCRIPTS else {
-				GlobalScriptHandler.resetting = false;
+				GlobalScripts.resetting = false;
 			} #end
 		}
 		
@@ -165,11 +166,12 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		stagesFunc((stage:BaseStage) -> stage.update(elapsed));
 		super.update(elapsed);
 	}
+	
 	/**
 	 * Resets the current state.
 	*/
 	public function reset():Void {
-		#if GLOBAL_SCRIPTS GlobalScriptHandler.refreshScripts(FlxG.keys.pressed.SHIFT); #end
+		MusicBeatState.hardRefresh = FlxG.keys.pressed.SHIFT;
 		MusicBeatState.switchState(FlxG.state);
 	}
 	
@@ -308,7 +310,7 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	 * @return 	Return value in last called global script.
 	*/
 	public static inline function callGlobal(fun:String, ?params:Array<Dynamic>):Dynamic {
-		#if GLOBAL_SCRIPTS return GlobalScriptHandler.call(fun, params);
+		#if GLOBAL_SCRIPTS return GlobalScripts.call(fun, params);
 		#else return null; #end
 	}
 	

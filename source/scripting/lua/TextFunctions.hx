@@ -1,4 +1,4 @@
-package psychlua;
+package scripting.lua;
 
 class TextFunctions
 {
@@ -156,8 +156,9 @@ class TextFunctions
 			var text:FlxText = LuaUtils.getObjectDirectly(tag);
 			if (text == null) return;
 
-			var instance:Dynamic = (CustomSubstate.instance != null ? CustomSubstate.instance : LuaUtils.getTargetInstance());
+			var instance:Dynamic = (scripting.CustomSubState.instance ?? LuaUtils.getTargetInstance());
 			instance.remove(text, true);
+			
 			if (destroy) {
 				text.destroy();
 				instance.removeVar(tag);

@@ -1,5 +1,3 @@
 package psychlua;
 
-interface FunkinScript {
-	// TODO
-}
+typedef FunkinScript = scripting.lua.FunkinScript;

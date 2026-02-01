@@ -1,4 +1,4 @@
-package psychlua.hscript;
+package scripting.hscript;
 
 #if HSCRIPT_SCRIPTED_CLASSES
 

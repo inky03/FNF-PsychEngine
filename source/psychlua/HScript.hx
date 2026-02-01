@@ -1,3 +1,3 @@
 package psychlua;
 
-typedef HScript = psychlua.hscript.FunkinHscript;
+typedef HScript = scripting.hscript.FunkinHscript;

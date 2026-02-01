@@ -1,4 +1,6 @@
-package psychlua;
+package scripting.lua;
+
+import objects.ModchartAnimateSprite;
 
 import openfl.utils.Assets;
 

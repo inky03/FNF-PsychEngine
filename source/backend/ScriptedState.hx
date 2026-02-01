@@ -5,7 +5,8 @@ import psychlua.FunkinLua;
 #end
 
 #if GLOBAL_SCRIPTS
-import psychlua.GlobalScriptHandler;
+import scripting.hscript.FunkinModuleCollection;
+import scripting.GlobalScripts;
 #end
 
 class ScriptedState extends ScriptedSubState {
@@ -36,7 +37,10 @@ class ScriptedState extends ScriptedSubState {
 		MusicBeatState.timePassedOnState = 0;
 	}
 	public override function preCreate():Void {
-		#if GLOBAL_SCRIPTS GlobalScriptHandler.refreshScripts(); #end
+		#if GLOBAL_SCRIPTS
+			FunkinModuleCollection.refresh();
+			GlobalScripts.refresh();
+		#end
 		
 		if (camOther == null) {
 			camOther = new FlxCamera();
@@ -50,6 +54,13 @@ class ScriptedState extends ScriptedSubState {
 		super.preCreate();
 	}
 	override function _preCreate():Void {
+		#if GLOBAL_SCRIPTS
+			FunkinModuleCollection.refresh(MusicBeatState.hardRefresh);
+			GlobalScripts.refresh(MusicBeatState.hardRefresh);
+		#end
+		
+		MusicBeatState.hardRefresh = null;
+		
 		#if SCRIPTS_ALLOWED startStateScripts(); #end
 		
 		MusicBeatSubstate.callGlobal('onCreateState', [this, Type.getClass(this)]);
