@@ -1376,11 +1376,11 @@ class PlayState extends ScriptedState
 		
 		inCutscene = false;
 		seenCutscene = true;
-		if (!skipArrowStartTween && !isStoryMode && !skipCountdown && startOnTime <= 0)
-			tweenInArrows();
+		
+		strumLineNotes.revive();
 		
 		var ret:Dynamic = callOnScripts('onStartCountdown', null, true);
-		if(ret != LuaUtils.Function_Stop) {
+		if (ret != LuaUtils.Function_Stop) {
 			if (skipCountdown || startOnTime > 0) skipArrowStartTween = true;
 
 			canPause = true;
@@ -1393,9 +1393,12 @@ class PlayState extends ScriptedState
 				setOnScripts('defaultOpponentStrumY' + i, opponentStrums.members[i].y);
 				//if(ClientPrefs.data.middleScroll) opponentStrums.members[i].visible = false;
 			}
+			
+			if (!skipArrowStartTween && !isStoryMode && startOnTime <= 0)
+				tweenInArrows();
 
 			startedCountdown = true;
-			Conductor.songPosition = -Conductor.crochet * 5;
+			Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
 			setOnScripts('startedCountdown', true);
 			callOnScripts('onCountdownStarted');
 
@@ -1411,6 +1414,8 @@ class PlayState extends ScriptedState
 				return true;
 			}
 			moveCameraSection();
+		} else {
+			strumLineNotes.kill();
 		}
 		
 		return true;
@@ -1672,6 +1677,7 @@ class PlayState extends ScriptedState
 	function startSong():Void
 	{
 		startingSong = false;
+		strumLineNotes.revive();
 
 		@:privateAccess
 		FlxG.sound.playMusic(inst._sound, 1, false);
@@ -2204,7 +2210,8 @@ class PlayState extends ScriptedState
 		if (startedCountdown && !paused)
 		{
 			Conductor.songPosition += elapsed * 1000 * playbackRate;
-			if (FlxG.sound.music != null && FlxG.sound.music.playing)
+			
+			if (!startingSong && FlxG.sound.music?.playing)
 			{
 				Conductor.songPosition = FlxMath.lerp(FlxG.sound.music.time + Conductor.offset, Conductor.songPosition, Math.exp(-elapsed * 5));
 				var timeDiff:Float = Math.abs((FlxG.sound.music.time + Conductor.offset) - Conductor.songPosition);
@@ -2218,7 +2225,7 @@ class PlayState extends ScriptedState
 			if (startedCountdown && Conductor.songPosition >= Conductor.offset)
 				startSong();
 			else if(!startedCountdown)
-				Conductor.songPosition = -Conductor.crochet * 5;
+				Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
 		}
 		else if (!paused && updateTime)
 		{
@@ -3245,7 +3252,8 @@ class PlayState extends ScriptedState
 		
 		// more accurate hit time for the ratings?
 		var lastTime:Float = Conductor.songPosition;
-		if(Conductor.songPosition >= 0) Conductor.songPosition = FlxG.sound.music.time + Conductor.offset;
+		if (Conductor.songPosition >= 0 && !startingSong && FlxG.sound.music?.playing)
+			Conductor.songPosition = FlxG.sound.music.time + Conductor.offset;
 		
 		// obtain notes that the player can hit
 		var highestNote:Note = null;

@@ -55,15 +55,13 @@ class DiscordClient
 			message += '($user#$discriminator)';
 		else //New Discord IDs/Discriminator system
 			message += '($user)';
-
-		trace(message);
-		if (FlxG.state is MusicBeatSubstate)
-			cast(FlxG.state, MusicBeatSubstate).updatePresence();
 		
 		var button:DiscordButton = new DiscordButton();
 		button.url = 'https://gamebanana.com/mods/591796';
 		button.label = 'On GameBanana';
 		presence.__presence.buttons[0] = button;
+
+		updatePresence();
 	}
 
 	private static function onError(errorCode:Int, message:cpp.ConstCharStar):Void
