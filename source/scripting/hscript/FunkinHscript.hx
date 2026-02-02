@@ -231,7 +231,6 @@ class FunkinHscript extends Script implements FunkinScript {
 	}
 	
 	public var origin:String;
-	public var unsafe:Bool = false;
 	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false, ?state:FlxState) {
 		parentState = state ?? FlxG.state;
 		
@@ -287,8 +286,12 @@ class FunkinHscript extends Script implements FunkinScript {
 		var newScript:FunkinHscript = null;
 		
 		newScript = Type.createInstance(base ?? FunkinHscript, [null, file, null, true, parent]);
-		newScript.unsafe = true;
-		newScript.start();
+		
+		if (newScript.program != null) {
+			newScript.start();
+		} else {
+			newScript.failed = true;
+		}
 		
 		if (newScript.failed) {
 			newScript.destroy();
@@ -297,8 +300,6 @@ class FunkinHscript extends Script implements FunkinScript {
 		
 		if (newScript.variables.exists('onCreate'))
 			newScript.call('onCreate');
-		
-		newScript.unsafe = false;
 		
 		return newScript;
 	}
@@ -492,11 +493,6 @@ class FunkinHscript extends Script implements FunkinScript {
 	}
 	
 	public static function catchError(hs:FunkinHscript, e:haxe.Exception, ?funcToRun:String):Void {
-		if (hs.unsafe) {
-			hs.onProgramError(e);
-			return;
-		}
-		
 		var pos:HScriptInfos = cast hs.interp.posInfos();
 		pos.funcName = funcToRun;
 		#if LUA_ALLOWED
@@ -507,7 +503,7 @@ class FunkinHscript extends Script implements FunkinScript {
 		}
 		#end
 		
-		log(e, pos, hs.unsafe ? FATAL : ERROR);
+		log(e, pos, ERROR);
 	}
 	
 	public static function log(x:Dynamic, pos:haxe.PosInfos, level:LogType = INFO) {
@@ -539,7 +535,10 @@ class FunkinHscript extends Script implements FunkinScript {
 		log(Std.string(e), posInfos(), FATAL);
 	}
 	public override dynamic function onParsingError(e:haxe.Exception):Void {
-		log(Std.string(e), cast {fileName: name, lineNumber: parser.line}, FATAL);
+		var message:String = Std.string(e);
+		if (e is ParserException) message = Printer.errorToString(cast(e, ParserException).e);
+		
+		log(message, cast {fileName: name, lineNumber: parser.line}, FATAL);
 	}
 
 	public function destroy() {
