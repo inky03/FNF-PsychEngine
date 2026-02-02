@@ -626,31 +626,38 @@ class CustomInterp extends insanity.backend.Interp {
 		return v;
 	}
 	override function resolve(id:String):Dynamic {
-		if (locals.exists(id)) 
-			return locals.get(id).r;
-		if (variables.exists(id))
-			return variables.get(id);
-		if (imports.exists(id))
-			return imports.get(id);
-		if (_instanceFields.contains(id))
-			return Reflect.getProperty(parentInstance, id);
-		
-		#if LUA_ALLOWED
-		if (FunkinLua.customFunctions.exists(id))
-			return FunkinLua.customFunctions.get(id);
-		#end
-		if (parentInstance != null) {
-			if (_instanceFields.contains(id)) {
-				return Reflect.getProperty(parentInstance, id);
-			} else if (parentInstance is FlxBasic) {
-				var basic:FlxBasic = cast parentInstance;
-				if (basic.hasVar(id))
-					return basic.getVar(id);
-			}
+		if (imports.exists(id)) {
+			var v:Dynamic = imports.get(id);
+			
+			if (v == null)
+				error(ECustom('Module $id does not define type $id'));
+			
+			return resolveMirror(v);
 		}
 		
-		error(EUnknownVariable(id));
-		return null;
+		if (!variables.exists(id)) {
+			if (_instanceFields.contains(id))
+				return Reflect.getProperty(parentInstance, id);
+			
+			#if LUA_ALLOWED
+			if (FunkinLua.customFunctions.exists(id))
+				return FunkinLua.customFunctions.get(id);
+			#end
+			
+			if (parentInstance != null) {
+				if (_instanceFields.contains(id)) {
+					return Reflect.getProperty(parentInstance, id);
+				} else if (parentInstance is FlxBasic) {
+					var basic:FlxBasic = cast parentInstance;
+					if (basic.hasVar(id))
+						return basic.getVar(id);
+				}
+			}
+			
+			error(EUnknownVariable(id));
+		}
+		
+		return resolveMirror(variables.get(id));
 	}
 	override function setVar(name:String, v:Dynamic):Dynamic {
 		if (AbstractTools.isAbstract(v))
