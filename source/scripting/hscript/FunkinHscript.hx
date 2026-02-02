@@ -610,7 +610,7 @@ class CustomInterp extends insanity.backend.Interp {
 		if (o is FlxBasic && cast(o, FlxBasic).hasVar(f))
 			return cast(o, FlxBasic).getVar(f);
 		
-		return Reflect.getProperty(o, f);
+		return CustomReflect.getProperty(o, f);
 	}
 	override function set(o:Dynamic, f:String, v:Dynamic):Dynamic {
 		if (AbstractTools.isAbstract(v))
@@ -621,7 +621,7 @@ class CustomInterp extends insanity.backend.Interp {
 		if (o is FlxBasic && cast(o, FlxBasic).hasVar(f))
 			return cast(o, FlxBasic).setVar(f, v);
 		
-		Reflect.setProperty(o,f,v);
+		CustomReflect.setProperty(o,f,v);
 		
 		return v;
 	}
@@ -637,7 +637,7 @@ class CustomInterp extends insanity.backend.Interp {
 		
 		if (!variables.exists(id)) {
 			if (_instanceFields.contains(id))
-				return Reflect.getProperty(parentInstance, id);
+				return CustomReflect.getProperty(parentInstance, id);
 			
 			#if LUA_ALLOWED
 			if (FunkinLua.customFunctions.exists(id))
@@ -646,7 +646,7 @@ class CustomInterp extends insanity.backend.Interp {
 			
 			if (parentInstance != null) {
 				if (_instanceFields.contains(id)) {
-					return Reflect.getProperty(parentInstance, id);
+					return CustomReflect.getProperty(parentInstance, id);
 				} else if (parentInstance is FlxBasic) {
 					var basic:FlxBasic = cast parentInstance;
 					if (basic.hasVar(id))
@@ -668,9 +668,9 @@ class CustomInterp extends insanity.backend.Interp {
 			if (iv is Mirror) {
 				switch (iv) {
 					case MProperty(t, f):
-						if (curAccess == f) { Reflect.setField(t, f, v); }
-						else { Reflect.setProperty(t, f, v); }
-						return Reflect.field(t, f);
+						if (curAccess == f) { CustomReflect.setField(t, f, v); }
+						else { CustomReflect.setProperty(t, f, v); }
+						return CustomReflect.field(t, f);
 					default:
 				}
 			}
@@ -683,16 +683,16 @@ class CustomInterp extends insanity.backend.Interp {
 			if (vv is Mirror) {
 				switch (vv) {
 					case MProperty(t, f):
-						if (curAccess == f) { Reflect.setField(t, f, v); }
-						else { Reflect.setProperty(t, f, v); }
-						return Reflect.field(t, f);
+						if (curAccess == f) { CustomReflect.setField(t, f, v); }
+						else { CustomReflect.setProperty(t, f, v); }
+						return CustomReflect.field(t, f);
 					default:
 				}
 			}
 			
 			variables.set(name, v);
 		} else if (_instanceFields.contains(name)) {
-			Reflect.setProperty(parentInstance, name, v);
+			CustomReflect.setProperty(parentInstance, name, v);
 		} else {
 			if (parentInstance is FlxBasic && cast(parentInstance, FlxBasic).hasVar(name)) {
 				cast(parentInstance, FlxBasic).setVar(name, v);
