@@ -11,24 +11,27 @@ class FunkinModule extends insanity.Module {
 	public var hash:String;
 	
 	public override function parse(string:String):Array<ModuleDecl> {
-		var types:Array<ModuleDecl> = super.parse(string);
 		hash = haxe.crypto.Sha256.encode(string);
 		
-		for (type in types) {
-			if (type is InsanityScriptedClass) {
-				var cls:InsanityScriptedClass = cast type;
+		return super.parse(string);
+	}
+	
+	public override function startType(?environment:insanity.Environment, type:IInsanityType):IInsanityType {
+		var type:IInsanityType = super.startType(environment, type);
+		
+		if (type is InsanityScriptedClass) {
+			var cls:InsanityScriptedClass = cast type;
+			
+			cls.safe = true;
+			cls.onInstanceError = function(e:Dynamic, fun:String, ?instance:IInsanityScripted) {
+				var pos:HScriptInfos = cast interp.posInfos();
+				pos.funcName = fun;
 				
-				cls.safe = true;
-				cls.onInstanceError = function(e:Dynamic, fun:String, ?instance:IInsanityScripted) {
-					var pos:HScriptInfos = cast interp.posInfos();
-					pos.funcName = fun;
-					
-					FunkinHscript.log(Std.string(e), pos, ERROR);
-				}
+				FunkinHscript.log(Std.string(e), pos, ERROR);
 			}
 		}
 		
-		return types;
+		return type;
 	}
 	
 	public override dynamic function onProgramError(e:haxe.Exception):Void {
