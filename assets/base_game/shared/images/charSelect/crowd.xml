@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TextureAtlas imagePath="crowd.png">
+<SubTexture name="crowd0000" x="0" y="0" width="1467" height="290" frameX="0" frameY="0" frameWidth="1467" frameHeight="290" />
+<SubTexture name="crowd0001" x="0" y="870" width="1453" height="286" frameX="0" frameY="-4" frameWidth="1467" frameHeight="290" />
+<SubTexture name="crowd0002" x="0" y="290" width="1439" height="290" frameX="0" frameY="0" frameWidth="1467" frameHeight="290" />
+<SubTexture name="crowd0003" x="0" y="580" width="1460" height="290" frameX="0" frameY="0" frameWidth="1467" frameHeight="290" />
+</TextureAtlas>

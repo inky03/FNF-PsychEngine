@@ -50,6 +50,8 @@ class FreeplayState extends ScriptedState
 	var bottomText:FlxText;
 	var bottomBG:FlxSprite;
 
+	var allowInputs:Bool = true;
+
 	var player:MusicPlayer;
 
 	override function create()
@@ -77,6 +79,12 @@ class FreeplayState extends ScriptedState
 		for (i in 0...WeekData.weeksList.length)
 		{
 			if(weekIsLocked(WeekData.weeksList[i])) continue;
+
+			if(ClientPrefs.data.savedCharacter == 'pico' && (!WeekData.weeksList[i].contains('-pico') && WeekData.weeksList[i] != 'weekend1') || WeekData.weeksList[i] == 'weekend1-bf') continue;
+			if(ClientPrefs.data.savedCharacter == 'bf' && (WeekData.weeksList[i].contains('-pico') || WeekData.weeksList[i] == 'weekend1')) continue;
+
+			if(ClientPrefs.data.savedCharacter == 'bf' && ClientPrefs.data.savedDifficulty == 'erect' && (!WeekData.weeksList[i].contains('-erect'))) continue;
+			if(ClientPrefs.data.savedCharacter == 'bf' && ClientPrefs.data.savedDifficulty != 'erect' && (WeekData.weeksList[i].contains('-erect'))) continue;
 
 			var leWeek:WeekData = WeekData.weeksLoaded.get(WeekData.weeksList[i]);
 			var leSongs:Array<String> = [];
@@ -299,6 +307,14 @@ class FreeplayState extends ScriptedState
 				_updateSongLastDifficulty();
 			}
 		}
+
+		#if BASE_GAME_FILES
+		if (FlxG.keys.pressed.TAB && allowInputs) {
+			allowInputs = false;
+            MusicBeatState.switchState(new states.CharacterSelectState());
+            FlxG.sound.play(Paths.sound('cancelMenu'));
+		}
+		#end
 
 		if (controls.BACK)
 		{

@@ -36,6 +36,10 @@ import states.TitleState;
 		[0xFF71E300, 0xFFF6FFE6, 0xFF003100],
 		[0xFFFF884E, 0xFFFFFAF5, 0xFF6C0000]];
 
+	//character select shits
+	public var savedCharacter:String = 'bf';
+	public var savedDifficulty:String = 'normal';
+	
 	public var ghostTapping:Bool = true;
 	public var timeBarType:String = 'Time Left';
 	public var scoreZoom:Bool = true;
