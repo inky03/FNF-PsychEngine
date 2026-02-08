@@ -322,7 +322,7 @@ class FunkinHscript extends Script implements FunkinScript {
 			var stateName:String = clsName.substr(clsName.indexOf('.') + 1);
 			
 			set('game', parentState);
-			set(stateName, cls);
+			interp.imports.set(stateName, cls);
 		}
 		
 		set('global', variableMap);
