@@ -22,8 +22,8 @@ class MusicBeatState extends MusicBeatSubstate {
 	 * 
 	 * @return 	The current `MusicBeatState`.
 	*/
-	public static function getState():MusicBeatState {
-		return cast (FlxG.state, MusicBeatState);
+	public static inline function getState():MusicBeatSubstate {
+		return cast (FlxG.state, MusicBeatSubstate);
 	}
 	/**
 	 * Retrieves the current state's custom variables map.
