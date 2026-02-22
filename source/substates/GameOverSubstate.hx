@@ -153,7 +153,7 @@ class GameOverSubstate extends ScriptedSubState
 			{
 				endBullshit();
 			}
-			else if (controls.BACK)
+			else if (controls.BACK && PlayState.instance?.callOnScripts('onGameOverConfirmPre', [false], true) != psychlua.LuaUtils.Function_Stop)
 			{
 				#if DISCORD_ALLOWED DiscordClient.resetClientID(); #end
 				FlxG.camera.visible = false;
@@ -203,7 +203,7 @@ class GameOverSubstate extends ScriptedSubState
 
 	function endBullshit():Void
 	{
-		if (!isEnding)
+		if (!isEnding && PlayState.instance?.callOnScripts('onGameOverConfirmPre', [true], true) != psychlua.LuaUtils.Function_Stop)
 		{
 			isEnding = true;
 			if (boyfriend.hasAnimation('deathConfirm')) {

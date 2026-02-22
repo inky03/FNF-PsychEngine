@@ -82,7 +82,7 @@ class Main extends Sprite
 		appName = (FlxG.stage.application.meta.get('file') ?? 'PsychEngineMint');
 		
 		#if (cpp && windows)
-		backend.macro.Native.fixScaling();
+		backend.Native.fixScaling();
 		#end
 		
 		// Credits to MAJigsaw77 (he's the og author for this code)
@@ -100,6 +100,11 @@ class Main extends Sprite
 		Mods.pushGlobalMods();
 		#end
 		Mods.loadTopMod();
+		
+		FlxG.signals.postGameReset.add(function() {
+			#if (!html5 && !switch) FlxG.autoPause = ClientPrefs.data.autoPause; #end
+			FlxG.fixedTimestep = false;
+		});
 		
 		FlxG.save.bind('funkin', CoolUtil.getSavePath());
 		Controls.instance = new Controls();
@@ -159,11 +164,6 @@ class Main extends Sprite
 
 			if (FlxG.game != null)
 			resetSpriteCache(FlxG.game);
-		});
-		
-		FlxG.signals.postGameStart.add(function() {
-			#if (!html5 && !switch) FlxG.autoPause = ClientPrefs.data.autoPause; #end
-			FlxG.fixedTimestep = false;
 		});
 	}
 	

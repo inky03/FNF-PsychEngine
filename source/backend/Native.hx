@@ -1,4 +1,4 @@
-package backend.macro;
+package backend;
 
 import lime.app.Application;
 import lime.system.Display;

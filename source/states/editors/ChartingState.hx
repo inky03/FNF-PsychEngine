@@ -1583,9 +1583,13 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 	}
 	
 	function updateSelectedEvents():Void {
+		if (lockedEvents)
+			return selectedEvents.resize(0);
+		
 		var i:Int = (selectedEvents.length);
 		while (-- i >= 0) {
 			var event:SelectedEventData = selectedEvents[i];
+			
 			if (!events.contains(event.note))
 				selectedEvents.remove(event);
 		}
@@ -1854,7 +1858,9 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		var eventV1:Null<String> = null;
 		var eventV2:Null<String> = null;
 		
-		for (event in selectedEvents) { // find matching / mismatching fields ... 
+		for (event in selectedEvents) { // find matching / mismatching fields ...
+			if (event.event == null) continue;
+			
 			if (eventName == null) {
 				eventName = (event.event[0] ?? '');
 				eventDropDown.selectedIndex = (Lambda.findIndex(eventsList, (n:Array<String>) -> (n[0] == eventName)) ?? 0);
@@ -3357,7 +3363,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			if(Song.chartPath != null && Song.chartPath.length > 0)
 			{
 				var parentFolder:String = Song.chartPath.replace('\\', '/');
-				parentFolder = parentFolder.substr(0, Song.chartPath.lastIndexOf('/')+1);
+				parentFolder = parentFolder.substr(0, parentFolder.lastIndexOf('/')+1);
 				var notetypeFile:Array<String> = CoolUtil.coolTextFile(parentFolder + 'notetypes.txt');
 				if(notetypeFile.length > 0)
 				{

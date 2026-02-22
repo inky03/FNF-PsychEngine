@@ -305,6 +305,7 @@ class EditorSustain extends Note {
 	}
 }
 
+@:access(states.editors.ChartingState)
 class EventMetaNote extends MetaNote
 {
 	public var events:Array<Array<String>>;
@@ -335,10 +336,12 @@ class EventMetaNote extends MetaNote
 	public override function draw():Void {
 		super.draw();
 		
-		gui.updateHover(EventNoteGui.closestGui == gui);
-		gui.alpha = (FlxG.mouse.overlaps(gui.rect) ? 1 : alpha);
-		gui.setPosition(x - gui.rect.width, y);
-		gui.draw();
+		if (!ChartingState.instance.lockedEvents) {
+			gui.updateHover(EventNoteGui.closestGui == gui);
+			gui.alpha = (FlxG.mouse.overlaps(gui.rect) ? 1 : alpha);
+			gui.setPosition(x - gui.rect.width, y);
+			gui.draw();
+		}
 		
 		eventText.setPosition(x, y + (height - eventText.height) * .5);
 		eventText.alpha = alpha;

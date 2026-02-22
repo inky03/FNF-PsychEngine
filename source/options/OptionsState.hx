@@ -83,8 +83,10 @@ class OptionsState extends ScriptedState
 	}
 
 	override function update(elapsed:Float) {
+		preUpdate(elapsed);
+		
 		super.update(elapsed);
-
+		
 		if (controls.UI_UP_P)
 			changeSelection(-1);
 		if (controls.UI_DOWN_P)
@@ -101,6 +103,8 @@ class OptionsState extends ScriptedState
 		} else if (controls.ACCEPT) {
 			accept(options[curSelected], curSelected);
 		}
+		
+		postUpdate(elapsed);
 	}
 	
 	function changeSelection(change:Int = 0) {
