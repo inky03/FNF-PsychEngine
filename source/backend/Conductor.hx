@@ -355,15 +355,15 @@ class Conductor
 	public static function set_bpm(newBPM:Float):Float {
 		crochet = calculateCrochet(newBPM);
 		stepCrochet = crochet / 4;
-		bpm = newBPM;
 		
 		if (bpmChangeMap == null || bpmChangeMap.length == 0) {
+			bpm = newBPM;
 			mapBPMChanges();
 		} else if (Math.abs(bpm - bpmChangeMap[0].bpm) < 1) {
 			bpmChangeMap[0].stepCrochet = stepCrochet;
 			bpmChangeMap[0].bpm = bpm;
 		}
-
-		return newBPM;
+		
+		return bpm = newBPM;
 	}
 }

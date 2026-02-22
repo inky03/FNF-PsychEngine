@@ -3363,7 +3363,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 			if(Song.chartPath != null && Song.chartPath.length > 0)
 			{
 				var parentFolder:String = Song.chartPath.replace('\\', '/');
-				parentFolder = parentFolder.substr(0, Song.chartPath.lastIndexOf('/')+1);
+				parentFolder = parentFolder.substr(0, parentFolder.lastIndexOf('/')+1);
 				var notetypeFile:Array<String> = CoolUtil.coolTextFile(parentFolder + 'notetypes.txt');
 				if(notetypeFile.length > 0)
 				{
