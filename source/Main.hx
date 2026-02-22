@@ -74,7 +74,7 @@ class Main extends Sprite
 		appName = (FlxG.stage.application.meta.get('file') ?? 'PsychEngineMint');
 		
 		#if (cpp && windows)
-		backend.macro.Native.fixScaling();
+		backend.Native.fixScaling();
 		#end
 		
 		// Credits to MAJigsaw77 (he's the og author for this code)
