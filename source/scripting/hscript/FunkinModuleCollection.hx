@@ -11,13 +11,11 @@ using Lambda;
 typedef PackageInfo = {
 	var subPackages:Array<PackageInfo>;
 	var modules:Array<ModuleInfo>;
-	var ?importModule:ModuleInfo;
 	var path:Array<String>;
 }
 typedef ModuleInfo = {
 	var path:String;
 	var name:String;
-	var ?importModule:Bool;
 }
 
 class FunkinModuleCollection extends insanity.Environment {
@@ -29,7 +27,7 @@ class FunkinModuleCollection extends insanity.Environment {
 		
 		var removed:Int = 0, added:Int = 0, changed:Int = 0, total:Int = 0;
 		
-		function readModules(dir:String, pack:PackageInfo) {
+		function readModules(dir:String, pack:PackageInfo):PackageInfo {
 			for (file in FileSystem.readDirectory(dir)) {
 				var path:String = '$dir/$file';
 				
@@ -39,15 +37,10 @@ class FunkinModuleCollection extends insanity.Environment {
 					pack.subPackages.push(readModules(path, { subPackages: [], modules: [], path: newPath }));
 				} else if (file.endsWith('.hx')) {
 					var name:String = file.replace('.hx', '');
-					if (name == 'import') {
-						if (pack.importModule != null) {
-							pack.importModule.path = path;
-						} else {
-							pack.importModule = { path: path, name: name };
-						}
-					} else if ((~/^[A-Z_]?[a-zA-Z0-9_]+/).match(name)) {
-						var foundModule:ModuleInfo = pack.modules.find(function(info:ModuleInfo) return (info.name == name));
-						
+					
+					var foundModule:ModuleInfo = pack.modules.find(function(info:ModuleInfo) return (info.name == name));
+					
+					if (name == 'import' || (~/^[A-Z_]?[a-zA-Z0-9_]+/).match(name)) {
 						if (foundModule != null) { // allows module shadowing and stuff
 							foundModule.path = path;
 						} else {
@@ -65,50 +58,42 @@ class FunkinModuleCollection extends insanity.Environment {
 		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'scripts/modules'))
 			readModules(folder, low);
 		
-		function loadModules(pack:PackageInfo, ?importModules:Array<FunkinImportModule>) {
-			importModules ??= [];
-			
-			var modules:Array<FunkinModule> = [];
-			
-			if (pack.importModule != null) {
-				var mod:ModuleInfo = pack.importModule;
-				importModules.push(new FunkinImportModule(File.getContent(mod.path), mod.path));
-			}
+		function loadModules(pack:PackageInfo, ?subModules:Array<insanity.Module>):Void {
+			subModules ??= [];
 			
 			for (mod in pack.modules) {
-				var path:String = Tools.pathToString(mod.name, pack.path);
 				var string:String = File.getContent(mod.path);
 				
-				if (!tracked.contains(path))
-					tracked.push(path);
+				var module:insanity.Module;
 				
-				if (instance.modules.exists(path)) {
-					if (!hard && cast(instance.modules.get(path), FunkinModule).hash == haxe.crypto.Sha256.encode(string)) {
-						continue;
-					} else {
-						changed ++;
-					}
+				if (mod.name == 'import') {
+					module = new FunkinImportModule(string, mod.path);
 				} else {
-					added ++;
+					var path:String = Tools.pathToString(mod.name, pack.path);
+					
+					if (!tracked.contains(path))
+						tracked.push(path);
+					
+					if (instance.modules.exists(path)) {
+						if (!hard && cast(instance.modules.get(path), IFunkinModule).hash == haxe.crypto.Sha256.encode(string))
+							continue;
+						
+						changed ++;
+					} else {
+						added ++;
+					}
+					
+					module = new FunkinModule(string, mod.name, pack.path, mod.path);
+					module.subModules = cast subModules;
+					
+					instance.modules.set(module.path, module);
 				}
 				
-				var module:FunkinModule = new FunkinModule(string, mod.name, pack.path, mod.path);
-				module.importModules = cast importModules;
-				
-				instance.modules.set(module.path, module);
-				modules.push(module);
-			}
-			
-			for (module in modules) {
-				if (!module.types.exists(module.path)) continue;
-				var main = module.types.get(module.path);
-				
-				for (module in modules)
-					module.interp.imports.set(main.name, main);
+				subModules.push(module);
 			}
 			
 			for (pack in pack.subPackages)
-				loadModules(pack, importModules.copy());
+				loadModules(pack, subModules.copy());
 		}
 		
 		loadModules(low);
@@ -119,6 +104,8 @@ class FunkinModuleCollection extends insanity.Environment {
 				removed ++;
 			}
 		}
+		
+		@:privateAccess insanity.backend.Interp.localsPool.resize(0);
 		
 		total = instance.modules.count();
 		
