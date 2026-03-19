@@ -343,12 +343,10 @@ class ScriptedSubState extends MusicBeatSubstate {
 	 * @return 	Return value in last called script.
 	*/
 	public function callOnScripts(func:String, ?args:Array<Dynamic>, ignoreStops:Bool = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
-		excludeValues ??= [];
-		excludeValues.push(LuaUtils.Function_Continue);
+		excludeValues ??= [LuaUtils.Function_Continue];
 		
 		var result:Dynamic = callOnLuas(func, args, ignoreStops, exclusions, excludeValues);
-		if (result == null || excludeValues.contains(result))
-			result = callOnHScript(func, args, ignoreStops, exclusions, excludeValues);
+		result ??= callOnHScript(func, args, ignoreStops, exclusions, excludeValues);
 		
 		return result;
 	}
@@ -365,12 +363,10 @@ class ScriptedSubState extends MusicBeatSubstate {
 	 * @return 	Return value in last called script.
 	*/
 	public function callOnScriptsExt(func:String, ?argsLua:Array<Dynamic>, ?argsHScript:Array<Dynamic>, ignoreStops:Bool = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
-		excludeValues ??= [];
-		excludeValues.push(LuaUtils.Function_Continue);
+		excludeValues ??= [LuaUtils.Function_Continue];
 		
 		var result:Dynamic = callOnLuas(func, argsLua, ignoreStops, exclusions, excludeValues);
-		if (result == null || excludeValues.contains(result))
-			result = callOnHScript(func, argsHScript, ignoreStops, exclusions, excludeValues);
+		result ??= callOnHScript(func, argsHScript, ignoreStops, exclusions, excludeValues);
 		
 		return result;
 	}
@@ -386,16 +382,16 @@ class ScriptedSubState extends MusicBeatSubstate {
 	 * @return 	Return value in last called script.
 	*/
 	public function callOnLuas(func:String, ?args:Array<Dynamic>, ignoreStops:Bool = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
-		var returnVal:Dynamic = LuaUtils.Function_Continue;
+		var returnVal:Dynamic = null;
+		
 		#if LUA_ALLOWED
 		if (luaArray == null) return returnVal;
 		
 		exclusions ??= [];
-		excludeValues ??= [];
-		excludeValues.push(LuaUtils.Function_Continue);
+		excludeValues ??= [LuaUtils.Function_Continue];
 
 		var arr:Array<FunkinLua> = [];
-		for (script in luaArray) 	{
+		for (script in luaArray) {
 			if (script.closed) {
 				arr.push(script);
 				continue;
@@ -404,14 +400,14 @@ class ScriptedSubState extends MusicBeatSubstate {
 			if (exclusions.contains(script.scriptName))
 				continue;
 
-			var myValue:Dynamic = script.call(func, args);
-			if ((myValue == LuaUtils.Function_StopLua || myValue == LuaUtils.Function_StopAll) && !excludeValues.contains(myValue) && !ignoreStops) {
-				returnVal = myValue;
-				break;
+			var result:Dynamic = script.call(func, args);
+			
+			if (result != null && !excludeValues.contains(result)) {
+				returnVal = result;
+			
+				if ((result == LuaUtils.Function_StopLua || result == LuaUtils.Function_StopAll) && !ignoreStops)
+					break;
 			}
-
-			if (myValue != null && !excludeValues.contains(myValue))
-				returnVal = myValue;
 
 			if (script.closed) arr.push(script);
 		}
@@ -420,8 +416,10 @@ class ScriptedSubState extends MusicBeatSubstate {
 			for (script in arr)
 				luaArray.remove(script);
 		#end
+		
 		return returnVal;
 	}
+	
 	/**
 	 * Calls a function on all HScript scripts.
 	 * 
@@ -434,34 +432,29 @@ class ScriptedSubState extends MusicBeatSubstate {
 	 * @return 	Return value in last called script.
 	*/
 	public function callOnHScript(funcToCall:String, ?args:Array<Dynamic>, ?ignoreStops:Bool = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
-		var returnVal:Dynamic = LuaUtils.Function_Continue;
-
+		var returnVal:Dynamic = null;
+		
 		#if HSCRIPT_ALLOWED
 		if (hscriptArray == null) return returnVal;
 		
 		exclusions ??= [];
-		excludeValues ??= [];
-		excludeValues.push(LuaUtils.Function_Continue);
+		excludeValues ??= [LuaUtils.Function_Continue];
 		
 		for (script in hscriptArray) {
 			if (script.closed || !script.exists(funcToCall) || exclusions.contains(script.origin))
 				continue;
-
-			var callValue = script.call(funcToCall, args);
-			if (callValue != null) {
-				var myValue:Dynamic = callValue;
-
-				if((myValue == LuaUtils.Function_StopHScript || myValue == LuaUtils.Function_StopAll) && !excludeValues.contains(myValue) && !ignoreStops) {
-					returnVal = myValue;
+			
+			var result = script.call(funcToCall, args);
+			
+			if (result != null && !excludeValues.contains(result)) {
+				returnVal = result;
+			
+				if ((result == LuaUtils.Function_StopHScript || result == LuaUtils.Function_StopAll) && !ignoreStops)
 					break;
-				}
-
-				if (myValue != null && !excludeValues.contains(myValue))
-					returnVal = myValue;
 			}
 		}
 		#end
-
+		
 		return returnVal;
 	}
 	
@@ -476,6 +469,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 		setOnLuas(variable, value, exclusions);
 		setOnHScript(variable, value, exclusions);
 	}
+	
 	/**
 	 * Sets a variable on all Lua scripts.
 	 * 
@@ -496,6 +490,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 		}
 		#end
 	}
+	
 	/**
 	 * Sets a variable on all HScript scripts.
 	 * 

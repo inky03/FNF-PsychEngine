@@ -646,10 +646,8 @@ class CustomInterp extends insanity.backend.Interp {
 			if (parentInstance != null) {
 				if (_instanceFields.contains(id)) {
 					return CustomReflect.getProperty(parentInstance, id);
-				} else if (parentInstance is FlxBasic) {
-					var basic:FlxBasic = cast parentInstance;
-					if (basic.hasVar(id))
-						return basic.getVar(id);
+				} else if (parentInstance.hasVar != null && parentInstance.hasVar(id)) {
+					return parentInstance.getVar(id);
 				}
 			}
 			
@@ -657,6 +655,9 @@ class CustomInterp extends insanity.backend.Interp {
 		}
 		
 		return resolveMirror(variables.get(id));
+	}
+	override function isResolvable(id:String):Bool {
+		return (imports.exists(id) || variables.exists(id) || _instanceFields.contains(id) || (parentInstance.hasVar != null && parentInstance.hasVar(id)));
 	}
 	override function setVar(name:String, v:Dynamic):Dynamic {
 		if (AbstractTools.isAbstract(v))
