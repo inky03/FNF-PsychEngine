@@ -1,5 +1,9 @@
 package backend;
 
+#if flixel_animate
+import animate.FlxAnimateFrames;
+#end
+
 import flixel.graphics.frames.FlxFrame.FlxFrameAngle;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.FlxGraphic;
@@ -17,7 +21,6 @@ import lime.utils.Assets;
 import flash.media.Sound;
 
 import haxe.Json;
-
 
 #if MODS_ALLOWED
 import backend.Mods;
@@ -240,6 +243,23 @@ class Paths
 		}
 		return cacheBitmap(key, parentFolder, bitmap, allowGPU);
 	}
+	
+	public static function gpuCacheBitmap(bitmap:BitmapData):Void
+	{
+		if (!ClientPrefs.data.cacheOnGPU || bitmap.image == null) return;
+		
+		bitmap.lock();
+		if (bitmap.__texture == null)
+		{
+			bitmap.image.premultiplied = true;
+			bitmap.getTexture(FlxG.stage.context3D);
+		}
+		bitmap.getSurface();
+		bitmap.disposeImage();
+		bitmap.image.data = null;
+		bitmap.image = null;
+		bitmap.readable = true;
+	}
 
 	public static function cacheBitmap(key:String, ?parentFolder:String = null, ?bitmap:BitmapData, ?allowGPU:Bool = true):FlxGraphic
 	{
@@ -259,20 +279,7 @@ class Paths
 			}
 		}
 
-		if (allowGPU && ClientPrefs.data.cacheOnGPU && bitmap.image != null)
-		{
-			bitmap.lock();
-			if (bitmap.__texture == null)
-			{
-				bitmap.image.premultiplied = true;
-				bitmap.getTexture(FlxG.stage.context3D);
-			}
-			bitmap.getSurface();
-			bitmap.disposeImage();
-			bitmap.image.data = null;
-			bitmap.image = null;
-			bitmap.readable = true;
-		}
+		if (allowGPU) gpuCacheBitmap(bitmap);
 
 		var graph:FlxGraphic = FlxGraphic.fromBitmapData(bitmap, false, key);
 		graph.persist = true;
@@ -492,75 +499,46 @@ class Paths
 		return 'mods/' + key;
 	}
 	#end
-
-	#if flxanimate
-	public static function loadAnimateAtlas(spr:FlxAnimate, folderOrImg:Dynamic, spriteJson:Dynamic = null, animationJson:Dynamic = null)
-	{
-		var changedAnimJson = false;
-		var changedAtlasJson = false;
-		var changedImage = false;
+	
+	#if flixel_animate
+	inline static public function animate(key:String, ?parentFolder:String):String
+		return getPath('images/$key/Animation.json', parentFolder);
+	
+	public static function loadAnimateAtlas(spr:FlxAnimate, path:String):Bool {
+		final atlas:FlxAnimateFrames = getAnimateAtlas(path);
 		
-		if(spriteJson != null)
-		{
-			changedAtlasJson = true;
-			spriteJson = getTextFromFile(spriteJson);
+		spr.frames = atlas;
+		
+		return (atlas != null);
+	}
+	
+	public static function getAnimateAtlas(key:String, ?parentFolder:String, allowGPU:Bool = true):FlxAnimateFrames {
+		final path:String = animate(key);
+		
+		if (! #if (MODS_ALLOWED && sys) FileSystem #else OpenFlAssets #end.exists(path)) {
+			trace('ANIMATION JSON NOT FOUND: $key, PATH: $path');
+			
+			return null;
 		}
-
-		if(animationJson != null) 
-		{
-			changedAnimJson = true;
-			animationJson = getTextFromFile(animationJson);
-		}
-
-		// is folder or image path
-		if(Std.isOfType(folderOrImg, String))
-		{
-			var originalPath:String = folderOrImg;
-			for (i in 0...10)
-			{
-				var st:String = '$i';
-				if(i == 0) st = '';
-
-				if(!changedAtlasJson)
-				{
-					spriteJson = getTextFromFile('images/$originalPath/spritemap$st.json');
-					if(spriteJson != null)
-					{
-						//trace('found Sprite Json');
-						changedImage = true;
-						changedAtlasJson = true;
-						folderOrImg = image('$originalPath/spritemap$st');
-						break;
-					}
-				}
-				else if(fileExists('images/$originalPath/spritemap$st.png', IMAGE))
-				{
-					//trace('found Sprite PNG');
-					changedImage = true;
-					folderOrImg = image('$originalPath/spritemap$st');
-					break;
+		
+		final folder:String = path.substring(0, path.length - '/Animation.json'.length); // idk it trips if i dont do that
+		
+		var animateFrames:FlxAnimateFrames = FlxAnimateFrames.fromAnimate(folder, false, {cacheOnLoad: true});
+		
+		// trace('$path, $folder -> $animateFrames');
+		
+		if (animateFrames != null) {
+			if (allowGPU) {
+				for (spritemap in @:privateAccess cast(animateFrames.parent, FlxAnimateSpritemapCollection).spritemaps) {
+					if (spritemap.bitmap != null)
+						gpuCacheBitmap(spritemap.bitmap);
 				}
 			}
-
-			if(!changedImage)
-			{
-				//trace('Changing folderOrImg to FlxGraphic');
-				changedImage = true;
-				folderOrImg = image(originalPath);
-			}
-
-			if(!changedAnimJson)
-			{
-				//trace('found Animation Json');
-				changedAnimJson = true;
-				animationJson = getTextFromFile('images/$originalPath/Animation.json');
-			}
+			
+			return animateFrames;
 		}
-
-		//trace(folderOrImg);
-		//trace(spriteJson);
-		//trace(animationJson);
-		spr.loadAtlasEx(folderOrImg, spriteJson, animationJson);
+		
+		return null;
 	}
 	#end
 }

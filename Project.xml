@@ -129,7 +129,7 @@
 	<haxelib name="linc_luajit" if="LUA_ALLOWED"/>
 	<haxelib name="hscript-iris" if="HSCRIPT_ALLOWED" />
 	<haxelib name="hxdiscord_rpc" if="DISCORD_ALLOWED" />
-	<haxelib name="flxanimate" />
+	<haxelib name="flixel-animate" />
 	
 	<!-- Other -->
 	<haxelib name="grig.audio" />

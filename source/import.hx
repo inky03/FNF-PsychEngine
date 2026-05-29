@@ -47,9 +47,8 @@ import objects.BGSprite;
 import states.PlayState;
 import states.LoadingState;
 
-#if flxanimate
-import flxanimate.*;
-import flxanimate.PsychFlxAnimate as FlxAnimate;
+#if flixel_animate
+import animate.*;
 #end
 
 //Flixel

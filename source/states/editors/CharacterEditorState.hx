@@ -21,9 +21,7 @@ class GraphicCursorCross extends openfl.display.BitmapData {}
 class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.PsychUIEvent
 {
 	var character:Character;
-	var ghost:FlxSprite;
-	var animateGhost:FlxAnimate;
-	var animateGhostImage:String;
+	var ghost:FlxAnimate;
 	var cameraFollowPointer:FlxSprite;
 	var isAnimateSprite:Bool = false;
 
@@ -100,9 +98,10 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 
 		silhouettes.alpha = 0.25;
 
-		ghost = new FlxSprite();
+		ghost = new FlxAnimate();
 		ghost.visible = false;
 		ghost.alpha = ghostAlpha;
+		ghost.useRenderTexture = true;
 		add(ghost);
 		
 		animsTxt = new FlxText(10, 32, 400, '');
@@ -281,55 +280,24 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 			if(!character.isAnimationNull())
 			{
 				var myAnim = anims[curAnim];
-				if(!character.isAnimateAtlas)
-				{
-					ghost.loadGraphic(character.graphic);
-					ghost.frames.frames = character.frames.frames;
-					ghost.animation.copyFrom(character.animation);
-					ghost.animation.play(character.animation.curAnim.name, true, false, character.animation.curAnim.curFrame);
-					ghost.animation.pause();
-				}
-				else if(myAnim != null) //This is VERY unoptimized and bad, I hope to find a better replacement that loads only a specific frame as bitmap in the future.
-				{
-					if(animateGhost == null) //If I created the animateGhost on create() and you didn't load an atlas, it would crash the game on destroy, so we create it here
-					{
-						animateGhost = new FlxAnimate(ghost.x, ghost.y);
-						animateGhost.showPivot = false;
-						insert(members.indexOf(ghost), animateGhost);
-						animateGhost.active = false;
-					}
-
-					if(animateGhost == null || animateGhostImage != character.imageFile)
-						Paths.loadAnimateAtlas(animateGhost, character.imageFile);
-					
-					if(myAnim.indices != null && myAnim.indices.length > 0)
-						animateGhost.anim.addBySymbolIndices('anim', myAnim.name, myAnim.indices, 0, false);
-					else
-						animateGhost.anim.addBySymbol('anim', myAnim.name, 0, false);
-
-					animateGhost.anim.play('anim', true, false, character.atlas.anim.curFrame);
-					animateGhost.anim.pause();
-
-					animateGhostImage = character.imageFile;
-				}
+			
+				ghost.loadGraphic(character.graphic);
+				ghost.frames.frames = character.frames.frames;
+				ghost.animation.copyFrom(character.animation);
+				ghost.animation.play(character.animation.curAnim.name, true, false, character.animation.curAnim.curFrame);
+				ghost.animation.pause();
 				
-				var spr:FlxSprite = !character.isAnimateAtlas ? ghost : animateGhost;
-				if(spr != null)
-				{
-					spr.setPosition(character.x, character.y);
-					spr.antialiasing = character.antialiasing;
-					spr.flipX = character.flipX;
-					spr.alpha = ghostAlpha;
+				ghost.setPosition(character.x, character.y);
+				ghost.antialiasing = character.antialiasing;
+				ghost.flipX = character.flipX;
+				ghost.alpha = ghostAlpha;
 
-					spr.scale.set(character.scale.x, character.scale.y);
-					spr.updateHitbox();
+				ghost.scale.set(character.scale.x, character.scale.y);
+				ghost.updateHitbox();
 
-					spr.offset.set(character.offset.x, character.offset.y);
-					spr.visible = true;
-
-					var otherSpr:FlxSprite = (spr == animateGhost) ? ghost : animateGhost;
-					if(otherSpr != null) otherSpr.visible = false;
-				}
+				ghost.offset.set(character.offset.x, character.offset.y);
+				ghost.visible = true;
+				
 				/*hideGhostButton.active = true;
 				hideGhostButton.alpha = 1;*/
 				trace('created ghost image');
@@ -348,23 +316,16 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 		highlightGhost.onClick = function()
 		{
 			var value = highlightGhost.checked ? 125 : 0;
+			
 			ghost.colorTransform.redOffset = value;
 			ghost.colorTransform.greenOffset = value;
 			ghost.colorTransform.blueOffset = value;
-			if(animateGhost != null)
-			{
-				animateGhost.colorTransform.redOffset = value;
-				animateGhost.colorTransform.greenOffset = value;
-				animateGhost.colorTransform.blueOffset = value;
-			}
 		};
 
 		var ghostAlphaSlider:PsychUISlider = new PsychUISlider(15, makeGhostButton.y + 25, function(v:Float)
 		{
 			ghostAlpha = v;
 			ghost.alpha = ghostAlpha;
-			if(animateGhost != null) animateGhost.alpha = ghostAlpha;
-
 		}, ghostAlpha, 0, 1);
 		ghostAlphaSlider.label = 'Opacity:';
 
@@ -535,11 +496,8 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 			for (anim in character.animationsArray)
 				if(animationInputText.text == anim.anim) {
 					lastOffsets = anim.offsets;
-					if(character.hasAnimation(animationInputText.text))
-					{
-						if(!character.isAnimateAtlas) character.animation.remove(animationInputText.text);
-						else @:privateAccess character.atlas.anim.animsMap.remove(animationInputText.text);
-					}
+					
+					if (character.hasAnimation(animationInputText.text)) character.animation.remove(animationInputText.text);
 					character.animationsArray.remove(anim);
 				}
 
@@ -565,8 +523,7 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 					if(anim.anim == character.getAnimationName()) resetAnim = true;
 					if(character.hasAnimation(anim.anim))
 					{
-						if(!character.isAnimateAtlas) character.animation.remove(anim.anim);
-						else @:privateAccess character.atlas.anim.animsMap.remove(anim.anim);
+						character.animation.remove(anim.anim);
 						character.animOffsets.remove(anim.anim);
 						character.animationsArray.remove(anim);
 					}
@@ -797,27 +754,17 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 	{
 		var lastAnim:String = character.getAnimationName();
 		var anims:Array<AnimArray> = character.animationsArray.copy();
-
-		character.atlas = FlxDestroyUtil.destroy(character.atlas);
-		character.isAnimateAtlas = false;
+		
 		character.color = FlxColor.WHITE;
 		character.alpha = 1;
-
-		if(Paths.fileExists('images/' + character.imageFile + '/Animation.json', TEXT))
+		
+		#if flixel_animate
+		if (#if (MODS_ALLOWED && sys) FileSystem #else Assets #end.exists(Paths.animate(character.imageFile)))
 		{
-			character.atlas = new FlxAnimate();
-			character.atlas.showPivot = false;
-			try
-			{
-				Paths.loadAnimateAtlas(character.atlas, character.imageFile);
-			}
-			catch(e:Dynamic)
-			{
-				FlxG.log.warn('Could not load atlas ${character.imageFile}: $e');
-			}
-			character.isAnimateAtlas = true;
+			Paths.loadAnimateAtlas(character, character.imageFile);
 		}
 		else
+		#end
 		{
 			character.frames = Paths.getMultiAtlas(character.imageFile.split(','));
 		}
@@ -1018,15 +965,10 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 
 			var frames:Int = -1;
 			var length:Int = -1;
-			if(!character.isAnimateAtlas && character.animation.curAnim != null)
+			if (character.animation.curAnim != null)
 			{
 				frames = character.animation.curAnim.curFrame;
 				length = character.animation.curAnim.numFrames;
-			}
-			else if(character.isAnimateAtlas && character.atlas.anim != null)
-			{
-				frames = character.atlas.anim.curFrame;
-				length = character.atlas.anim.length;
 			}
 
 			if(length >= 0)
@@ -1040,8 +982,7 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 					if(holdingFrameTime <= 0.5 || holdingFrameElapsed > 0.1)
 					{
 						frames = FlxMath.wrap(frames + Std.int(isLeft ? -shiftMult : shiftMult), 0, length-1);
-						if(!character.isAnimateAtlas) character.animation.curAnim.curFrame = frames;
-						else character.atlas.anim.curFrame = frames;
+						character.animation.curAnim.curFrame = frames;
 						holdingFrameElapsed -= 0.1;
 					}
 				}
@@ -1212,10 +1153,21 @@ class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.
 		}
 		else
 		{
-			if(indices != null && indices.length > 0)
-				character.atlas.anim.addBySymbolIndices(anim, name, indices, fps, loop);
-			else
-				character.atlas.anim.addBySymbol(anim, name, fps, loop);
+			final hasSymbol:Bool = (character.library.getSymbol(name) != null);
+			
+			if (indices != null && indices.length > 0) {
+				if (hasSymbol) {
+					character.anim.addBySymbolIndices(anim, name, indices, fps, loop);
+				} else {
+					character.anim.addByFrameLabelIndices(anim, name, indices, fps, loop);
+				}
+			} else {
+				if (hasSymbol) {
+					character.anim.addBySymbol(anim, name, fps, loop);
+				} else {
+					character.anim.addByFrameLabel(anim, name, fps, loop);
+				}
+			}
 		}
 
 		if(!character.hasAnimation(anim))
