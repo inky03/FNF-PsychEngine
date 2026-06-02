@@ -1524,7 +1524,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						
 						var noteDiffY:Float = diffY;
 						if (downScroll) noteDiffY = (gridBg.height - diffY - (shift ? 0 : GRID_SIZE));
-						noteDiffY -= (note.chartY * GRID_SIZE * curZoom);
+						noteDiffY -= ((note.chartY - cachedSectionRow[curSec]) * GRID_SIZE * curZoom);
 						
 						var stepLength:Float = Math.max(noteDiffY / GRID_SIZE / curZoom, 0);
 						var endMs:Float = Conductor.stepToSeconds(Conductor.getStep(note.strumTime) + stepLength);
