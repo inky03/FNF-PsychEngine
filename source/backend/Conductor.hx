@@ -9,7 +9,7 @@ typedef BPMChangeEvent =
 	var stepTime:Int;
 	var songTime:Float;
 	var sectionBeats:Int;
-	@:optional var stepCrochet:Float;
+	var ?stepCrochet:Float;
 }
 
 class Conductor
@@ -132,7 +132,7 @@ class Conductor
 	/**
 	 * Converts time in steps to time in milliseconds.
 	 * 
-	 * @param 	step 			The step time to convert to milliseconds.
+	 * @param 	step 			The timestamp in steps to convert to milliseconds.
 	 * @param 	bpmChangeMap 	A list of BPM changes. If unspecified, the default `bpmChangeMap` is used.
 	 * 
 	 * @return 	Time in milliseconds.
@@ -145,7 +145,7 @@ class Conductor
 	/**
 	 * Converts time in beats to time in milliseconds.
 	 * 
-	 * @param 	beat 			The beat time to convert to milliseconds.
+	 * @param 	beat 			The timestamp in beats to convert to milliseconds.
 	 * @param 	bpmChangeMap 	A list of BPM changes. If unspecified, the default `bpmChangeMap` is used.
 	 * 
 	 * @return 	Time in milliseconds.
@@ -155,9 +155,44 @@ class Conductor
 	}
 
 	/**
+	 * Converts time in sections to time in milliseconds.
+	 * 
+	 * @param 	beat 			The timestamp in sections to convert to milliseconds.
+	 * @param 	bpmChangeMap 	A list of BPM changes. If unspecified, the default `bpmChangeMap` is used.
+	 * 
+	 * @return 	Time in milliseconds.
+	*/
+	public static function sectionToSeconds(section:Float, ?bpmChangeMap:Array<BPMChangeEvent>):Float {
+		bpmChangeMap ??= Conductor.bpmChangeMap;
+		
+		var curSectionBeats:Int = bpmChangeMap[0].sectionBeats;
+		var curBPM:Float = bpmChangeMap[0].bpm;
+		
+		var lastSection:Float = 0;
+		var lastTime:Float = 0;
+		var lastStep:Float = 0;
+		
+		for (change in bpmChangeMap) {
+			final beatDiff:Float = ((change.stepTime - lastStep) / 4);
+			
+			lastSection += (beatDiff / curSectionBeats);
+			
+			if (lastSection > change.stepTime) break;
+			
+			lastTime += (beatDiff * calculateCrochet(curBPM));
+			lastStep = change.stepTime;
+			
+			curBPM = change.bpm;
+			curSectionBeats = change.sectionBeats;
+		}
+		
+		return ((section - lastSection) * calculateCrochet(curBPM) * curSectionBeats + lastTime);
+	}
+
+	/**
 	 * Converts time in milliseconds to time in steps.
 	 * 
-	 * @param 	step 			The millisecond time to convert to steps.
+	 * @param 	step 			The millisecond time to convert to step measures.
 	 * @param 	bpmChangeMap 	A list of BPM changes. If unspecified, the default `bpmChangeMap` is used.
 	 * 
 	 * @return 	Time in steps.
@@ -170,10 +205,10 @@ class Conductor
 	/**
 	 * Converts time in milliseconds to time in steps.
 	 * 
-	 * @param 	step 			The millisecond time to convert to steps.
+	 * @param 	step 			The millisecond time to convert to step measures.
 	 * @param 	bpmChangeMap 	A list of BPM changes. If unspecified, the default `bpmChangeMap` is used.
 	 * 
-	 * @return 	Time in steps, rounded to `Int`.
+	 * @return 	Count of steps passed.
 	*/
 	public static function getStepRounded(time:Float, ?bpmChangeMap:Array<BPMChangeEvent>):Int {
 		return Math.floor(getStep(time, bpmChangeMap));
@@ -182,7 +217,7 @@ class Conductor
 	/**
 	 * Converts time in milliseconds to time in beats.
 	 * 
-	 * @param 	step 			The millisecond time to convert to beats.
+	 * @param 	step 			The millisecond time to convert to beat measures.
 	 * @param 	bpmChangeMap 	A list of BPM changes. If unspecified, the default `bpmChangeMap` is used.
 	 * 
 	 * @return 	Time in beats.
@@ -197,7 +232,7 @@ class Conductor
 	 * @param 	step 			The millisecond time to convert to beats.
 	 * @param 	bpmChangeMap 	A list of BPM changes. If unspecified, the default `bpmChangeMap` is used.
 	 * 
-	 * @return 	Time in beats, rounded to `Int`.
+	 * @return 	Count of beats passed.
 	*/
 	public static function getBeatRounded(time:Float, ?bpmChangeMap:Array<BPMChangeEvent>):Int {
 		return Math.floor(getStep(time, bpmChangeMap) / 4);
@@ -239,7 +274,7 @@ class Conductor
 	 * @param 	step 			The millisecond time to convert to measures.
 	 * @param 	bpmChangeMap 	A list of BPM changes. If unspecified, the default `bpmChangeMap` is used.
 	 * 
-	 * @return 	Time in measures, rounded to `Int`.
+	 * @return 	Count of measures passed.
 	*/
 	public static function getSectionRounded(time:Float, ?bpmChangeMap:Array<BPMChangeEvent>):Int {
 		return Math.floor(getSection(time, bpmChangeMap));
