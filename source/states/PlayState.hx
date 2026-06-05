@@ -2218,10 +2218,11 @@ class PlayState extends ScriptedState
 			
 			if (!startingSong && FlxG.sound.music?.playing)
 			{
-				final musicTime:Float = @:privateAccess FlxG.sound.music._channel.position;
-				final maxDesync:Float = (1000 / 60);
+				final musicTime:Float = (@:privateAccess FlxG.sound.music._channel.position + Conductor.offset);
+				final maxDesync:Float = (1000 / 60 / playbackRate);
 				
-				if (Math.abs(Conductor.songPosition - musicTime) > maxDesync) Conductor.songPosition = musicTime;
+				if (Math.abs(Conductor.songPosition - musicTime) > maxDesync)
+					Conductor.songPosition = musicTime;
 			}
 		}
 
