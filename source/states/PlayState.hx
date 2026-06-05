@@ -2214,14 +2214,14 @@ class PlayState extends ScriptedState
 
 		if (startedCountdown && !paused)
 		{
-			Conductor.songPosition += elapsed * 1000 * playbackRate;
+			Conductor.songPosition += (elapsed * 1000 * playbackRate);
 			
 			if (!startingSong && FlxG.sound.music?.playing)
 			{
-				Conductor.songPosition = FlxMath.lerp(FlxG.sound.music.time + Conductor.offset, Conductor.songPosition, Math.exp(-elapsed * 5));
-				var timeDiff:Float = Math.abs((FlxG.sound.music.time + Conductor.offset) - Conductor.songPosition);
-				if (timeDiff > 1000 * playbackRate)
-					Conductor.songPosition = Conductor.songPosition + 1000 * FlxMath.signOf(timeDiff);
+				final musicTime:Float = @:privateAccess FlxG.sound.music._channel.position;
+				final maxDesync:Float = (1000 / 60);
+				
+				if (Math.abs(Conductor.songPosition - musicTime) > maxDesync) Conductor.songPosition = musicTime;
 			}
 		}
 
@@ -3256,9 +3256,9 @@ class PlayState extends ScriptedState
 		if(ret == LuaUtils.Function_Stop) return;
 		
 		// more accurate hit time for the ratings?
-		var lastTime:Float = Conductor.songPosition;
-		if (Conductor.songPosition >= 0 && !startingSong && FlxG.sound.music?.playing)
-			Conductor.songPosition = FlxG.sound.music.time + Conductor.offset;
+		final musicTime:Float = (FlxG.sound.music.playing ? @:privateAccess FlxG.sound.music._channel.position : Conductor.songPosition);
+		final lastTime:Float = Conductor.songPosition;
+		Conductor.songPosition = (musicTime + Conductor.offset);
 		
 		// obtain notes that the player can hit
 		var highestNote:Note = null;
