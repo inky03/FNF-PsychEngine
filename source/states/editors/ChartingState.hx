@@ -1031,13 +1031,14 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 						}
 						pushedNotes.sort((a:Array<Dynamic>, b:Array<Dynamic>) -> FlxSort.byValues(FlxSort.ASCENDING, a[0], b[0]));
 						
-						var minTime:Float = Conductor.getStep(pushedNotes[0][0]);
+						final minStep:Float = Conductor.getStep(pushedNotes[0][0]);
+						
 						for (note in pushedNotes) {
 							var noteStep:Float = Conductor.getStep(note[0]);
 							
 							if (note[2] is Float) note[2] = (Conductor.getStep(note[0] + note[2]) - noteStep);
 							
-							note[0] = noteStep;
+							note[0] = (noteStep - minStep);
 						}
 					}
 				}
@@ -3408,6 +3409,8 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		var nextSectionTime:Null<Float> = cachedSectionTimes[curSec + 1];
 		if (nextSectionTime == null) nextSectionTime = Math.POSITIVE_INFINITY;
 		
+		final sectionStep:Float = Conductor.getStep(curSectionTime);
+		
 		var pushedNotes:Array<MetaNote> = [];
 		var nts:Array<MetaNote> = [];
 		var evs:Array<EventMetaNote> = [];
@@ -3418,7 +3421,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 				if(note == null) continue;
 				var dataCopy:Array<Dynamic> = makeNoteDataCopy(note, false);
 				
-				var noteStep:Float = dataCopy[0];
+				var noteStep:Float = (dataCopy[0] + sectionStep);
 				var strumTime:Float = Conductor.stepToSeconds(noteStep);
 				
 				if (strumTime < nextSectionTime) {
