@@ -107,12 +107,10 @@ class GlobalScripts {
 			
 			var callValue:Dynamic = script.call(func, args);
 			if (callValue != null) {
-				var myValue:Dynamic = callValue.returnValue;
-				
-				if (myValue == LuaUtils.Function_StopHScript || myValue == LuaUtils.Function_StopAll) {
+				if (callValue == LuaUtils.Function_StopHScript || callValue == LuaUtils.Function_StopAll) {
 					return LuaUtils.Function_Stop;
-				} else if (myValue != null && !excludeValues.contains(myValue)) {
-					return myValue;
+				} else if (callValue != null && !excludeValues.contains(callValue)) {
+					return callValue;
 				}
 			}
 		}
