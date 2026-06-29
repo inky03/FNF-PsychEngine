@@ -423,10 +423,12 @@ class EventNoteGui extends FlxSpriteGroup {
 				return sprite;
 			});
 			
+			final eventImage:String = 'events/${event[0].length == 0 ? 'default' : event[0]}';
+			
 			eventContainer.remove(sprite, true);
 			
 			sprite.ID = i;
-			sprite.loadGraphic(Paths.image('events/${event[0].length == 0 ? 'default' : event[0]}') ?? Paths.image('events/default'));
+			sprite.loadGraphic(Paths.image(Paths.fileExists('images/$eventImage.png', IMAGE) ? eventImage : 'events/default'));
 			sprite.setGraphicSize(size);
 			sprite.updateHitbox();
 			sprite.revive();
