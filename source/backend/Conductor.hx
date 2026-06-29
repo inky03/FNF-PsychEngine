@@ -174,13 +174,13 @@ class Conductor
 		
 		for (change in bpmChangeMap) {
 			final beatDiff:Float = ((change.stepTime - lastStep) / 4);
+			final nextSection:Float = (lastSection + beatDiff / curSectionBeats);
 			
-			lastSection += (beatDiff / curSectionBeats);
-			
-			if (lastSection > change.stepTime) break;
+			if (nextSection >= section) break;
 			
 			lastTime += (beatDiff * calculateCrochet(curBPM));
 			lastStep = change.stepTime;
+			lastSection = nextSection;
 			
 			curBPM = change.bpm;
 			curSectionBeats = change.sectionBeats;
@@ -256,16 +256,16 @@ class Conductor
 		var lastTime:Float = 0;
 		
 		for (change in bpmChangeMap) {
-			if (change.songTime > time) break;
+			if (change.songTime >= time) break;
 			
-			lastSection += ((change.songTime - lastTime) / calculateCrochet(curBPM) / curSectionBeats);
+			lastSection += ((change.songTime - lastTime) / calculateCrochet(curBPM * curSectionBeats));
 			lastTime = change.songTime;
 			
 			curBPM = change.bpm;
 			curSectionBeats = change.sectionBeats;
 		}
 		
-		return ((time - lastTime) / calculateCrochet(curBPM) / curSectionBeats + lastSection);
+		return ((time - lastTime) / calculateCrochet(curBPM * curSectionBeats) + lastSection);
 	}
 	
 	/**
