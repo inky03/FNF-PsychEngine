@@ -444,7 +444,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 			if (script.closed || !script.exists(funcToCall) || exclusions.contains(script.origin))
 				continue;
 			
-			var result = script.call(funcToCall, args);
+			var result:Dynamic = script.call(funcToCall, args);
 			
 			if (result != null && !excludeValues.contains(result)) {
 				returnVal = result;
