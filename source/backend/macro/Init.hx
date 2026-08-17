@@ -5,12 +5,6 @@ import haxe.macro.Context;
 import haxe.macro.Compiler;
 
 class Init {
-	public static var allowScriptedAbstracts:Array<String> = [
-		'flixel.input',
-		'flixel.util',
-		'flixel.math'
-	];
-	
 	public static macro function includeClasses():Void {
 		Compiler.include('flixel', true, ['flixel.addons.nape', 'flixel.addons.editors.spine', 'flixel.system.macros']);
 		Compiler.include('haxe', true, ['haxe.atomic', 'haxe.macro']);
@@ -26,8 +20,7 @@ class Init {
 	}
 	
 	public static macro function includeScriptedAbstracts():Void {
-		for (pack in allowScriptedAbstracts)
-			Compiler.addGlobalMetadata(pack, '@:build(insanity.backend.macro.AbstractMacro.build())');
+		Compiler.addGlobalMetadata('', '@:build(insanity.backend.macro.AbstractMacro.build())');
 	}
 	
 	public static macro function init():Void {
