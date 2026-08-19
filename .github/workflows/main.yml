@@ -2,23 +2,31 @@ name: Build
 
 on:
   push:
-    branches: [ main, experimental ]
+    branches:
+      - main
+      - experimental
   pull_request:
-    branches: [ main, experimental ]
+    branches:
+      - main
+      - experimental
   workflow_dispatch:
 
 jobs:
   buildLinux:
+    name: Build Linux
     runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4.3.0
 
-      - uses: krdlab/setup-haxe@master
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
         with:
           haxe-version: 4.3.7
-      - name: Restore Build cache
-        uses: actions/cache@v4
+
+      - name: Restore Build Cache
+        uses: actions/cache@v6
         with:
           key: cacheLinux
           path: |
@@ -26,6 +34,7 @@ jobs:
             export/release/linux/obj/
           restore-keys: |
             cacheLinux
+
       - name: Install Haxelib
         run: |
           sudo apt-get install libvlc-dev
@@ -34,26 +43,34 @@ jobs:
           haxelib install hxcpp > /dev/null --quiet
           chmod +x ./setup/unix.sh
           sh ./setup/unix.sh
-      - name: Create Version Tag
-        run: echo "${{github.run_id}}" > VERSION
+
+      - name: Create version tag
+        run: echo "${{ github.run_id }}" > VERSION
+
       - name: Compile
-        run: haxelib run lime build Project.xml linux --app-version="4.0.0-${{ github.run_id}}" -D officialBuild
-      - name: Publish Artifact
-        uses: actions/upload-artifact@v4
+        run: haxelib run lime build Project.xml linux --app-version="4.0.0-${{ github.run_id }}" -D officialBuild
+
+      - name: Publish artifact
+        uses: actions/upload-artifact@v7
         with:
           name: linuxBuild
           path: export/release/linux/bin
+
   buildWindows:
+    name: Build Windows
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4.3.0
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
-      - uses: krdlab/setup-haxe@master
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
         with:
           haxe-version: 4.3.7
-      - name: Restore Build cache
-        uses: actions/cache@v4
+
+      - name: Restore Build Cache
+        uses: actions/cache@v6
         with:
           key: cacheWindows
           path: |
@@ -61,32 +78,41 @@ jobs:
             export/release/windows/obj/
           restore-keys: |
             cacheWindows
+
       - name: Install Haxelib
         run: |
           haxelib setup C:/haxelib
           haxelib install hxcpp > /dev/null --quiet
           .\"setup/windows.bat"
         shell: cmd
-      - name: Create Version Tag
-        run: echo "${{github.run_id}}" > VERSION
+
+      - name: Create version tag
+        run: echo "${{ github.run_id }}" > VERSION
+
       - name: Compile
-        run: haxelib run lime build windows --app-version="4.0.0-${{ github.run_id}}"  -D officialBuild
-      - name: Publish Artifact
-        uses: actions/upload-artifact@v4
+        run: haxelib run lime build windows --app-version="4.0.0-${{ github.run_id }}" -D officialBuild
+
+      - name: Publish artifact
+        uses: actions/upload-artifact@v7
         with:
           name: windowsBuild
           path: export/release/windows/bin
+
   buildMac:
-    runs-on: macos-15
+    name: Build macOS
+    runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4.3.0
+      - name: Checkout
+        uses: actions/checkout@v7
 
-      - uses: krdlab/setup-haxe@master
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
         with:
           haxe-version: 4.3.7
-      - name: Restore Build cache
-        uses: actions/cache@v4
+
+      - name: Restore Build Cache
+        uses: actions/cache@v6
         with:
           key: cacheMac
           path: |
@@ -94,18 +120,22 @@ jobs:
             export/release/macos/obj/
           restore-keys: |
             cacheMac
+
       - name: Install Haxelib
         run: |
           haxelib setup ~/haxelib
           haxelib install hxcpp > /dev/null --quiet
           chmod +x ./setup/unix.sh
           sh ./setup/unix.sh
-      - name: Create Version Tag
-        run: echo "${{github.run_id}}" > VERSION
+
+      - name: Create version tag
+        run: echo "${{ github.run_id }}" > VERSION
+
       - name: Compile
-        run: haxelib run lime build mac --app-version="4.0.0-${{ github.run_id}}"  -D officialBuild
-      - name: Publish Artifact
-        uses: actions/upload-artifact@v4
+        run: haxelib run lime build mac --app-version="4.0.0-${{ github.run_id }}" -D officialBuild
+
+      - name: Publish artifact
+        uses: actions/upload-artifact@v7
         with:
           name: macBuild
           path: export/release/macos/bin
