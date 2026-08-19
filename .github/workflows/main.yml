@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4.3.0
+      - uses: actions/checkout@v5.0.0
 
-      - uses: krdlab/setup-haxe@master
+      - uses: krdlab/setup-haxe@v2.0.2
         with:
           haxe-version: 4.3.7
       - name: Restore Build cache
@@ -47,9 +47,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4.3.0
+      - uses: actions/checkout@v5.0.0
 
-      - uses: krdlab/setup-haxe@master
+      - uses: krdlab/setup-haxe@v2.0.2
         with:
           haxe-version: 4.3.7
       - name: Restore Build cache
@@ -80,9 +80,9 @@ jobs:
     runs-on: macos-15
 
     steps:
-      - uses: actions/checkout@v4.3.0
+      - uses: actions/checkout@v5.0.0
 
-      - uses: krdlab/setup-haxe@master
+      - uses: krdlab/setup-haxe@v2.0.2
         with:
           haxe-version: 4.3.7
       - name: Restore Build cache
